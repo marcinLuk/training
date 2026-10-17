@@ -1,6 +1,7 @@
 'use strict';
 
 const RUN_KEY = 'trening.run.v1';
+const CARDIO_KEY = 'trening.cardio.v1';
 const AUTO_KEY = 'trening.autoNext';
 const CIRC = 2 * Math.PI * 54; // obwód pierścienia timera (r = 54)
 
@@ -41,11 +42,22 @@ function loadJSON(key) {
 }
 
 // Plany, kalendarz i dziennik żyją w bazie SQLite na serwerze
-let db = { exercises: [], plans: [], schedule: [], log: [] };
+let db = { exercises: [], plans: [], schedule: [], log: [], cardioTemplates: [], cardioLog: [] };
 let loaded = false;
 // Trwający trening trzymamy lokalnie – przetrwa odświeżenie strony i brak zasięgu na siłowni
 let run = loadJSON(RUN_KEY);
 const settings = { autoNext: loadJSON(AUTO_KEY) ?? true };
+
+// Trwający trening cardio ma własny klucz – nie dotyka stanu treningu siłowego
+let cardio = loadCardio();
+function loadCardio() {
+  const c = loadJSON(CARDIO_KEY);
+  // Uszkodzona wartość nie może zablokować aplikacji – odrzucamy ją i czyścimy klucz
+  if (CardioCore.isValidStored(c)) return c;
+  if (c !== null) { try { localStorage.removeItem(CARDIO_KEY); } catch { /* brak dostępu do pamięci */ } }
+  return null;
+}
+const saveCardio = () => (cardio ? localStorage.setItem(CARDIO_KEY, JSON.stringify(cardio)) : localStorage.removeItem(CARDIO_KEY));
 
 const saveRun = () => (run ? localStorage.setItem(RUN_KEY, JSON.stringify(run)) : localStorage.removeItem(RUN_KEY));
 
@@ -115,13 +127,16 @@ const ui = {
   libEditId: null,
   libFilter: '',
   exDefaults: { sets: 3, reps: 10, rest: 90 },
+  // kreator treningu interwałowego (czas całkowity jako minuty + sekundy)
+  cardio: { intervals: [], addSec: 30, min: 10, sec: 0, name: '' },
 };
 
 function render() {
   document.querySelectorAll('#tabs button').forEach(b => b.classList.toggle('active', b.dataset.tab === ui.tab));
-  const views = { calendar: viewCalendar, plans: viewPlans, library: viewLibrary, journal: viewJournal };
+  const views = { calendar: viewCalendar, plans: viewPlans, cardio: viewCardio, library: viewLibrary, journal: viewJournal };
   $('#view').innerHTML = loaded ? views[ui.tab]() : '<div class="empty">Wczytywanie…</div>';
   renderRunner();
+  renderCardio();
 }
 
 // ---------- Widok: Kalendarz ----------
@@ -308,11 +323,16 @@ function libraryList() {
 
 // ---------- Widok: Dziennik ----------
 function viewJournal() {
-  const logs = [...db.log].sort((a, b) => b.startedAt - a.startedAt);
+  // Treningi siłowe i cardio w jednej liście, od najnowszego
+  const entries = [
+    ...db.log.map(l => ({ kind: 'strength', startedAt: l.startedAt, date: l.date, l })),
+    ...db.cardioLog.map(l => ({ kind: 'cardio', startedAt: l.startedAt, date: l.date, l })),
+  ].sort((a, b) => b.startedAt - a.startedAt);
   const monthKey = today().slice(0, 7);
-  const thisMonth = logs.filter(l => l.date.startsWith(monthKey)).length;
+  const thisMonth = entries.filter(e => e.date.startsWith(monthKey)).length;
 
-  const cards = logs.map(l => {
+  const cards = entries.map(({ kind, l }) => {
+    if (kind === 'cardio') return cardioLogCard(l);
     const sets = l.exercises.reduce((n, e) => n + e.sets.length, 0);
     const volume = l.exercises.reduce((n, e) => n + e.sets.reduce((m, s) => m + (s.weight ?? 0) * s.reps, 0), 0);
     const exercises = l.exercises.filter(e => e.sets.length).map(e =>
@@ -335,7 +355,7 @@ function viewJournal() {
   }).join('');
 
   return `
-    <div class="section-title"><h2>Dziennik</h2><span class="muted">w tym miesiącu: <b>${thisMonth}</b> · łącznie: <b>${logs.length}</b></span></div>
+    <div class="section-title"><h2>Dziennik</h2><span class="muted">w tym miesiącu: <b>${thisMonth}</b> · łącznie: <b>${entries.length}</b></span></div>
     ${cards || '<div class="empty">Brak wpisów. Zakończ pierwszy trening, a pojawi się tutaj.</div>'}
     <div class="card">
       <h3>Kopia zapasowa</h3>
@@ -346,6 +366,23 @@ function viewJournal() {
         <input type="file" id="import-file" accept="application/json,.json" hidden>
       </div>
     </div>`;
+}
+
+function cardioLogCard(l) {
+  const plan = l.mode === 'interval' ? CardioCore.checkPlan(l.intervals, l.totalSec) : null;
+  return `
+      <div class="card cardio">
+        <div class="row between">
+          <h3 class="grow">${esc(l.name)} <span class="tag cardio">cardio</span></h3>
+          <button class="btn ghost small danger" data-action="cardio-log-del" data-id="${esc(l.id)}">Usuń</button>
+        </div>
+        <div class="muted">${fmtDayLong(l.date)}</div>
+        <div class="stats">
+          <span>Czas aktywny <b>${fmtElapsed(l.activeSec)}</b></span>
+          ${plan ? `<span>Interwały <b>${esc(CardioCore.intervalsList(l.intervals))}</b> × <b>${esc(CardioCore.cyclesLabel(plan.cycles))}</b></span>` : '<span>Trening swobodny</span>'}
+        </div>
+        ${l.note ? `<p class="muted">📝 ${esc(l.note)}</p>` : ''}
+      </div>`;
 }
 
 async function importData(file) {
@@ -366,6 +403,7 @@ const curEx = () => run.exercises[run.exIdx];
 function startRun(planId, scheduleId) {
   const p = planById(planId);
   if (!p || !p.exercises.length) return;
+  if (cardio) { showError(new Error('Trwa trening cardio – zakończ go, zanim zaczniesz trening siłowy')); return; }
   if (run && !confirm('Masz niezakończony trening. Porzucić go i zacząć nowy?')) return;
   run = {
     planId,
@@ -450,16 +488,32 @@ function beep(freq, dur) {
 }
 
 // Ekran nie gaśnie w trakcie treningu (jeśli przeglądarka wspiera Wake Lock)
+// Chcemy blokadę wtedy, gdy trening trwa; żądania są serializowane, więc kilka wywołań
+// w jednym renderze (nakładki siłowa i cardio) nie zdobywa dwóch blokad naraz.
+let wakeWanted = false, wakeBusy = false;
 async function keepAwake(on) {
+  wakeWanted = on;
+  if (wakeBusy) return; // trwające żądanie samo sprawdzi nowy stan po zakończeniu
+  wakeBusy = true;
   try {
-    if (on && !wakeLock && 'wakeLock' in navigator) {
-      wakeLock = await navigator.wakeLock.request('screen');
-      wakeLock.addEventListener('release', () => { wakeLock = null; });
-    } else if (!on && wakeLock) {
-      await wakeLock.release();
-      wakeLock = null;
+    for (let i = 0; i < 4; i++) {
+      if (wakeWanted && !wakeLock && 'wakeLock' in navigator) {
+        wakeLock = await navigator.wakeLock.request('screen');
+        wakeLock.addEventListener('release', () => { wakeLock = null; });
+      } else if (!wakeWanted && wakeLock) {
+        const lock = wakeLock;
+        wakeLock = null;
+        await lock.release();
+      } else break;
     }
   } catch { /* np. karta w tle */ }
+  finally { wakeBusy = false; }
+}
+
+// Nakładka treningu (siłowego lub cardio) blokuje przewijanie; ekran nie gaśnie, dopóki trening trwa
+function syncOverlayState() {
+  document.body.style.overflow = run || cardio ? 'hidden' : '';
+  keepAwake((!!run && run.phase !== 'summary') || (!!cardio && cardio.phase !== 'summary'));
 }
 
 // Timer liczony od znacznika czasu końca przerwy – odporny na uśpienie karty
@@ -492,8 +546,9 @@ setInterval(tick, 250);
 
 document.addEventListener('visibilitychange', () => {
   if (document.visibilityState !== 'visible') return;
-  keepAwake(!!run && run.phase !== 'summary');
+  syncOverlayState();
   tick();
+  cardioTick();
 });
 
 // ---------- Trening: widok ----------
@@ -508,8 +563,7 @@ function setPills(ex) {
 function renderRunner() {
   const el = $('#runner');
   el.hidden = !run;
-  document.body.style.overflow = run ? 'hidden' : '';
-  keepAwake(!!run && run.phase !== 'summary');
+  syncOverlayState();
   if (!run) { el.innerHTML = ''; return; }
 
   const total = run.exercises.reduce((n, e) => n + e.sets, 0);
@@ -594,6 +648,262 @@ function runnerSummary() {
     <button class="btn ghost danger" data-action="run-discard">Odrzuć trening</button>`;
 }
 
+// ---------- Cardio: kreator, szablony ----------
+const setText = (sel, text) => {
+  const el = $(sel);
+  if (el && el.textContent !== String(text)) el.textContent = text;
+};
+
+// Czas całkowity z pól „minuty” i „sekundy” kreatora (puste lub błędne pole = 0)
+function cardioTotalSec() {
+  const part = v => Math.max(0, Math.floor(Number(v) || 0));
+  return part(ui.cardio.min) * 60 + part(ui.cardio.sec);
+}
+const cardioPlanCheck = () => CardioCore.checkPlan(ui.cardio.intervals, cardioTotalSec());
+const cardioLiveText = plan => (plan.ok
+  ? `Mieści się w pełnych cyklach: ${CardioCore.cyclesLabel(plan.cycles)} (cykl ${CardioCore.formatClock(plan.cycleSec)}).`
+  : plan.message);
+
+// Start, „Zapisz jako szablon” i nazwa są zablokowane, dopóki plan nie mieści się w pełnych cyklach
+function syncCardioBuilder() {
+  const live = $('#cardio-live');
+  if (!live) return;
+  const plan = cardioPlanCheck();
+  live.textContent = cardioLiveText(plan);
+  live.className = `cardio-live ${plan.ok ? 'ok' : 'bad'}`;
+  for (const sel of ['#cardio-build-start', '#cardio-tpl-name', '#cardio-save-tpl']) {
+    const el = $(sel);
+    if (el) el.disabled = !plan.ok;
+  }
+}
+
+function viewCardio() {
+  const b = ui.cardio;
+  const plan = cardioPlanCheck();
+  const dis = plan.ok ? '' : 'disabled';
+  const rows = b.intervals.map((sec, i) => `
+    <li>
+      <span class="ex-num">${i + 1}.</span>
+      <span class="grow">${sec} s</span>
+      <button class="btn ghost small danger" data-action="cardio-remove-interval" data-index="${i}" aria-label="Usuń interwał ${i + 1}">✕</button>
+    </li>`).join('');
+
+  const templates = db.cardioTemplates.map(t => {
+    const tp = CardioCore.checkPlan(t.intervals, t.totalSec);
+    return `
+    <div class="card cardio">
+      <h3>${esc(t.name)}</h3>
+      <div class="muted">${esc(CardioCore.intervalsList(t.intervals))} · razem ${CardioCore.formatClock(t.totalSec)} · ${esc(CardioCore.cyclesLabel(tp.cycles))}</div>
+      <div class="row mt">
+        <button class="btn primary" data-action="cardio-start" data-template="${esc(t.id)}">▶ Start</button>
+        <button class="btn ghost danger" data-action="cardio-template-del" data-id="${esc(t.id)}">Usuń</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="section-title"><h2>Cardio</h2></div>
+    <div class="card cardio">
+      <h3>Trening swobodny</h3>
+      <p class="muted">Stoper z pauzą – wynik liczy tylko czas aktywny.</p>
+      <button class="btn primary" data-action="cardio-start-free">▶ Start</button>
+    </div>
+    <div class="card cardio" id="cardio-builder">
+      <h3>Trening interwałowy</h3>
+      ${rows ? `<ul class="ex-list">${rows}</ul>` : '<p class="muted">Dodaj interwały – po kolei będą się powtarzać do końca czasu.</p>'}
+      <form id="cardio-interval-form" class="row mt" novalidate>
+        <label class="field grow">Nowy interwał (s)<input type="number" name="sec" id="cardio-add-sec" inputmode="numeric" value="${esc(b.addSec)}"></label>
+        <button class="btn">+ Dodaj interwał</button>
+      </form>
+      <div class="row mt">
+        <label class="field grow">Czas całkowity – minuty<input type="number" id="cardio-total-min" inputmode="numeric" min="0" value="${esc(b.min)}"></label>
+        <label class="field grow">sekundy<input type="number" id="cardio-total-sec" inputmode="numeric" min="0" value="${esc(b.sec)}"></label>
+      </div>
+      <div id="cardio-live" class="cardio-live ${plan.ok ? 'ok' : 'bad'}">${esc(cardioLiveText(plan))}</div>
+      <button class="btn primary big mt" id="cardio-build-start" data-action="cardio-build-start" ${dis}>▶ Start</button>
+      <form id="cardio-tpl-form" class="row mt">
+        <input type="text" id="cardio-tpl-name" name="name" required class="grow" maxlength="120" placeholder="Nazwa szablonu" autocomplete="off" value="${esc(b.name)}" ${dis}>
+        <button class="btn" id="cardio-save-tpl" ${dis}>Zapisz jako szablon</button>
+      </form>
+    </div>
+    <div class="section-title mt-lg"><h2>Szablony</h2></div>
+    ${templates || '<div class="empty">Brak szablonów. Zapisz plan interwałowy jako szablon, aby szybko go uruchamiać.</div>'}`;
+}
+
+// ---------- Cardio: logika treningu ----------
+let cardioShown = null;      // co jest teraz narysowane w nakładce: { stage, pos, paused }
+let cardioFlash = false;     // podświetl bieżący interwał po zmianie
+let cardioLastBeep = null;   // ostatnia sekunda odliczania, na którą zabrzmiał sygnał
+
+function startCardio({ mode, name, intervals = null, totalSec = null, templateId = null, scheduleId = null }) {
+  if (run) throw new Error('Trwa trening siłowy – zakończ go, zanim zaczniesz cardio');
+  if (cardio) throw new Error('Masz niezakończony trening cardio');
+  if (mode === 'interval') {
+    const plan = CardioCore.checkPlan(intervals, totalSec);
+    if (!plan.ok) throw new Error(plan.message);
+  }
+  const now = Date.now();
+  cardio = {
+    mode, name, templateId, scheduleId, intervals, totalSec,
+    startedAt: now,
+    // w treningu interwałowym czas rusza dopiero po odliczaniu 3-2-1
+    session: mode === 'interval' ? CardioCore.newIntervalSession(now) : CardioCore.newSession(now),
+    phase: 'running', // running | summary
+    pos: 0,
+    note: '',
+  };
+  cardioShown = null;
+  cardioLastBeep = null;
+  unlockAudio();
+  saveCardio();
+  renderCardio();
+}
+
+function cardioStage(now) {
+  if (cardio.phase === 'summary') return 'summary';
+  if (cardio.mode === 'interval' && CardioCore.countdownSec(cardio.session, now) > 0) return 'countdown';
+  return 'running';
+}
+
+const cardioInterval = now => CardioCore.intervalAt(cardio.intervals, cardio.totalSec, CardioCore.activeMs(cardio.session, now));
+
+function finishCardio(now, auto = false) {
+  const s = cardio.session;
+  const limitMs = cardio.mode === 'interval' ? cardio.totalSec * 1000 : Infinity;
+  cardio.activeMs = Math.min(CardioCore.activeMs(s, now), limitMs);
+  // po samoczynnym końcu liczy się dokładna chwila upłynięcia czasu, nie moment wykrycia (uśpiona karta)
+  cardio.finishedAt = auto ? s.startedAt + s.pausedMs + limitMs : now;
+  cardio.phase = 'summary';
+  saveCardio();
+  renderCardio();
+}
+
+// Czas pochodzi wyłącznie ze znaczników czasu – uśpiona karta czy przeładowanie trafiają we właściwą chwilę
+function cardioTick() {
+  if (!cardio || cardio.phase === 'summary') return;
+  const now = Date.now();
+  const stage = cardioStage(now);
+  const paused = cardio.session.pausedAt != null;
+  if (!cardioShown || cardioShown.stage !== stage || cardioShown.paused !== paused) { renderCardio(); return; }
+
+  if (stage === 'countdown') {
+    const left = CardioCore.countdownSec(cardio.session, now);
+    if (cardioLastBeep !== left) { cardioLastBeep = left; beep(660, 0.15); }
+    setText('#cardio-countdown', left);
+    return;
+  }
+  setText('#cardio-active', CardioCore.formatClock(CardioCore.activeMs(cardio.session, now) / 1000));
+  if (cardio.mode !== 'interval') return;
+
+  const r = cardioInterval(now);
+  if (r.done) {
+    beep(990, 0.6);
+    navigator.vibrate?.([300, 100, 300]);
+    finishCardio(now, true);
+    return;
+  }
+  if (r.position !== cardio.pos) {
+    cardio.pos = r.position;
+    cardioFlash = true;
+    saveCardio();
+    beep(880, 0.25);
+    navigator.vibrate?.(200);
+    renderCardio();
+    return;
+  }
+  setText('#cardio-remaining', CardioCore.formatClock(Math.ceil(r.remainingMs / 1000)));
+}
+setInterval(cardioTick, 250);
+
+// ---------- Cardio: nakładka ----------
+function renderCardio() {
+  const el = $('#cardio-runner');
+  el.hidden = !cardio;
+  syncOverlayState();
+  if (!cardio) { el.innerHTML = ''; cardioShown = null; return; }
+
+  const now = Date.now();
+  const stage = cardioStage(now);
+  // Po przeładowaniu czas treningu mógł już minąć – od razu podsumowanie
+  if (stage === 'running' && cardio.mode === 'interval' && cardioInterval(now).done) { finishCardio(now, true); return; }
+
+  cardioShown = { stage, pos: cardio.pos, paused: cardio.session.pausedAt != null };
+  const body = { countdown: cardioCountdown, running: cardioRunning, summary: cardioSummary }[stage](now);
+  const modeLabel = cardio.mode === 'interval' ? 'Trening interwałowy' : 'Trening swobodny';
+  el.innerHTML = `
+    <div class="runner-top">
+      <div><b>${esc(cardio.name)}</b><div class="muted">${modeLabel}</div></div>
+      ${stage !== 'summary' ? '<button class="btn small danger" data-action="cardio-end">Zakończ</button>' : ''}
+    </div>
+    <div class="runner-body">${body}</div>`;
+  cardioFlash = false;
+  cardioTick();
+}
+
+function cardioCountdown() {
+  return `
+    <div class="ex-title">
+      <h2>Przygotuj się</h2>
+      <div class="muted">${esc(CardioCore.intervalsList(cardio.intervals))} · razem ${CardioCore.formatClock(cardio.totalSec)}</div>
+    </div>
+    <div class="cardio-big" id="cardio-countdown" aria-live="assertive"></div>`;
+}
+
+function cardioRunning(now) {
+  const paused = cardio.session.pausedAt != null;
+  const controls = paused
+    ? '<button class="btn primary big" data-action="cardio-resume">▶ Wznów</button>'
+    : '<button class="btn big" data-action="cardio-pause">⏸ Pauza</button>';
+  const state = paused ? '<div class="cardio-paused" id="cardio-state">Wstrzymano</div>' : '<div id="cardio-state"></div>';
+
+  if (cardio.mode === 'free') {
+    return `
+      <div class="ex-title"><div class="muted">Czas aktywny</div></div>
+      <div class="cardio-big" id="cardio-active"></div>
+      ${state}
+      ${controls}`;
+  }
+
+  const r = cardioInterval(now);
+  const cycles = cardio.totalSec / cardio.intervals.reduce((a, b) => a + b, 0);
+  const next = CardioCore.nextIntervalSec(cardio.intervals, cardio.totalSec, r.position);
+  return `
+    <div class="ex-title">
+      <div class="muted" id="cardio-position">Interwał ${r.index + 1} z ${cardio.intervals.length} · cykl ${r.cycle + 1} z ${cycles}</div>
+      <h2 id="cardio-now" class="cardio-now${cardioFlash ? ' flash' : ''}">Teraz: ${r.intervalSec} s</h2>
+    </div>
+    <div class="cardio-big" id="cardio-remaining"></div>
+    ${state}
+    <div class="card next-up">
+      <span class="muted">Następny interwał</span>
+      <b id="cardio-next">${next === null ? 'Koniec treningu' : `${next} s`}</b>
+    </div>
+    <div class="stats center">
+      <span>Czas aktywny <b id="cardio-active"></b></span>
+      <span>z <b>${CardioCore.formatClock(cardio.totalSec)}</b></span>
+    </div>
+    ${controls}`;
+}
+
+function cardioSummary() {
+  const planned = cardio.mode === 'interval'
+    ? `<li>Interwały: <b>${esc(CardioCore.intervalsList(cardio.intervals))}</b> × <b>${esc(CardioCore.cyclesLabel(CardioCore.checkPlan(cardio.intervals, cardio.totalSec).cycles))}</b></li>`
+    : '';
+  return `
+    <div class="ex-title">
+      <h2>🎉 Trening zakończony</h2>
+      <div class="muted">${esc(cardio.name)}</div>
+    </div>
+    <div class="card"><ul class="summary-list">
+      <li>Tryb: <b>${cardio.mode === 'interval' ? 'interwałowy' : 'swobodny'}</b></li>
+      <li>Czas aktywny: <b id="cardio-summary-active">${CardioCore.formatClock(cardio.activeMs / 1000)}</b></li>
+      ${planned}
+    </ul></div>
+    <label class="field">Notatka (opcjonalnie)<textarea id="cardio-note" placeholder="Jak poszło? Samopoczucie, uwagi…">${esc(cardio.note || '')}</textarea></label>
+    <button class="btn primary big" data-action="cardio-save">Zapisz w dzienniku</button>
+    <button class="btn ghost danger" data-action="cardio-discard">Odrzuć trening</button>`;
+}
+
 // ---------- Akcje ----------
 const actions = {
   // kalendarz
@@ -676,6 +986,79 @@ const actions = {
   },
   'import': () => $('#import-file').click(),
 
+  // cardio
+  'cardio-start-free': () => startCardio({ mode: 'free', name: 'Cardio swobodne' }),
+  'cardio-build-start': () => {
+    const intervals = [...ui.cardio.intervals];
+    startCardio({ mode: 'interval', name: CardioCore.intervalsName(intervals), intervals, totalSec: cardioTotalSec() });
+  },
+  'cardio-start': d => {
+    const t = db.cardioTemplates.find(x => x.id === d.template);
+    if (!t) throw new Error('Nie znaleziono szablonu cardio');
+    startCardio({ mode: 'interval', name: t.name, intervals: [...t.intervals], totalSec: t.totalSec, templateId: t.id, scheduleId: d.sched || null });
+  },
+  'cardio-remove-interval': d => { ui.cardio.intervals.splice(Number(d.index), 1); render(); },
+  'cardio-template-del': async d => {
+    const t = db.cardioTemplates.find(x => x.id === d.id);
+    if (!t) return;
+    if (!confirm(`Usunąć szablon „${t.name}”? Niewykonane treningi z tym szablonem znikną też z kalendarza.`)) return;
+    await api('DELETE', `api/cardio-templates/${d.id}`);
+    await loadState();
+  },
+  'cardio-log-del': async d => {
+    if (!confirm('Usunąć ten wpis z dziennika?')) return;
+    await api('DELETE', `api/cardio-workouts/${d.id}`);
+    db.cardioLog = db.cardioLog.filter(l => l.id !== d.id);
+    render();
+  },
+  'cardio-pause': () => {
+    if (!cardio || cardioStage(Date.now()) !== 'running') return; // w odliczaniu nie ma pauzy
+    cardio.session = CardioCore.pause(cardio.session, Date.now());
+    saveCardio();
+    renderCardio();
+  },
+  'cardio-resume': () => {
+    if (!cardio) return;
+    cardio.session = CardioCore.resume(cardio.session, Date.now());
+    saveCardio();
+    renderCardio();
+  },
+  'cardio-end': () => {
+    if (CardioCore.activeMs(cardio.session, Date.now()) <= 0) {
+      if (confirm('Przerwać trening cardio? Nie zmierzono jeszcze żadnego czasu.')) { cardio = null; saveCardio(); renderCardio(); }
+      return;
+    }
+    if (confirm('Zakończyć trening cardio teraz?')) finishCardio(Date.now());
+  },
+  // Przy błędzie sieci trening zostaje na ekranie podsumowania – można ponowić zapis
+  'cardio-save': async (d, btn) => {
+    btn.disabled = true;
+    const interval = cardio.mode === 'interval';
+    const entry = await api('POST', 'api/cardio-workouts', {
+      templateId: cardio.templateId,
+      scheduleId: cardio.scheduleId,
+      name: cardio.name,
+      mode: cardio.mode,
+      ...(interval ? { intervals: cardio.intervals, totalSec: cardio.totalSec } : {}),
+      date: ymd(new Date(cardio.startedAt)),
+      startedAt: cardio.startedAt,
+      finishedAt: cardio.finishedAt,
+      activeSec: Math.round(cardio.activeMs / 1000),
+      note: (cardio.note || '').trim(),
+    }).finally(() => { btn.disabled = false; });
+    db.cardioLog.push(entry);
+    cardio = null;
+    saveCardio();
+    ui.tab = 'journal';
+    render();
+  },
+  'cardio-discard': () => {
+    if (!confirm('Odrzucić trening cardio bez zapisu?')) return;
+    cardio = null;
+    saveCardio();
+    render();
+  },
+
   // trening
   'rep-inc': () => {
     run.reps++;
@@ -745,7 +1128,7 @@ document.addEventListener('click', e => {
   }
   const btn = e.target.closest('[data-action]');
   if (!btn || btn.disabled) return;
-  if (run) unlockAudio();
+  if (run || cardio) unlockAudio();
   const action = actions[btn.dataset.action];
   if (action) Promise.resolve().then(() => action(btn.dataset, btn)).catch(showError);
 });
@@ -793,6 +1176,30 @@ async function onSubmit(f) {
     await loadState(); // nazwa zmienia się we wszystkich planach
   }
 
+  if (f.id === 'cardio-interval-form') {
+    const sec = Number(fd.get('sec'));
+    // pojedynczy interwał sprawdzamy tymi samymi limitami co cały plan
+    const single = CardioCore.checkPlan([sec], sec);
+    if (!single.ok) throw new Error(single.message);
+    ui.cardio.intervals.push(sec);
+    ui.cardio.addSec = sec;
+    render();
+    $('#cardio-add-sec').focus();
+  }
+
+  if (f.id === 'cardio-tpl-form') {
+    const plan = cardioPlanCheck();
+    if (!plan.ok) throw new Error(plan.message);
+    const template = await api('POST', 'api/cardio-templates', {
+      name: fd.get('name'),
+      intervals: [...ui.cardio.intervals],
+      totalSec: cardioTotalSec(),
+    });
+    db.cardioTemplates.push(template);
+    ui.cardio.name = '';
+    render();
+  }
+
   if (f.id === 'sched-form') {
     const weeks = fd.get('repeat') ? clampInt(fd.get('weeks'), 1, 52) : 1;
     const base = parseYmd(ui.selected);
@@ -822,6 +1229,11 @@ document.addEventListener('input', e => {
   if (t.id === 'lib-filter') { ui.libFilter = t.value; $('#lib-list').innerHTML = libraryList(); }
   if (t.id === 'run-weight') { run.weight = toWeight(t.value); saveRun(); }
   if (t.id === 'run-note') { run.note = t.value; saveRun(); }
+  if (t.id === 'cardio-add-sec') ui.cardio.addSec = t.value;
+  if (t.id === 'cardio-total-min') { ui.cardio.min = t.value; syncCardioBuilder(); }
+  if (t.id === 'cardio-total-sec') { ui.cardio.sec = t.value; syncCardioBuilder(); }
+  if (t.id === 'cardio-tpl-name') ui.cardio.name = t.value;
+  if (t.id === 'cardio-note') { cardio.note = t.value; saveCardio(); }
 });
 
 document.addEventListener('change', e => {

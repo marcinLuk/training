@@ -66,26 +66,26 @@ db.js:284 addSchedule, app.js:93 dayItems, app.js:310 viewJournal, app.js:466 ti
 
 ### Phase 2: Cardio data model and API
 #### Automated Verification:
-- [x] 2.1 `node --disable-warning=ExperimentalWarning --test test/cardio-repo.test.js` passes with N > 0 and `# fail 0` (D5, D6, D7, D9)
-- [x] 2.2 `node --disable-warning=ExperimentalWarning --test test/migration.test.js` passes with N > 0 and `# fail 0` (D8)
-- [x] 2.3 `node --disable-warning=ExperimentalWarning --test test/cardio-api.test.js` passes with N > 0 and `# fail 0` (D2)
-- [x] 2.4 `node --check server.js && node --check db.js && node --check public/app.js && node --check public/cardio-core.js` exits 0, and the auto-loop.md §2 smoke command exits 0
-- [x] 2.5 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0`
+- [x] 2.1 `node --disable-warning=ExperimentalWarning --test test/cardio-repo.test.js` passes with N > 0 and `# fail 0` (D5, D6, D7, D9) — 525b781
+- [x] 2.2 `node --disable-warning=ExperimentalWarning --test test/migration.test.js` passes with N > 0 and `# fail 0` (D8) — 525b781
+- [x] 2.3 `node --disable-warning=ExperimentalWarning --test test/cardio-api.test.js` passes with N > 0 and `# fail 0` (D2) — 525b781
+- [x] 2.4 `node --check server.js && node --check db.js && node --check public/app.js && node --check public/cardio-core.js` exits 0, and the auto-loop.md §2 smoke command exits 0 — 525b781
+- [x] 2.5 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0` — 525b781
 
 ### Phase 3: Cardio tab, runner and journal
 #### Automated Verification:
-- [ ] 3.1 `node --check public/app.js && node --check public/cardio-core.js` exits 0
-- [ ] 3.2 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0`
-- [ ] 3.3 the auto-loop.md §2 smoke command exits 0
+- [x] 3.1 `node --check public/app.js && node --check public/cardio-core.js` exits 0
+- [x] 3.2 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0`
+- [x] 3.3 the auto-loop.md §2 smoke command exits 0
 #### Manual Verification:
-- [ ] 3.4 Free mode: Start → the clock runs; Pause → it stays still for at least 3 s; Resume → it continues from the paused value; End → the summary's active time excludes the pause (run ~5 s, pause ~5 s, run ~5 s → about 0:10, not 0:15) (D1)
-- [ ] 3.5 Builder: intervals 30 s + 60 s with total 9:00 shows 6 full cycles and Start / "Zapisz jako szablon" are enabled; total 10:00 shows the Polish "does not fit in full cycles" message naming 9:00 and 10:30, and both are disabled; total 1:00 names only 1:30; adding or removing an interval updates the cycle count (D2)
-- [ ] 3.6 Interval run with 5 s + 7 s and total 0:24: a 3-2-1 countdown, then 5 s, 7 s, 5 s, 7 s; at every interval change the screen shows the new interval at once, a beep is played (AudioContext oscillator calls observed in the page) and vibration is requested; at 0:24 of active time the workout ends by itself and shows the summary (D3)
-- [ ] 3.7 Pause during an interval: the remaining time stays frozen for at least 3 s; Resume continues from the same remaining time (D4)
-- [ ] 3.8 Saving the summary adds a cardio card to the Dziennik tab, in the cardio colour (computed colour differs from a strength card), with the active time and the intervals (D5)
-- [ ] 3.9 Saving an interval workout as a template named `<b>Tabata & "test"</b>` lists it with the name shown as literal text; Start from the template runs it; Usuń removes it (D7)
-- [ ] 3.10 Reload during a running interval → it continues with the correct remaining time (±1 s); reload while paused → still paused at the same value; reload during the countdown → the countdown continues (D10)
-- [ ] 3.11 Strength regression: a strength plan still starts, records a set, runs its rest timer and saves; a cardio workout cannot start while a strength one is active, and the reverse, each with a Polish message
+- [x] 3.4 Free mode: Start → the clock runs; Pause → it stays still for at least 3 s; Resume → it continues from the paused value; End → the summary's active time excludes the pause (run ~5 s, pause ~5 s, run ~5 s → about 0:10, not 0:15) (D1)
+- [x] 3.5 Builder: intervals 30 s + 60 s with total 9:00 shows 6 full cycles and Start / "Zapisz jako szablon" are enabled; total 10:00 shows the Polish "does not fit in full cycles" message naming 9:00 and 10:30, and both are disabled; total 1:00 names only 1:30; adding or removing an interval updates the cycle count (D2)
+- [x] 3.6 Interval run with 5 s + 7 s and total 0:24: a 3-2-1 countdown, then 5 s, 7 s, 5 s, 7 s; at every interval change the screen shows the new interval at once, a beep is played (AudioContext oscillator calls observed in the page) and vibration is requested; at 0:24 of active time the workout ends by itself and shows the summary (D3)
+- [x] 3.7 Pause during an interval: the remaining time stays frozen for at least 3 s; Resume continues from the same remaining time (D4)
+- [x] 3.8 Saving the summary adds a cardio card to the Dziennik tab, in the cardio colour (computed colour differs from a strength card), with the active time and the intervals (D5)
+- [x] 3.9 Saving an interval workout as a template named `<b>Tabata & "test"</b>` lists it with the name shown as literal text; Start from the template runs it; Usuń removes it (D7)
+- [x] 3.10 Reload during a running interval → it continues with the correct remaining time (±1 s); reload while paused → still paused at the same value; reload during the countdown → the countdown continues (D10)
+- [x] 3.11 Strength regression: a strength plan still starts, records a set, runs its rest timer and saves; a cardio workout cannot start while a strength one is active, and the reverse, each with a Polish message
 
 ### Phase 4: Cardio in the calendar
 #### Automated Verification:

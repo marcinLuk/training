@@ -144,9 +144,48 @@
     throw new RangeError('Nie znaleziono bieżącego interwału');
   }
 
+  // Zapis interwałów do wyświetlenia, np. „30 s + 60 s”.
+  const intervalsList = intervals => intervals.map(s => `${s} s`).join(' + ');
+
+  // Nazwa niezapisanego treningu interwałowego, np. „Interwały 30 s + 60 s”.
+  const intervalsName = intervals => `Interwały ${intervalsList(intervals)}`;
+
+  // Czas (s) interwału następującego po interwale o pozycji `position` w całym treningu;
+  // null, gdy bieżący interwał jest ostatnim. Plan musi być poprawny (pełne cykle).
+  function nextIntervalSec(intervals, totalSec, position) {
+    const cycleSec = intervals.reduce((a, b) => a + b, 0);
+    const count = (totalSec / cycleSec) * intervals.length;
+    if (position + 1 >= count) return null;
+    return intervals[(position + 1) % intervals.length];
+  }
+
+  // Sprawdza wartość odczytaną z localStorage (trwający trening cardio): pełny kształt sesji,
+  // planu interwałowego, fazy i – w podsumowaniu – czasów. Zwraca true tylko dla poprawnej wartości.
+  function isValidStored(c) {
+    const num = v => typeof v === 'number' && Number.isFinite(v);
+    if (!c || typeof c !== 'object') return false;
+    if (c.mode !== 'free' && c.mode !== 'interval') return false;
+    const s = c.session;
+    if (!s || typeof s !== 'object') return false;
+    if (!num(s.startedAt) || !num(s.pausedMs) || s.pausedMs < 0) return false;
+    if (s.pausedAt !== null && !num(s.pausedAt)) return false;
+    if (c.phase !== 'running' && c.phase !== 'summary') return false;
+    if (typeof c.name !== 'string') return false;
+    if (c.pos !== undefined && !(Number.isInteger(c.pos) && c.pos >= 0)) return false;
+    if (c.note !== undefined && typeof c.note !== 'string') return false;
+    if (c.mode === 'interval') {
+      if (!Number.isInteger(c.totalSec) || !checkPlan(c.intervals, c.totalSec).ok) return false;
+    }
+    if (c.phase === 'summary') {
+      if (!num(c.activeMs) || c.activeMs < 0 || !num(c.finishedAt)) return false;
+    }
+    return true;
+  }
+
   return {
-    LIMITS, COUNTDOWN_SEC,
+    LIMITS, COUNTDOWN_SEC, isValidStored,
     formatClock, cyclesWord, cyclesLabel,
+    intervalsList, intervalsName, nextIntervalSec,
     checkPlan,
     newSession, newIntervalSession, activeMs, pause, resume, countdownSec,
     intervalAt,

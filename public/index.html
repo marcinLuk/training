@@ -14,6 +14,7 @@
     <nav class="tabs" id="tabs">
       <button data-tab="calendar" class="active">Kalendarz</button>
       <button data-tab="plans">Plany</button>
+      <button data-tab="cardio">Cardio</button>
       <button data-tab="library">Ćwiczenia</button>
       <button data-tab="journal">Dziennik</button>
     </nav>
@@ -24,8 +25,12 @@
   <!-- Ekran aktywnego treningu (pełnoekranowa nakładka) -->
   <section id="runner" class="runner" hidden></section>
 
+  <!-- Ekran aktywnego treningu cardio (osobna nakładka) -->
+  <section id="cardio-runner" class="runner" hidden></section>
+
   <div id="toast" class="toast" role="alert" hidden></div>
 
+  <script src="cardio-core.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

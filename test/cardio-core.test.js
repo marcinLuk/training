@@ -329,3 +329,74 @@ test('pauza przed końcem interwału nie przesuwa granicy interwałów po wznowi
 test('checkPlan: liczba cykli to czas całkowity podzielony przez cykl', () => {
   for (let n = 1; n <= 50; n++) assert.equal(checkPlan([5], n * 5).cycles, n);
 });
+
+test('intervalsList i intervalsName: zapis interwałów i nazwa niezapisanego treningu', () => {
+  assert.equal(core.intervalsList([30, 60]), '30 s + 60 s');
+  assert.equal(core.intervalsList([45]), '45 s');
+  assert.equal(core.intervalsName([30, 60]), 'Interwały 30 s + 60 s');
+});
+
+test('nextIntervalSec: następny interwał zawija cykl, a po ostatnim jest null', () => {
+  const iv = [5, 7];
+  assert.equal(core.nextIntervalSec(iv, 24, 0), 7);
+  assert.equal(core.nextIntervalSec(iv, 24, 1), 5, 'zawinięcie do kolejnego cyklu');
+  assert.equal(core.nextIntervalSec(iv, 24, 2), 7);
+  assert.equal(core.nextIntervalSec(iv, 24, 3), null, 'ostatni interwał treningu (0:24)');
+  assert.equal(core.nextIntervalSec([30], 30, 0), null, 'jeden interwał, jeden cykl');
+});
+
+// ---------- isValidStored: wartość z localStorage nie może zablokować aplikacji ----------
+const goodRunning = () => ({
+  mode: 'interval', name: 'Interwały 5 s + 7 s', templateId: null, scheduleId: null,
+  intervals: [5, 7], totalSec: 24, startedAt: 1000,
+  session: { startedAt: 4000, pausedAt: null, pausedMs: 0 }, phase: 'running', pos: 0, note: '',
+});
+const mut = (base, fn) => { const c = base(); fn(c); return c; };
+
+test('isValidStored: przyjmuje poprawne wartości (trening, pauza, odliczanie, podsumowanie, tryb swobodny)', () => {
+  assert.equal(core.isValidStored(goodRunning()), true, 'interwały w toku / odliczanie');
+  assert.equal(core.isValidStored(mut(goodRunning, c => { c.session.pausedAt = 9000; c.session.pausedMs = 500; })), true, 'pauza');
+  assert.equal(core.isValidStored(mut(goodRunning, c => { c.phase = 'summary'; c.activeMs = 24000; c.finishedAt = 30000; })), true, 'podsumowanie');
+  assert.equal(core.isValidStored({
+    mode: 'free', name: 'Cardio swobodne', intervals: null, totalSec: null,
+    session: { startedAt: 1, pausedAt: null, pausedMs: 0 }, phase: 'running', pos: 0, note: '',
+  }), true, 'tryb swobodny');
+});
+
+test('isValidStored: odrzuca wartość z opisu błędu (brak planu, brak pausedMs, brak fazy)', () => {
+  assert.equal(core.isValidStored({ mode: 'interval', session: { startedAt: 1, pausedAt: null, pausedMs: 0 }, phase: 'running' }), false);
+  assert.equal(core.isValidStored(mut(goodRunning, c => { delete c.intervals; delete c.totalSec; })), false, 'brak planu');
+  assert.equal(core.isValidStored(mut(goodRunning, c => { delete c.session.pausedMs; })), false, 'brak pausedMs');
+  assert.equal(core.isValidStored(mut(goodRunning, c => { delete c.phase; })), false, 'brak fazy');
+});
+
+test('isValidStored: odrzuca każdy inny uszkodzony kształt', () => {
+  const bad = [
+    null, undefined, 'x', 5, [], {},
+    mut(goodRunning, c => { c.mode = 'inny'; }),
+    mut(goodRunning, c => { c.session = null; }),
+    mut(goodRunning, c => { c.session.startedAt = '4000'; }),
+    mut(goodRunning, c => { c.session.startedAt = NaN; }),
+    mut(goodRunning, c => { c.session.pausedMs = '0'; }),
+    mut(goodRunning, c => { c.session.pausedMs = -1; }),
+    mut(goodRunning, c => { c.session.pausedAt = '9000'; }),
+    mut(goodRunning, c => { c.session.pausedAt = undefined; }),
+    mut(goodRunning, c => { c.phase = 'countdown'; }),
+    mut(goodRunning, c => { c.name = 5; }),
+    mut(goodRunning, c => { c.pos = -1; }),
+    mut(goodRunning, c => { c.pos = 1.5; }),
+    mut(goodRunning, c => { c.note = 7; }),
+    mut(goodRunning, c => { c.intervals = []; }),
+    mut(goodRunning, c => { c.intervals = [0, 7]; }),
+    mut(goodRunning, c => { c.intervals = 'ab'; }),
+    mut(goodRunning, c => { c.totalSec = 25; }), // nie mieści się w pełnych cyklach
+    mut(goodRunning, c => { c.totalSec = '24'; }),
+    mut(goodRunning, c => { c.phase = 'summary'; c.finishedAt = 30000; }), // brak activeMs
+    mut(goodRunning, c => { c.phase = 'summary'; c.activeMs = NaN; c.finishedAt = 30000; }),
+    mut(goodRunning, c => { c.phase = 'summary'; c.activeMs = '24000'; c.finishedAt = 30000; }),
+    mut(goodRunning, c => { c.phase = 'summary'; c.activeMs = -5; c.finishedAt = 30000; }),
+    mut(goodRunning, c => { c.phase = 'summary'; c.activeMs = 24000; }), // brak finishedAt
+    mut(goodRunning, c => { c.phase = 'summary'; c.activeMs = 24000; c.finishedAt = Infinity; }),
+  ];
+  bad.forEach((c, i) => assert.equal(core.isValidStored(c), false, `wartość #${i} powinna zostać odrzucona: ${JSON.stringify(c)}`));
+});

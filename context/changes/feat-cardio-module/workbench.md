@@ -14,7 +14,7 @@ open config proposals: none found
 
 Ledger:
 - [x] Phase 1: Cardio core logic
-- [ ] Phase 2: Cardio data model and API
+- [x] Phase 2: Cardio data model and API
 - [ ] Phase 3: Cardio tab, runner and journal
 - [ ] Phase 4: Cardio in the calendar
 - [ ] goal review
@@ -33,8 +33,8 @@ Decisions taken from research Unknowns (slice details, not Done-when changes):
 | Phase | Builder | Rounds | State | Category | Wall / subagent | Tokens |
 |---|---|---|---|---|---|---|
 | 1 — Cardio core logic | sonnet | 1 | CONCERNS (4 minor, 2 nit) → `d7dbb2b` | feature | 8m / 6m | 232k |
-| 2 — Cardio data model and API | sonnet | 0 | waiting | feature | — | — |
-| 3 — Cardio tab, runner and journal | sonnet | 0 | waiting | feature | — | — |
+| 2 — Cardio data model and API | sonnet | 1 | CONCERNS (3 minor, 4 nit) → `525b781` | feature | 13m / 12m | 309k |
+| 3 — Cardio tab, runner and journal | sonnet | 1 | in progress | feature | — | — |
 | 4 — Cardio in the calendar | sonnet | 0 | waiting | feature | — | — |
 
 Routing (Step 1): every slice is `sonnet` — each writes production code and tests (1, 2) or frontend
@@ -43,22 +43,59 @@ logic with manual items (3, 4). Categories: all `feature` — each delivers new 
 
 ## Run totals
 
-phases measured: 1 of 4 executed (0 wall unknown)   ·   tokens are subagents only
+phases measured: 2 of 4 executed (0 wall unknown)   ·   tokens are subagents only
 research agent: 107k tok / 11 calls / 1m (not a phase)
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 1 | 232k | 100% | 8m | 100% | 6m |
+| feature | 2 | 541k | 100% | 21m | 100% | 18m |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 1 | 232k | 100% | 8m | 100% | 6m |
+| **total** | 2 | 541k | 100% | 21m | 100% | 18m |
 
 ---
 
+## Phase 3 — Cardio tab, runner and journal
+
+phase:     feature  ·  start 2026-10-17T14:16:20+0200  ·  end <pending>  ·  user wait 0m  ·  paused 0m
+
+### round 2          builder sonnet → critic opus
+  cost:      builder 96k tok / 22 calls / 2m  ·  critic 230k tok / 64 calls / 18m
+  automated: 3/3   manual: 8/8 passed (0 unreachable)
+  verdict:   CONCERNS (4 minor, 1 nit)
+  blockers:  none
+  majors:    none
+  closures:  `wakelock-double-request-leak` closed (counting fake: interval reload → summary {req:1,rel:1,active:0}; strength reload → run-save = HEAD) · `cardio-storage-shape-unchecked` closed (6 corrupt values reloaded, app loads, key removed; 28/29 validator mutants killed)
+  report:    reviews/phase-3-round-2.md
+  spot-check: re-ran 3.2 (# tests 75, # fail 0); isValidStored accepts a value with no top-level startedAt, as the new minor says → confirmed
+  diff:      cumulative 5 files, +566/-18 (round 2: keepAwake guard, CardioCore.isValidStored + 3 tests)
+  clauses:   both findings mapped (isValidStored → 3 node tests; wake lock → browser counts, no DOM in node:test)
+  scripted:  public/app.js, public/cardio-core.js (python replace), test/cardio-core.test.js (heredoc) — node --check clean
+  inconclusive: none
+  integrity: plan-freeze clean; slice details unchanged; no removed test lines
+  builder:   serialized keepAwake with desired-state guard; full stored-value validation on load
+
+### round 1          builder sonnet → critic opus
+  cost:      builder 155k tok / 33 calls / 7m  ·  critic 258k tok / 82 calls / 19m
+  automated: 3/3   manual: 8/8 passed (0 unreachable)
+  verdict:   FAIL
+  blockers:  none
+  majors:    `wakelock-double-request-leak` — render() calls syncOverlayState→keepAwake twice with no in-flight guard; a second sentinel stays held after the workout (strength regression); public/app.js:132-138, 489-505
+             `cardio-storage-shape-unchecked` — loadCardio accepts a malformed trening.cardio.v1; renderCardio throws from top-level render(), loadState never runs, the whole app is stuck; public/app.js:53-57
+  report:    reviews/phase-3-round-1.md
+  spot-check: opened app.js:53-57 (only mode + startedAt checked) and app.js:132-138 + 489-499 (two renderers, no pending guard) → confirmed
+  diff:      5 files, +468/-11 (app.js +420)
+  clauses:   frontend clauses mapped to manual rows 3.4–3.11; 2 new pure helpers → 2 node tests
+  scripted:  public/app.js, public/cardio-core.js, public/index.html, public/styles.css (python replace), test/cardio-core.test.js (heredoc append) — node --check at 2f
+  inconclusive: none
+  integrity: plan-freeze clean; slice details unchanged; no never-weaken hit (no removed test lines)
+  builder:   Cardio tab, builder, templates, cardio runner (countdown/pause/auto-end/beeps), save + journal cards, shared plumbing
+
 ## Phase 2 — Cardio data model and API
 
-phase:     feature  ·  start 2026-10-17T14:02:51+0200  ·  end <pending>  ·  user wait 0m  ·  paused 0m
+phase:     feature  ·  start 2026-10-17T14:02:51+0200  ·  end 2026-10-17T14:16:13+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 13m  ·  subagent time 12m  ·  tokens 309k (subagents only)  ·  rounds 1
 
 ### round 1          builder sonnet → critic opus
   cost:      builder 118k tok / 12 calls / 3m  ·  critic 191k tok / 37 calls / 9m
