@@ -102,8 +102,8 @@ db.js:284 addSchedule, app.js:93 dayItems, app.js:310 viewJournal, app.js:466 ti
 
 ### Phase 5: Goal-review fixes
 #### Automated Verification:
-- [x] 5.1 `npm test` runs the whole `node:test` suite: summary shows `# tests N` with N > 0 and `# fail 0`
-- [x] 5.2 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0`, and the auto-loop.md §2 smoke command exits 0
+- [x] 5.1 `npm test` runs the whole `node:test` suite: summary shows `# tests N` with N > 0 and `# fail 0` — ea893b2
+- [x] 5.2 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0`, and the auto-loop.md §2 smoke command exits 0 — ea893b2
 
 ## Slice details
 

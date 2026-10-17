@@ -12,16 +12,20 @@ frozen hash: 31204a6eec64d65c76ae9878fdbe36c4c3d51386bccfdb57f93c9d0517ce19c6
 owner-run: D3 audible beep + phone vibration on a real device (no row; walkthrough only)
 open config proposals: none found
 
+Closed findings: `wakelock-double-request-leak`, `cardio-storage-shape-unchecked`, `calendar-clauses-unpinned`, `G-01`
+Open (Minor/Nit, never fixed by design): see reviews/ and retrospective.md → Residual risk 6
+Manual steps left to the user: D3 audible beep / vibration / wake lock on a phone (owner-run)
+
 Ledger:
 - [x] Phase 1: Cardio core logic
 - [x] Phase 2: Cardio data model and API
 - [x] Phase 3: Cardio tab, runner and journal
 - [x] Phase 4: Cardio in the calendar
-- [ ] Phase 5: Goal-review fixes
-- [ ] goal review
-- [ ] e2e walkthrough
-- [ ] retrospective
-- [ ] final report
+- [x] Phase 5: Goal-review fixes
+- [x] goal review
+- [x] e2e walkthrough
+- [x] retrospective
+- [x] final report
 
 Decisions taken from research Unknowns (slice details, not Done-when changes):
 - cardio workouts get their own `cardio_workouts` table — strength consumers stay untouched
@@ -37,7 +41,7 @@ Decisions taken from research Unknowns (slice details, not Done-when changes):
 | 2 — Cardio data model and API | sonnet | 1 | CONCERNS (3 minor, 4 nit) → `525b781` | feature | 13m / 12m | 309k |
 | 3 — Cardio tab, runner and journal | sonnet | 2 | CONCERNS (4 minor, 1 nit) → `2867e53` | feature | 51m / 47m | 739k |
 | 4 — Cardio in the calendar | sonnet | 3 | CONCERNS (2 minor, 1 nit) → `d8f9a79` | feature | 49m / 45m | 981k |
-| 5 — Goal-review fixes | sonnet | 0 | in progress | stabilization | — | — |
+| 5 — Goal-review fixes | sonnet | 1 | CONCERNS (1 minor, 1 nit) → `ea893b2` | stabilization | 6m / 5m | 254k |
 
 Routing (Step 1): every slice is `sonnet` — each writes production code and tests (1, 2) or frontend
 logic with manual items (3, 4). Categories: all `feature` — each delivers new user-visible behaviour
@@ -45,20 +49,30 @@ logic with manual items (3, 4). Categories: all `feature` — each delivers new 
 
 ## Run totals
 
-phases measured: 4 of 4 executed (0 wall unknown)   ·   tokens are subagents only
+phases measured: 5 of 5 executed (0 wall unknown)   ·   tokens are subagents only
 research agent: 107k tok / 11 calls / 1m (not a phase)
+goal review: round 1 215k tok / 46 calls / 11m · round 2 179k tok / 23 calls / 3m — D1–D10 met, G-01 closed, no Blocker/Major (not a phase)
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 4 | 2,261k | 100% | 121m | 100% | 110m |
-| stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
+| feature | 4 | 2,261k | 90% | 121m | 95% | 110m |
+| stabilization | 1 | 254k | 10% | 6m | 5% | 5m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 4 | 2,261k | 100% | 121m | 100% | 110m |
+| **total** | 5 | 2,515k | 100% | 127m | 100% | 115m |
 
 ---
 
 ## Goal review
+
+### round 2          critic opus + ultrathink   (diff d8f9a79..HEAD)
+  cost:      critic 179k tok / 23 calls / 3m
+  done-when: D1–D10 met (no app or test change since round 1; npm test 90/90)
+  blockers:  none
+  majors:    none
+  closures:  `G-01` closed — every CLAUDE.md/README statement checked against file:line
+  minors:    G-11 "exactly one of planId/cardioTemplateId" holds only at creation · G-10 nit · G-03…G-09 carried
+  report:    reviews/goal-review-round-2.md
 
 ### round 1          critic opus + ultrathink   (diff c20c239..HEAD)
   cost:      critic 215k tok / 46 calls / 11m
@@ -71,7 +85,8 @@ research agent: 107k tok / 11 calls / 1m (not a phase)
 
 ## Phase 5 — Goal-review fixes
 
-phase:     stabilization  ·  start 2026-10-17T16:14:01+0200  ·  end <pending>  ·  user wait 0m  ·  paused 0m
+phase:     stabilization  ·  start 2026-10-17T16:14:01+0200  ·  end 2026-10-17T16:19:48+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 6m  ·  subagent time 5m  ·  tokens 254k (subagents only)  ·  rounds 1
 
 ### round 1          builder sonnet → critic opus
   cost:      builder 110k tok / 13 calls / 1m  ·  critic 144k tok / 26 calls / 3m
