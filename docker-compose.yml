@@ -1,0 +1,16 @@
+services:
+  trening:
+    build: .
+    container_name: trening
+    restart: unless-stopped
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      # Logowanie włącza się, gdy APP_PASSWORD jest ustawione (plik .env)
+      APP_USER: ${APP_USER:-admin}
+      APP_PASSWORD: ${APP_PASSWORD:-}
+    volumes:
+      - trening-data:/data
+
+volumes:
+  trening-data:
