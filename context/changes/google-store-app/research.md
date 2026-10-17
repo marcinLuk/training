@@ -9,7 +9,7 @@ tags: [research, codebase, android, google-play, pwa, twa, capacitor, expo, flut
 status: complete
 last_updated: 2026-10-17
 last_updated_by: Claude (Opus 5.5)
-last_updated_note: "Added follow-ups: open vs closed testing; paid tester services (Fiverr grayostudios, onTest) and whether Google accepts them"
+last_updated_note: "Added follow-ups: open vs closed testing; paid tester services; PWA option deep-dive"
 ---
 
 # Research: Shipping Trening to Google Play
@@ -474,3 +474,69 @@ Details from the same page:
    - never asks for access to your Play Console account.
 3. **Fill in the questionnaire yourself and truthfully,** including that some testers came from a service. Base it on real feedback, and ship at least one update during the test.
 4. **Our app is easy to test:** offline, no login. A tester just installs it and runs a workout, which helps engagement.
+
+## Follow-up Research 2026-10-17: the PWA option in depth
+
+There are three variants, from least to most "store":
+
+| Variant | What the user does | Play Store? | 12×14 closed test? | Server needed |
+|---|---|---|---|---|
+| **PWA only** | Opens the URL in Chrome and taps "Install app". Chrome builds a WebAPK, so the app appears in the launcher and app list like a native app. | No | **No** | Only static HTTPS hosting (B), or the Node API (A) |
+| **PWA + TWA** (Bubblewrap / PWABuilder) | Installs from Google Play. The APK/AAB opens the site full-screen in Chrome. | Yes | **Yes** | HTTPS host + `/.well-known/assetlinks.json` |
+| **PWA, later wrapped in Capacitor** | Installs from Google Play. The web code is bundled inside the APK. | Yes | Yes | None (B) |
+
+**What has to be added to this repo (all variants)**
+1. **`public/manifest.webmanifest`.**
+   - Fields: `name`, `short_name`, `lang: "pl"`, `start_url: "."`, `scope: "."` (relative, so the reverse-proxy subpath invariant holds), `display: "standalone"`, `theme_color` and `background_color`.
+   - Icons: 192 and 512 PNG plus a `maskable` icon. Today there is only the SVG emoji favicon (`public/index.html:8`).
+2. **A service worker (`public/sw.js`)** that pre-caches the app shell: `index.html`, `app.js`, `cardio-core.js`, `styles.css` and the icons. Register it with a relative path.
+   - Under A, `api/*` must stay network-only or network-first, because offline writes would need a queue and conflict handling.
+   - Under B, there is no API at all.
+3. **Safe-area CSS.** Add `env(safe-area-inset-*)` padding for the full-screen overlays and the toast (`public/styles.css:134-136`, `:211-212`). This matters because `viewport-fit=cover` is already set (`public/index.html:5`).
+4. **Dark/light `theme-color`.** Use two `<meta name="theme-color" media=...>` tags (`public/index.html:6`).
+5. **HTTPS.** Service workers and Wake Lock need a secure context. `localhost` counts as one for development, so `npm run dev` already works.
+
+**Data architecture inside a PWA**
+- **A (keep the Node server).**
+  - The current Basic auth works in Chrome, but the prompt returns every browser session.
+  - Offline means a read-only cached `api/state` at best.
+- **B (on-device).**
+  - Port `createRepo` to the browser and put a local adapter behind `api()` (`public/app.js:64-76`).
+  - Storage options: **IndexedDB** (async), or **SQLite-WASM with OPFS**. The second would reuse the `MIGRATIONS` SQL and could keep a synchronous API inside a worker. That is not yet researched in detail.
+  - Hosting becomes purely static (GitHub Pages, Cloudflare Pages or Netlify, free). There is no auth problem and no server-side data, which makes the Data safety form simple for a TWA.
+  - Call `navigator.storage.persist()` so the browser does not evict the data.
+  - Back up with the existing JSON export/import. `api/export` would become a client-side Blob download.
+
+**Platform limits (why the PWA is weaker for this app)**
+- **Background timers.**
+  - Chrome throttles hidden pages.
+  - Notification Triggers (scheduled local notifications) were abandoned.
+  - Web Push needs a server and is not designed for second-precise alerts.
+  - So a **rest-end beep with the screen off is not reliable**.
+  - A commonly cited hack is to keep an `<audio>` element playing, which reduces throttling and shows a media notification. *Unverified, and fragile.*
+- **Wake Lock** works in Chrome on Android, which already covers the "screen on during a workout" case (`public/app.js:512-536`).
+- **Vibration** works in Chrome on Android, in the foreground only.
+- **Storage.**
+  - A PWA's storage belongs to the origin, and "clear site data" or uninstalling wipes it.
+  - In a TWA it is shared with Chrome, so clearing Chrome data wipes it too.
+  - Export/import is the safety net.
+- **TWA specifics.**
+  - `assetlinks.json` must sit at the **origin root** (`https://host/.well-known/assetlinks.json`). A subpath deployment alone is not enough. It must also be exempt from Basic auth.
+  - It needs both the upload-key and the Play-App-Signing fingerprints.
+  - If verification fails, the app shows a URL bar (Custom Tab).
+  - The TWA needs a TWA-capable browser on the device; Chrome is the default.
+  - Some paid tester sellers refuse TWA apps (Grayo: "We do not work with PWA/TWA Apps").
+
+**Local run and test for the PWA**
+- **Desktop.** `npm run dev`, then Chrome DevTools → Application: Manifest, Service workers, Storage. Lighthouse 12 removed the PWA category in 2024 (*from memory*), so use DevTools' installability checks instead.
+- **Phone or emulator.**
+  - Run `adb reverse tcp:3000 tcp:3000` and open `http://localhost:3000` in Chrome. That counts as a secure context, so the service worker works and the app can be installed.
+  - Debug with `chrome://inspect`.
+- **Testing.** Playwright (`devices['Pixel 7']`, `context.setOffline(true)`, `page.clock`) covers most of it. Add a Maestro flow only for the installed TWA shell.
+
+**A suggested staged path**
+1. **Make it a good PWA:** manifest, service worker, safe areas, plus the B local data adapter on static hosting.
+   - Real use on the phone without any store, fee or 12-tester gate.
+   - Most of this work carries over to Capacitor: the local adapter, the safe-area CSS and the icons.
+2. **Ship to Play only when needed.** Either wrap it as a TWA (fast, but with the timer and storage limits) or in Capacitor (native notifications for the rest-end beep, an on-device SQLite plugin).
+   - Run the closed test at that point, with testers who are already using the PWA.
