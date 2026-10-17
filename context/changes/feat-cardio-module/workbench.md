@@ -16,7 +16,8 @@ Ledger:
 - [x] Phase 1: Cardio core logic
 - [x] Phase 2: Cardio data model and API
 - [x] Phase 3: Cardio tab, runner and journal
-- [ ] Phase 4: Cardio in the calendar
+- [x] Phase 4: Cardio in the calendar
+- [ ] Phase 5: Goal-review fixes
 - [ ] goal review
 - [ ] e2e walkthrough
 - [ ] retrospective
@@ -35,7 +36,8 @@ Decisions taken from research Unknowns (slice details, not Done-when changes):
 | 1 — Cardio core logic | sonnet | 1 | CONCERNS (4 minor, 2 nit) → `d7dbb2b` | feature | 8m / 6m | 232k |
 | 2 — Cardio data model and API | sonnet | 1 | CONCERNS (3 minor, 4 nit) → `525b781` | feature | 13m / 12m | 309k |
 | 3 — Cardio tab, runner and journal | sonnet | 2 | CONCERNS (4 minor, 1 nit) → `2867e53` | feature | 51m / 47m | 739k |
-| 4 — Cardio in the calendar | sonnet | 1 | in progress | feature | — | — |
+| 4 — Cardio in the calendar | sonnet | 3 | CONCERNS (2 minor, 1 nit) → `d8f9a79` | feature | 49m / 45m | 981k |
+| 5 — Goal-review fixes | sonnet | 0 | in progress | stabilization | — | — |
 
 Routing (Step 1): every slice is `sonnet` — each writes production code and tests (1, 2) or frontend
 logic with manual items (3, 4). Categories: all `feature` — each delivers new user-visible behaviour
@@ -43,22 +45,53 @@ logic with manual items (3, 4). Categories: all `feature` — each delivers new 
 
 ## Run totals
 
-phases measured: 3 of 4 executed (0 wall unknown)   ·   tokens are subagents only
+phases measured: 4 of 4 executed (0 wall unknown)   ·   tokens are subagents only
 research agent: 107k tok / 11 calls / 1m (not a phase)
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 3 | 1,280k | 100% | 72m | 100% | 65m |
+| feature | 4 | 2,261k | 100% | 121m | 100% | 110m |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 3 | 1,280k | 100% | 72m | 100% | 65m |
+| **total** | 4 | 2,261k | 100% | 121m | 100% | 110m |
 
 ---
 
+## Goal review
+
+### round 1          critic opus + ultrathink   (diff c20c239..HEAD)
+  cost:      critic 215k tok / 46 calls / 11m
+  done-when: D1–D10 met (each with a re-run test or a browser observation); owner-run: audible beep, real vibration, wake lock on a phone, locked-screen throttling
+  blockers:  none
+  majors:    `G-01` (severity marked uncertain) — CLAUDE.md now false: "no tests", old /api/state shape, old endpoint list, db.js → public/cardio-core.js dependency undocumented; no `npm test`
+  minors:    G-02 README silent on cardio · G-03 early-ended interval logged with planned cycles · G-04 fmtElapsed/formatClock + inline cycle count duplicated · G-05 strength code touched for coordination (uncertain) · G-06 cardioTemplateId vs templateId naming · G-07/G-08/G-09 nits
+  report:    reviews/goal-review.md
+  route:     appended "### Phase 5: Goal-review fixes" (rows 5.1–5.2 + Slice details entry) at 16:14 — frozen part untouched (integrity clean)
+
+## Phase 5 — Goal-review fixes
+
+phase:     stabilization  ·  start 2026-10-17T16:14:01+0200  ·  end <pending>  ·  user wait 0m  ·  paused 0m
+
+### round 1          builder sonnet → critic opus
+  cost:      builder 110k tok / 13 calls / 1m  ·  critic 144k tok / 26 calls / 3m
+  automated: 2/2   manual: n/a
+  verdict:   CONCERNS (1 minor, 1 nit)
+  blockers:  none
+  majors:    none
+  report:    reviews/phase-5-round-1.md
+  spot-check: opened CLAUDE.md:42 ("exactly one of planId / cardioTemplateId" — true only at creation) → confirmed
+  diff:      CLAUDE.md +11/-5, README.md +4/-2, package.json +2/-1
+  scripted:  CLAUDE.md, README.md, package.json (python replace), brief.md (sed) — package.json parses
+  inconclusive: none
+  integrity: plan-freeze clean; slice details unchanged since the Phase 5 append
+  builder:   CLAUDE.md/README brought in line with the code (tests, cardio-core, state shape, endpoints, cardio session); npm test script
+
+
 ## Phase 4 — Cardio in the calendar
 
-phase:     feature  ·  start 2026-10-17T15:07:07+0200  ·  end <pending>  ·  user wait 6m  ·  paused 0m
+phase:     feature  ·  start 2026-10-17T15:07:07+0200  ·  end 2026-10-17T16:02:35+0200  ·  user wait 6m  ·  paused 0m
+totals:    wall 49m  ·  subagent time 45m  ·  tokens 981k (subagents only)  ·  rounds 3
 
 ### round 3          builder sonnet → critic opus   (user-supplied brief: tests for the 5 listed gaps only, no app code change)
   cost:      builder 84k tok / 9 calls / 1m  ·  critic 243k tok / 60 calls / 12m

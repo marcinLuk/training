@@ -89,16 +89,21 @@ db.js:284 addSchedule, app.js:93 dayItems, app.js:310 viewJournal, app.js:466 ti
 
 ### Phase 4: Cardio in the calendar
 #### Automated Verification:
-- [x] 4.1 `node --check public/app.js` exits 0
-- [x] 4.2 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0`
-- [x] 4.3 the auto-loop.md §2 smoke command exits 0
+- [x] 4.1 `node --check public/app.js` exits 0 — d8f9a79
+- [x] 4.2 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0` — d8f9a79
+- [x] 4.3 the auto-loop.md §2 smoke command exits 0 — d8f9a79
 #### Manual Verification:
-- [x] 4.4 The calendar form offers cardio templates; adding one to a day (and with weekly repeat for 2 weeks) shows dots and day cards in the cardio colour, whose computed colour differs from both the planned and the done strength dot (D6)
-- [x] 4.5 Start from a cardio day card runs the template; after the summary is saved the card and the dot show it as done (D6)
-- [x] 4.6 A free cardio workout saved today appears on today's calendar day in the cardio colour (D5)
-- [x] 4.7 Deleting a template that has one done and one future calendar entry removes the future entry and keeps the done one with its name (D7)
-- [x] 4.8 In the builder, "Dodaj do kalendarza" is disabled while the total does not fit in full cycles; with a valid total and a name it saves the template and adds it on the chosen date (D2, D6)
-- [x] 4.9 Strength regression: scheduling a strength plan and its planned/done display in the calendar are unchanged
+- [x] 4.4 The calendar form offers cardio templates; adding one to a day (and with weekly repeat for 2 weeks) shows dots and day cards in the cardio colour, whose computed colour differs from both the planned and the done strength dot (D6) — d8f9a79
+- [x] 4.5 Start from a cardio day card runs the template; after the summary is saved the card and the dot show it as done (D6) — d8f9a79
+- [x] 4.6 A free cardio workout saved today appears on today's calendar day in the cardio colour (D5) — d8f9a79
+- [x] 4.7 Deleting a template that has one done and one future calendar entry removes the future entry and keeps the done one with its name (D7) — d8f9a79
+- [x] 4.8 In the builder, "Dodaj do kalendarza" is disabled while the total does not fit in full cycles; with a valid total and a name it saves the template and adds it on the chosen date (D2, D6) — d8f9a79
+- [x] 4.9 Strength regression: scheduling a strength plan and its planned/done display in the calendar are unchanged — d8f9a79
+
+### Phase 5: Goal-review fixes
+#### Automated Verification:
+- [x] 5.1 `npm test` runs the whole `node:test` suite: summary shows `# tests N` with N > 0 and `# fail 0`
+- [x] 5.2 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0`, and the auto-loop.md §2 smoke command exits 0
 
 ## Slice details
 
@@ -237,3 +242,21 @@ Changes required:
   while `checkPlan` is not ok or the name is empty; it creates the template and schedules it.
 - After deleting a template, reload the state so its removed entries leave the calendar.
 Slice guardrails: strength calendar behaviour and markup unchanged; `esc()` everywhere.
+
+### Phase 5: Goal-review fixes
+Changes required (from reviews/goal-review.md, finding G-01):
+- `CLAUDE.md`: bring it in line with the code as it now is — tests exist (`npm test` / `node --test`,
+  files under `test/`, `node:test` + `node:assert`, a `node:vm` harness for `public/app.js`); the
+  `GET /api/state` shape now also carries `cardioTemplates` and `cardioLog`, and schedule entries
+  carry `cardioTemplateId`; the cardio endpoints (`/api/cardio-templates`, `/api/cardio-workouts`,
+  and `/api/schedule` taking exactly one of `planId` / `cardioTemplateId`); the cardio tables and
+  that `cardio_workouts` is a denormalized snapshot like `workouts`; `public/cardio-core.js` as
+  the shared pure module loaded by `index.html` and required by `db.js`; the cardio session in
+  `localStorage` `trening.cardio.v1`, separate from `trening.run.v1`, and the rule that only one of
+  the two sessions runs at a time. Keep the file's English, its structure and its tone; change only
+  what the code made untrue, and add what a contributor now needs. Do not remove existing rules.
+- `README.md` (Polish): mention the Cardio tab and that the JSON backup now includes cardio
+  templates and workouts.
+- `package.json`: add the script `"test": "node --disable-warning=ExperimentalWarning --test"`.
+  No dependency change; `package-lock.json` untouched.
+Slice guardrails: documentation and one npm script only — no change to application code or tests.
