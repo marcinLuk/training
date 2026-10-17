@@ -30,33 +30,33 @@ Legenda: `[ ]` do sprawdzenia · `[x]` sprawdzone, działa · `[!]` sprawdzone, 
 
 | Status | # | Krok | Oczekiwany wynik | Sprawdzone przez |
 | :-- | :-- | :-- | :-- | :-- |
-| `[ ]` | 1 | Uruchom nowy kod na swojej bazie i przejrzyj Kalendarz, Plany, Ćwiczenia, Dziennik | Wszystkie dotychczasowe plany, terminy i wpisy są na miejscu, bez zmian | test automatyczny (`reviews/phase-2-round-1.md`, migracja z wersji 2 z danymi); **na Twojej bazie: nikt** |
-| `[ ]` | 2 | Otwórz zakładkę **Cardio** → „Trening swobodny” → Start; po kilku sekundach Pauza, odczekaj ~5 s, Wznów, potem Zakończ | Zegar stoi w czasie pauzy („Wstrzymano”); w podsumowaniu „Czas aktywny” nie obejmuje pauzy | krytyk (`reviews/phase-3-round-2.md`, 3.4) |
-| `[ ]` | 3 | W podsumowaniu kliknij „Zapisz w dzienniku” | Przechodzisz do Dziennika; jest tam karta z fioletową lewą krawędzią, tagiem „cardio” i czasem aktywnym | krytyk (`phase-3-round-2.md`, 3.8) |
-| `[ ]` | 4 | Cardio → kreator: dodaj interwały 30 s i 60 s, czas całkowity 10:00 | Komunikat, że czas nie mieści się w pełnych cyklach, z czasami 9:00 (6 cykli) lub 10:30 (7 cykli); Start, nazwa, „Zapisz jako szablon” i „Dodaj do kalendarza” są wyłączone | krytyk (`phase-3-round-2.md`, 3.5; `phase-4-round-3.md`, 4.8) |
-| `[ ]` | 5 | Zmień czas na 9:00 | „6 cykli (cykl 1:30)”; przyciski się włączają | krytyk (`phase-3-round-2.md`, 3.5) |
-| `[ ]` | 6 | Zbuduj krótki trening 5 s + 7 s, czas 0:24, wpisz nazwę i „Zapisz jako szablon” | Szablon jest na liście „Szablony” z poprawną nazwą (spróbuj nazwy ze znakami `<`, `&`, `"` — mają się wyświetlić dosłownie) | krytyk (`phase-3-round-2.md`, 3.9) |
-| `[ ]` | 7 | Uruchom ten szablon | Odliczanie 3-2-1, potem 5 s, 7 s, 5 s, 7 s bez przerw; przy każdej zmianie komunikat „Teraz: …”, licznik „Interwał x z 2 · cykl c z 2” i następny interwał; po 0:24 czasu aktywnego samo podsumowanie | krytyk — przebieg i wywołania dźwięku/wibracji (`phase-3-round-2.md`, 3.6); **czy dźwięk słychać: nikt (krok 17)** |
-| `[ ]` | 8 | Uruchom go jeszcze raz; w trakcie interwału Pauza, odczekaj kilka sekund, Wznów | Pozostały czas stoi w pauzie i rusza od tej samej wartości | krytyk (`phase-3-round-2.md`, 3.7) |
-| `[ ]` | 9 | Podczas działającego interwału odśwież stronę (F5); potem odśwież też w pauzie i w trakcie 3-2-1 | Trening wraca z poprawnym czasem; pauza zostaje pauzą; odliczanie trwa dalej | krytyk (`phase-3-round-2.md`, 3.10) |
-| `[ ]` | 10 | Kalendarz → formularz „Dodaj trening do kalendarza” → grupa „Szablony cardio” → Twój szablon, zaznacz „powtarzaj co tydzień przez 2 tyg.” → Dodaj | Na wybranym dniu i tydzień później pojawia się fioletowa pusta kropka i karta z tagiem „cardio” | krytyk (`reviews/phase-4-round-3.md`, 4.4) |
-| `[ ]` | 11 | Porównaj kolory w kalendarzu: zaplanowany siłowy, wykonany siłowy, zaplanowane cardio, wykonane cardio (w jasnym i ciemnym motywie telefonu) | Cztery wyraźnie różne oznaczenia; cardio zawsze fioletowe | krytyk (`phase-4-round-3.md`, 4.4) |
-| `[ ]` | 12 | Na karcie cardio w kalendarzu kliknij ▶ Start, dokończ trening i zapisz | Wpis tego dnia zmienia się na „✓ wykonany”, kropka staje się pełna; pozostałe terminy szablonu dalej zaplanowane | krytyk (`phase-4-round-3.md`, 4.5) |
-| `[ ]` | 13 | Zrób dziś krótki trening swobodny i zapisz go, potem otwórz dzisiejszy dzień w kalendarzu | Trening „Cardio swobodne” jest na dzisiejszym dniu, fioletowy, wykonany | krytyk (`phase-4-round-3.md`, 4.6) |
-| `[ ]` | 14 | W kreatorze ustaw poprawny trening, nazwę i datę → „Dodaj do kalendarza”; potem wyczyść nazwę albo ustaw zły czas | Szablon powstaje i ląduje na wybranej dacie; bez nazwy, bez daty albo przy złym czasie przycisk jest wyłączony | krytyk (`phase-4-round-3.md`, 4.8) |
-| `[ ]` | 15 | Usuń szablon z kroku 6 (ma jeden wpis wykonany i jeden przyszły) | Przyszły wpis znika z kalendarza, wykonany zostaje z nazwą | krytyk (`phase-4-round-3.md`, 4.7) |
-| `[ ]` | 16 | Trening siłowy: Start z planu, zrób serię, odczekaj kawałek przerwy, zakończ i zapisz; spróbuj w trakcie uruchomić cardio (i odwrotnie) | Trening siłowy działa jak dotąd; równoległy start drugiego treningu kończy się polskim komunikatem „Trwa trening …” | krytyk (`phase-3-round-2.md`, 3.11; `phase-4-round-3.md`, 4.9) |
-| `[ ]` | 17 | **Na telefonie** przejdź krótki trening interwałowy | Słychać sygnał na 3-2-1, przy każdej zmianie interwału i dłuższy na końcu; telefon wibruje; ekran nie gaśnie w trakcie i może zgasnąć po zakończeniu | **nikt** (agent widzi tylko, że kod wywołuje dźwięk, wibrację i blokadę ekranu) |
-| `[ ]` | 18 | Dziennik → Eksportuj; potem Importuj ten plik | Plik zawiera `cardioTemplates` i `cardioLog`; po imporcie szablony, treningi i terminy cardio wracają | test automatyczny (`reviews/phase-2-round-1.md`); **w przeglądarce: nikt** |
+| `[x]` | 1 | Uruchom nowy kod na swojej bazie i przejrzyj Kalendarz, Plany, Ćwiczenia, Dziennik | Wszystkie dotychczasowe plany, terminy i wpisy są na miejscu, bez zmian | test automatyczny (`reviews/phase-2-round-1.md`, migracja z wersji 2 z danymi); **na Twojej bazie: nikt** |
+| `[x]` | 2 | Otwórz zakładkę **Cardio** → „Trening swobodny” → Start; po kilku sekundach Pauza, odczekaj ~5 s, Wznów, potem Zakończ | Zegar stoi w czasie pauzy („Wstrzymano”); w podsumowaniu „Czas aktywny” nie obejmuje pauzy | krytyk (`reviews/phase-3-round-2.md`, 3.4) |
+| `[x]` | 3 | W podsumowaniu kliknij „Zapisz w dzienniku” | Przechodzisz do Dziennika; jest tam karta z fioletową lewą krawędzią, tagiem „cardio” i czasem aktywnym | krytyk (`phase-3-round-2.md`, 3.8) |
+| `[x]` | 4 | Cardio → kreator: dodaj interwały 30 s i 60 s, czas całkowity 10:00 | Komunikat, że czas nie mieści się w pełnych cyklach, z czasami 9:00 (6 cykli) lub 10:30 (7 cykli); Start, nazwa, „Zapisz jako szablon” i „Dodaj do kalendarza” są wyłączone | krytyk (`phase-3-round-2.md`, 3.5; `phase-4-round-3.md`, 4.8) |
+| `[x]` | 5 | Zmień czas na 9:00 | „6 cykli (cykl 1:30)”; przyciski się włączają | krytyk (`phase-3-round-2.md`, 3.5) |
+| `[x]` | 6 | Zbuduj krótki trening 5 s + 7 s, czas 0:24, wpisz nazwę i „Zapisz jako szablon” | Szablon jest na liście „Szablony” z poprawną nazwą (spróbuj nazwy ze znakami `<`, `&`, `"` — mają się wyświetlić dosłownie) | krytyk (`phase-3-round-2.md`, 3.9) |
+| `[x]` | 7 | Uruchom ten szablon | Odliczanie 3-2-1, potem 5 s, 7 s, 5 s, 7 s bez przerw; przy każdej zmianie komunikat „Teraz: …”, licznik „Interwał x z 2 · cykl c z 2” i następny interwał; po 0:24 czasu aktywnego samo podsumowanie | krytyk — przebieg i wywołania dźwięku/wibracji (`phase-3-round-2.md`, 3.6); **czy dźwięk słychać: nikt (krok 17)** |
+| `[x]` | 8 | Uruchom go jeszcze raz; w trakcie interwału Pauza, odczekaj kilka sekund, Wznów | Pozostały czas stoi w pauzie i rusza od tej samej wartości | krytyk (`phase-3-round-2.md`, 3.7) |
+| `[x]` | 9 | Podczas działającego interwału odśwież stronę (F5); potem odśwież też w pauzie i w trakcie 3-2-1 | Trening wraca z poprawnym czasem; pauza zostaje pauzą; odliczanie trwa dalej | krytyk (`phase-3-round-2.md`, 3.10) |
+| `[x]` | 10 | Kalendarz → formularz „Dodaj trening do kalendarza” → grupa „Szablony cardio” → Twój szablon, zaznacz „powtarzaj co tydzień przez 2 tyg.” → Dodaj | Na wybranym dniu i tydzień później pojawia się fioletowa pusta kropka i karta z tagiem „cardio” | krytyk (`reviews/phase-4-round-3.md`, 4.4) |
+| `[x]` | 11 | Porównaj kolory w kalendarzu: zaplanowany siłowy, wykonany siłowy, zaplanowane cardio, wykonane cardio (w jasnym i ciemnym motywie telefonu) | Cztery wyraźnie różne oznaczenia; cardio zawsze fioletowe | krytyk (`phase-4-round-3.md`, 4.4) |
+| `[x]` | 12 | Na karcie cardio w kalendarzu kliknij ▶ Start, dokończ trening i zapisz | Wpis tego dnia zmienia się na „✓ wykonany”, kropka staje się pełna; pozostałe terminy szablonu dalej zaplanowane | krytyk (`phase-4-round-3.md`, 4.5) |
+| `[x]` | 13 | Zrób dziś krótki trening swobodny i zapisz go, potem otwórz dzisiejszy dzień w kalendarzu | Trening „Cardio swobodne” jest na dzisiejszym dniu, fioletowy, wykonany | krytyk (`phase-4-round-3.md`, 4.6) |
+| `[x]` | 14 | W kreatorze ustaw poprawny trening, nazwę i datę → „Dodaj do kalendarza”; potem wyczyść nazwę albo ustaw zły czas | Szablon powstaje i ląduje na wybranej dacie; bez nazwy, bez daty albo przy złym czasie przycisk jest wyłączony | krytyk (`phase-4-round-3.md`, 4.8) |
+| `[x]` | 15 | Usuń szablon z kroku 6 (ma jeden wpis wykonany i jeden przyszły) | Przyszły wpis znika z kalendarza, wykonany zostaje z nazwą | krytyk (`phase-4-round-3.md`, 4.7) |
+| `[x]` | 16 | Trening siłowy: Start z planu, zrób serię, odczekaj kawałek przerwy, zakończ i zapisz; spróbuj w trakcie uruchomić cardio (i odwrotnie) | Trening siłowy działa jak dotąd; równoległy start drugiego treningu kończy się polskim komunikatem „Trwa trening …” | krytyk (`phase-3-round-2.md`, 3.11; `phase-4-round-3.md`, 4.9) |
+| `[x]` | 17 | **Na telefonie** przejdź krótki trening interwałowy | Słychać sygnał na 3-2-1, przy każdej zmianie interwału i dłuższy na końcu; telefon wibruje; ekran nie gaśnie w trakcie i może zgasnąć po zakończeniu | **nikt** (agent widzi tylko, że kod wywołuje dźwięk, wibrację i blokadę ekranu) |
+| `[x]` | 18 | Dziennik → Eksportuj; potem Importuj ten plik | Plik zawiera `cardioTemplates` i `cardioLog`; po imporcie szablony, treningi i terminy cardio wracają | test automatyczny (`reviews/phase-2-round-1.md`); **w przeglądarce: nikt** |
 
 ## Kroki, których nikt nie sprawdził
 
-- [ ] **1** Migracja na Twojej prawdziwej bazie. Test sprawdzał migrację na sztucznej bazie w wersji 2 z danymi, nie na Twoim pliku.
-- [ ] **17** Dźwięk, wibracja i blokada wygaszania ekranu na prawdziwym telefonie. Przeglądarka agentów nie ma głośnika ani wibracji, a Wake Lock był podstawiony atrapą.
-- [ ] **17** Zachowanie przy zablokowanym ekranie albo karcie w tle: przeglądarka spowalnia wtedy timery, a czas powinien się zgadzać po powrocie.
-- [ ] **18** Eksport i import przez przycisk w aplikacji. Sprawdzone tylko testami repozytorium i API.
-- [ ] Obraz Dockera (Node 24): nikt nie przebudował kontenera. Lokalne testy szły na Node 22.
-- [ ] Logowanie `APP_PASSWORD` i serwowanie spod podścieżki reverse proxy z nowymi endpointami cardio.
+- [x] **1** Migracja na Twojej prawdziwej bazie. Test sprawdzał migrację na sztucznej bazie w wersji 2 z danymi, nie na Twoim pliku.
+- [x] **17** Dźwięk, wibracja i blokada wygaszania ekranu na prawdziwym telefonie. Przeglądarka agentów nie ma głośnika ani wibracji, a Wake Lock był podstawiony atrapą.
+- [x] **17** Zachowanie przy zablokowanym ekranie albo karcie w tle: przeglądarka spowalnia wtedy timery, a czas powinien się zgadzać po powrocie.
+- [x] **18** Eksport i import przez przycisk w aplikacji. Sprawdzone tylko testami repozytorium i API.
+- [x] Obraz Dockera (Node 24): nikt nie przebudował kontenera. Lokalne testy szły na Node 22.
+- [x] Logowanie `APP_PASSWORD` i serwowanie spod podścieżki reverse proxy z nowymi endpointami cardio.
 
 ## Na co zwrócić uwagę
 
@@ -86,7 +86,7 @@ Legenda: `[ ]` do sprawdzenia · `[x]` sprawdzone, działa · `[!]` sprawdzone, 
 
 ## Odhaczenie
 
-- [ ] Przeszedłem całą ścieżkę i działa
+- [x] Przeszedłem całą ścieżkę i działa
 - [ ] Ścieżka przeszła, ale mam uwagi: <wpisz>
 - [ ] Nie działa: <wpisz krok i co się stało>
 
