@@ -1,0 +1,214 @@
+{
+  "study": "aplikacje-treningowe",
+  "goal": "Real user pain points about workout / training apps, to inform product decisions for Trening, a single-user workout planner (calendar, plans, exercise library, rest timer / rep counter, workout log, cardio module).",
+  "language": "en",
+  "csv": "documentation/pain-points.csv",
+  "app_types": [
+    {
+      "key": "strength",
+      "label": "strength trackers / gym logs",
+      "apps": [
+        "Strong",
+        "Hevy",
+        "JEFIT",
+        "Fitbod",
+        "Boostcamp",
+        "StrongLifts 5x5",
+        "Alpha Progression"
+      ]
+    },
+    {
+      "key": "planner",
+      "label": "workout planners / training calendars / coach-delivered programs",
+      "apps": [
+        "TrainHeroic",
+        "ABC Trainerize",
+        "TrueCoach",
+        "JuggernautAI",
+        "TrainingPeaks",
+        "MacroFactor Workouts",
+        "Gravl",
+        "Caliber",
+        "Future",
+        "Ladder"
+      ]
+    },
+    {
+      "key": "cardio",
+      "label": "cardio: running, cycling",
+      "apps": [
+        "Strava",
+        "Garmin Connect",
+        "Runna",
+        "Nike Run Club",
+        "Zwift",
+        "Komoot",
+        "ASICS Runkeeper",
+        "Polar Flow",
+        "Suunto",
+        "COROS"
+      ]
+    },
+    {
+      "key": "general_fitness",
+      "label": "general fitness / home workouts",
+      "apps": [
+        "Nike Training Club",
+        "Freeletics",
+        "Peloton",
+        "Sweat",
+        "FitOn",
+        "Apple Fitness+",
+        "Les Mills+",
+        "Centr",
+        "BetterMe",
+        "Down Dog"
+      ]
+    }
+  ],
+  "sources": [
+    "reddit",
+    "app stores (Google Play / App Store, incl. review aggregators)",
+    "forums and blogs",
+    "Trustpilot / G2 and similar"
+  ],
+  "source_types": [
+    "reddit",
+    "app_store",
+    "google_play",
+    "forum",
+    "blog",
+    "trustpilot",
+    "g2",
+    "other"
+  ],
+  "reddit": {
+    "enabled": true,
+    "env_file": "~/.config/trening-research/reddit.env"
+  },
+  "problem_keywords": [
+    "bug",
+    "crash",
+    "sync",
+    "lost",
+    "paywall",
+    "subscription",
+    "price",
+    "annoying",
+    "hate",
+    "frustrating",
+    "\"wish it\"",
+    "\"switched from\"",
+    "broken"
+  ],
+  "categories": [
+    {
+      "name": "UX/Usability",
+      "use_for": "confusing navigation, too many taps, poor layout, hard to find features"
+    },
+    {
+      "name": "Monetization/Paywall",
+      "use_for": "basic features behind a subscription, price, aggressive upsells, billing problems"
+    },
+    {
+      "name": "Ads",
+      "use_for": "intrusive or too frequent ads"
+    },
+    {
+      "name": "Bugs/Stability",
+      "use_for": "crashes, freezes, features broken after updates"
+    },
+    {
+      "name": "Sync/Data Loss",
+      "use_for": "lost workouts or history, sync between devices failing, export/import problems"
+    },
+    {
+      "name": "Workout Logging",
+      "use_for": "logging sets, reps, weights or exercises is slow, limited or awkward"
+    },
+    {
+      "name": "Planning/Scheduling",
+      "use_for": "creating plans or programs, calendar, scheduling, rest days"
+    },
+    {
+      "name": "Stats/Progress",
+      "use_for": "charts, personal records, progress tracking, missing or misleading statistics"
+    },
+    {
+      "name": "Integrations",
+      "use_for": "Apple Health, Google Fit / Health Connect, Garmin, smartwatches, other apps"
+    },
+    {
+      "name": "Offline",
+      "use_for": "app does not work, or works poorly, without internet"
+    },
+    {
+      "name": "Privacy",
+      "use_for": "data collection, sharing, account requirements, tracking"
+    },
+    {
+      "name": "Personalization/AI",
+      "use_for": "poor recommendations, generic plans, AI coach quality, no customization"
+    },
+    {
+      "name": "Performance/Battery",
+      "use_for": "slow app, lag, battery drain, GPS drain"
+    },
+    {
+      "name": "Other",
+      "use_for": "anything that does not fit above"
+    }
+  ],
+  "columns": [
+    "summary",
+    "category",
+    "app_name",
+    "app_type",
+    "severity",
+    "review_date",
+    "source_type",
+    "source_url"
+  ],
+  "severity": {
+    "high": "data loss, app unusable, or money lost",
+    "medium": "a core feature is hard to use or missing",
+    "low": "annoyance or cosmetic"
+  },
+  "rules": {
+    "undated": "drop",
+    "year_less_dates": "drop",
+    "reddit_mirrors": "drop",
+    "duplicates": "one row per opinion; drop only exact duplicates",
+    "store_review_url": "app store or aggregator page when the review has no own link"
+  },
+  "target_per_type": {
+    "exa": "60-70, soft",
+    "reddit": "10-15, soft"
+  },
+  "exa_caps_per_agent": {
+    "searches": 120,
+    "fetched_urls": 150
+  },
+  "budget_usd_per_run": 10,
+  "runs": [
+    {
+      "n": 1,
+      "mode": "adopt",
+      "from": "2024-10-17",
+      "to": "2026-10-17",
+      "run_date": "2026-10-17",
+      "rows_added": 369,
+      "rows_total": 369,
+      "by_source": {
+        "google_play": 101,
+        "trustpilot": 77,
+        "reddit": 59,
+        "forum": 56,
+        "app_store": 56,
+        "other": 14,
+        "blog": 6
+      },
+      "note": "adopted existing CSV: Exa (stores, Trustpilot, forums, blogs) + Reddit API; dropped 8 App Store year-less dates and 7 Reddit mirror rows"
+    }
+  ]
+}
