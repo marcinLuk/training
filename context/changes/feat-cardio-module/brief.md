@@ -74,31 +74,31 @@ db.js:284 addSchedule, app.js:93 dayItems, app.js:310 viewJournal, app.js:466 ti
 
 ### Phase 3: Cardio tab, runner and journal
 #### Automated Verification:
-- [x] 3.1 `node --check public/app.js && node --check public/cardio-core.js` exits 0
-- [x] 3.2 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0`
-- [x] 3.3 the auto-loop.md §2 smoke command exits 0
+- [x] 3.1 `node --check public/app.js && node --check public/cardio-core.js` exits 0 — 2867e53
+- [x] 3.2 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0` — 2867e53
+- [x] 3.3 the auto-loop.md §2 smoke command exits 0 — 2867e53
 #### Manual Verification:
-- [x] 3.4 Free mode: Start → the clock runs; Pause → it stays still for at least 3 s; Resume → it continues from the paused value; End → the summary's active time excludes the pause (run ~5 s, pause ~5 s, run ~5 s → about 0:10, not 0:15) (D1)
-- [x] 3.5 Builder: intervals 30 s + 60 s with total 9:00 shows 6 full cycles and Start / "Zapisz jako szablon" are enabled; total 10:00 shows the Polish "does not fit in full cycles" message naming 9:00 and 10:30, and both are disabled; total 1:00 names only 1:30; adding or removing an interval updates the cycle count (D2)
-- [x] 3.6 Interval run with 5 s + 7 s and total 0:24: a 3-2-1 countdown, then 5 s, 7 s, 5 s, 7 s; at every interval change the screen shows the new interval at once, a beep is played (AudioContext oscillator calls observed in the page) and vibration is requested; at 0:24 of active time the workout ends by itself and shows the summary (D3)
-- [x] 3.7 Pause during an interval: the remaining time stays frozen for at least 3 s; Resume continues from the same remaining time (D4)
-- [x] 3.8 Saving the summary adds a cardio card to the Dziennik tab, in the cardio colour (computed colour differs from a strength card), with the active time and the intervals (D5)
-- [x] 3.9 Saving an interval workout as a template named `<b>Tabata & "test"</b>` lists it with the name shown as literal text; Start from the template runs it; Usuń removes it (D7)
-- [x] 3.10 Reload during a running interval → it continues with the correct remaining time (±1 s); reload while paused → still paused at the same value; reload during the countdown → the countdown continues (D10)
-- [x] 3.11 Strength regression: a strength plan still starts, records a set, runs its rest timer and saves; a cardio workout cannot start while a strength one is active, and the reverse, each with a Polish message
+- [x] 3.4 Free mode: Start → the clock runs; Pause → it stays still for at least 3 s; Resume → it continues from the paused value; End → the summary's active time excludes the pause (run ~5 s, pause ~5 s, run ~5 s → about 0:10, not 0:15) (D1) — 2867e53
+- [x] 3.5 Builder: intervals 30 s + 60 s with total 9:00 shows 6 full cycles and Start / "Zapisz jako szablon" are enabled; total 10:00 shows the Polish "does not fit in full cycles" message naming 9:00 and 10:30, and both are disabled; total 1:00 names only 1:30; adding or removing an interval updates the cycle count (D2) — 2867e53
+- [x] 3.6 Interval run with 5 s + 7 s and total 0:24: a 3-2-1 countdown, then 5 s, 7 s, 5 s, 7 s; at every interval change the screen shows the new interval at once, a beep is played (AudioContext oscillator calls observed in the page) and vibration is requested; at 0:24 of active time the workout ends by itself and shows the summary (D3) — 2867e53
+- [x] 3.7 Pause during an interval: the remaining time stays frozen for at least 3 s; Resume continues from the same remaining time (D4) — 2867e53
+- [x] 3.8 Saving the summary adds a cardio card to the Dziennik tab, in the cardio colour (computed colour differs from a strength card), with the active time and the intervals (D5) — 2867e53
+- [x] 3.9 Saving an interval workout as a template named `<b>Tabata & "test"</b>` lists it with the name shown as literal text; Start from the template runs it; Usuń removes it (D7) — 2867e53
+- [x] 3.10 Reload during a running interval → it continues with the correct remaining time (±1 s); reload while paused → still paused at the same value; reload during the countdown → the countdown continues (D10) — 2867e53
+- [x] 3.11 Strength regression: a strength plan still starts, records a set, runs its rest timer and saves; a cardio workout cannot start while a strength one is active, and the reverse, each with a Polish message — 2867e53
 
 ### Phase 4: Cardio in the calendar
 #### Automated Verification:
-- [ ] 4.1 `node --check public/app.js` exits 0
-- [ ] 4.2 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0`
-- [ ] 4.3 the auto-loop.md §2 smoke command exits 0
+- [x] 4.1 `node --check public/app.js` exits 0
+- [x] 4.2 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0`
+- [x] 4.3 the auto-loop.md §2 smoke command exits 0
 #### Manual Verification:
-- [ ] 4.4 The calendar form offers cardio templates; adding one to a day (and with weekly repeat for 2 weeks) shows dots and day cards in the cardio colour, whose computed colour differs from both the planned and the done strength dot (D6)
-- [ ] 4.5 Start from a cardio day card runs the template; after the summary is saved the card and the dot show it as done (D6)
-- [ ] 4.6 A free cardio workout saved today appears on today's calendar day in the cardio colour (D5)
-- [ ] 4.7 Deleting a template that has one done and one future calendar entry removes the future entry and keeps the done one with its name (D7)
-- [ ] 4.8 In the builder, "Dodaj do kalendarza" is disabled while the total does not fit in full cycles; with a valid total and a name it saves the template and adds it on the chosen date (D2, D6)
-- [ ] 4.9 Strength regression: scheduling a strength plan and its planned/done display in the calendar are unchanged
+- [x] 4.4 The calendar form offers cardio templates; adding one to a day (and with weekly repeat for 2 weeks) shows dots and day cards in the cardio colour, whose computed colour differs from both the planned and the done strength dot (D6)
+- [x] 4.5 Start from a cardio day card runs the template; after the summary is saved the card and the dot show it as done (D6)
+- [x] 4.6 A free cardio workout saved today appears on today's calendar day in the cardio colour (D5)
+- [x] 4.7 Deleting a template that has one done and one future calendar entry removes the future entry and keeps the done one with its name (D7)
+- [x] 4.8 In the builder, "Dodaj do kalendarza" is disabled while the total does not fit in full cycles; with a valid total and a name it saves the template and adds it on the chosen date (D2, D6)
+- [x] 4.9 Strength regression: scheduling a strength plan and its planned/done display in the calendar are unchanged
 
 ## Slice details
 

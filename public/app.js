@@ -100,10 +100,20 @@ function showError(err) {
 
 const planById = id => db.plans.find(p => p.id === id);
 const isDone = schedId => db.log.some(l => l.scheduleId === schedId);
+const cardioTemplateById = id => db.cardioTemplates.find(t => t.id === id);
 
-// Treningi danego dnia: zaplanowane + wykonane poza kalendarzem
+// Treningi danego dnia: zaplanowane + wykonane poza kalendarzem.
+// Termin cardio to termin z szablonem albo taki, który zamknął trening cardio
+// (po usunięciu szablonu wykonany termin traci szablon, ale zachowuje nazwę w dzienniku).
 function dayItems(date) {
   const sched = db.schedule.filter(s => s.date === date).map(s => {
+    const cardioLog = db.cardioLog.find(c => c.scheduleId === s.id);
+    if (s.cardioTemplateId || cardioLog) {
+      return {
+        kind: 'sched', cardio: true, id: s.id, templateId: s.cardioTemplateId, done: !!cardioLog,
+        name: cardioLog?.name ?? cardioTemplateById(s.cardioTemplateId)?.name ?? '(usunięty szablon)',
+      };
+    }
     const log = db.log.find(l => l.scheduleId === s.id);
     return {
       kind: 'sched', id: s.id, planId: s.planId, done: !!log,
@@ -113,7 +123,10 @@ function dayItems(date) {
   const loose = db.log
     .filter(l => l.date === date && !db.schedule.some(s => s.id === l.scheduleId))
     .map(l => ({ kind: 'log', id: l.id, planId: l.planId, done: true, name: l.planName }));
-  return [...sched, ...loose];
+  const looseCardio = db.cardioLog
+    .filter(c => c.date === date && !db.schedule.some(s => s.id === c.scheduleId))
+    .map(c => ({ kind: 'log', cardio: true, id: c.id, templateId: c.templateId, done: true, name: c.name }));
+  return [...sched, ...loose, ...looseCardio];
 }
 
 // ---------- Stan interfejsu ----------
@@ -128,7 +141,7 @@ const ui = {
   libFilter: '',
   exDefaults: { sets: 3, reps: 10, rest: 90 },
   // kreator treningu interwałowego (czas całkowity jako minuty + sekundy)
-  cardio: { intervals: [], addSec: 30, min: 10, sec: 0, name: '' },
+  cardio: { intervals: [], addSec: 30, min: 10, sec: 0, name: '', date: null },
 };
 
 function render() {
@@ -151,7 +164,7 @@ function viewCalendar() {
   let cells = ['Pn', 'Wt', 'Śr', 'Cz', 'Pt', 'So', 'Nd'].map(d => `<div class="cal-dow">${d}</div>`).join('');
   for (let d = start; d <= end; d = addDays(d, 1)) {
     const key = ymd(d);
-    const dots = dayItems(key).map(i => `<span class="dot${i.done ? ' done' : ''}"></span>`).join('');
+    const dots = dayItems(key).map(i => `<span class="dot${i.cardio ? ' cardio' : ''}${i.done ? ' done' : ''}"></span>`).join('');
     const cls = ['cal-day', d.getMonth() !== m.getMonth() && 'other', key === t && 'today', key === ui.selected && 'selected']
       .filter(Boolean).join(' ');
     cells += `<button class="${cls}" data-action="cal-select" data-date="${key}"><span>${d.getDate()}</span><span class="dots">${dots}</span></button>`;
@@ -159,29 +172,35 @@ function viewCalendar() {
 
   const items = dayItems(ui.selected);
   const list = items.length ? items.map(i => `
-    <div class="card row between">
+    <div class="card row between${i.cardio ? ' cardio' : ''}" data-id="${esc(i.id)}">
       <div class="grow">
-        <h3>${esc(i.name)}</h3>
+        <h3>${esc(i.name)}${i.cardio ? ' <span class="tag cardio">cardio</span>' : ''}</h3>
         ${i.done ? '<span class="tag ok">✓ wykonany</span>' : '<span class="tag">zaplanowany</span>'}
       </div>
       <div class="row">
-        ${!i.done && planById(i.planId) ? `<button class="btn primary small" data-action="start" data-plan="${i.planId}" data-sched="${i.id}">▶ Start</button>` : ''}
+        ${i.cardio
+    ? (!i.done && cardioTemplateById(i.templateId) ? `<button class="btn primary small" data-action="cardio-start" data-template="${esc(i.templateId)}" data-sched="${esc(i.id)}">▶ Start</button>` : '')
+    : (!i.done && planById(i.planId) ? `<button class="btn primary small" data-action="start" data-plan="${i.planId}" data-sched="${i.id}">▶ Start</button>` : '')}
         ${i.kind === 'sched' ? `<button class="btn ghost small danger" data-action="sched-del" data-id="${i.id}">Usuń</button>` : ''}
       </div>
     </div>`).join('') : '<p class="muted">Brak treningów tego dnia.</p>';
 
-  const form = db.plans.length ? `
+  const planOptions = db.plans.length
+    ? `<optgroup label="Plany siłowe">${db.plans.map(p => `<option value="plan:${esc(p.id)}">${esc(p.name)}</option>`).join('')}</optgroup>` : '';
+  const templateOptions = db.cardioTemplates.length
+    ? `<optgroup label="Szablony cardio">${db.cardioTemplates.map(t => `<option value="cardio:${esc(t.id)}">${esc(t.name)}</option>`).join('')}</optgroup>` : '';
+  const form = db.plans.length || db.cardioTemplates.length ? `
     <form id="sched-form" class="card">
       <h3>Dodaj trening do kalendarza</h3>
       <div class="row mt">
-        <select name="plan" class="grow">${db.plans.map(p => `<option value="${p.id}">${esc(p.name)}</option>`).join('')}</select>
+        <select name="plan" class="grow">${planOptions}${templateOptions}</select>
         <button class="btn primary">Dodaj</button>
       </div>
       <div class="row mt muted">
         <label class="row"><input type="checkbox" name="repeat"> powtarzaj co tydzień przez</label>
         <input type="number" name="weeks" min="2" max="52" value="4" class="narrow"> tyg.
       </div>
-    </form>` : '<div class="card empty">Najpierw utwórz plan w zakładce <b>Plany</b>.</div>';
+    </form>` : '<div class="card empty">Najpierw utwórz plan w zakładce <b>Plany</b> lub szablon w zakładce <b>Cardio</b>.</div>';
 
   return `
     <div class="cal-head">
@@ -675,12 +694,20 @@ function syncCardioBuilder() {
     const el = $(sel);
     if (el) el.disabled = !plan.ok;
   }
+  const sched = $('#cardio-sched-add');
+  if (sched) sched.disabled = !cardioCanSchedule(plan);
 }
+
+// Data dodania do kalendarza: domyślnie dzień zaznaczony w kalendarzu, dopóki użytkownik jej nie zmieni
+const cardioSchedDate = () => ui.cardio.date ?? ui.selected;
+// „Dodaj do kalendarza” wymaga planu mieszczącego się w cyklach, nazwy i daty
+const cardioCanSchedule = plan => plan.ok && !!ui.cardio.name.trim() && !!cardioSchedDate();
 
 function viewCardio() {
   const b = ui.cardio;
   const plan = cardioPlanCheck();
   const dis = plan.ok ? '' : 'disabled';
+  const schedDis = cardioCanSchedule(plan) ? '' : 'disabled';
   const rows = b.intervals.map((sec, i) => `
     <li>
       <span class="ex-num">${i + 1}.</span>
@@ -725,6 +752,10 @@ function viewCardio() {
         <input type="text" id="cardio-tpl-name" name="name" required class="grow" maxlength="120" placeholder="Nazwa szablonu" autocomplete="off" value="${esc(b.name)}" ${dis}>
         <button class="btn" id="cardio-save-tpl" ${dis}>Zapisz jako szablon</button>
       </form>
+      <div class="row mt">
+        <label class="field grow">Data w kalendarzu<input type="date" id="cardio-sched-date" value="${esc(cardioSchedDate())}"></label>
+        <button class="btn" id="cardio-sched-add" data-action="cardio-template-schedule" ${schedDis}>Dodaj do kalendarza</button>
+      </div>
     </div>
     <div class="section-title mt-lg"><h2>Szablony</h2></div>
     ${templates || '<div class="empty">Brak szablonów. Zapisz plan interwałowy jako szablon, aby szybko go uruchamiać.</div>'}`;
@@ -998,6 +1029,30 @@ const actions = {
     startCardio({ mode: 'interval', name: t.name, intervals: [...t.intervals], totalSec: t.totalSec, templateId: t.id, scheduleId: d.sched || null });
   },
   'cardio-remove-interval': d => { ui.cardio.intervals.splice(Number(d.index), 1); render(); },
+  // Zapisuje kreator jako szablon i od razu planuje go na wybrany dzień
+  'cardio-template-schedule': async (d, btn) => {
+    const plan = cardioPlanCheck();
+    if (!plan.ok) throw new Error(plan.message);
+    if (!cardioCanSchedule(plan)) throw new Error('Podaj nazwę szablonu i datę');
+    const date = cardioSchedDate();
+    btn.disabled = true;
+    try {
+      const template = await api('POST', 'api/cardio-templates', {
+        name: ui.cardio.name,
+        intervals: [...ui.cardio.intervals],
+        totalSec: cardioTotalSec(),
+      });
+      db.cardioTemplates.push(template);
+      ui.cardio.name = '';
+      try {
+        db.schedule.push(...await api('POST', 'api/schedule', { cardioTemplateId: template.id, dates: [date] }));
+      } catch (err) {
+        render(); // szablon już istnieje – widok ma go pokazać, żeby nie zapisać go drugi raz
+        throw new Error(`Szablon zapisano, ale nie dodano go do kalendarza: ${err.message}`);
+      }
+      render();
+    } finally { btn.disabled = false; }
+  },
   'cardio-template-del': async d => {
     const t = db.cardioTemplates.find(x => x.id === d.id);
     if (!t) return;
@@ -1204,7 +1259,10 @@ async function onSubmit(f) {
     const weeks = fd.get('repeat') ? clampInt(fd.get('weeks'), 1, 52) : 1;
     const base = parseYmd(ui.selected);
     const dates = Array.from({ length: weeks }, (_, i) => ymd(addDays(base, 7 * i)));
-    db.schedule.push(...await api('POST', 'api/schedule', { planId: fd.get('plan'), dates }));
+    // wartość opcji: „plan:<id>” albo „cardio:<id>”
+    const [kind, ...rest] = String(fd.get('plan')).split(':');
+    const target = kind === 'cardio' ? { cardioTemplateId: rest.join(':') } : { planId: rest.join(':') };
+    db.schedule.push(...await api('POST', 'api/schedule', { ...target, dates }));
     render();
   }
 }
@@ -1232,7 +1290,8 @@ document.addEventListener('input', e => {
   if (t.id === 'cardio-add-sec') ui.cardio.addSec = t.value;
   if (t.id === 'cardio-total-min') { ui.cardio.min = t.value; syncCardioBuilder(); }
   if (t.id === 'cardio-total-sec') { ui.cardio.sec = t.value; syncCardioBuilder(); }
-  if (t.id === 'cardio-tpl-name') ui.cardio.name = t.value;
+  if (t.id === 'cardio-tpl-name') { ui.cardio.name = t.value; syncCardioBuilder(); }
+  if (t.id === 'cardio-sched-date') { ui.cardio.date = t.value; syncCardioBuilder(); }
   if (t.id === 'cardio-note') { cardio.note = t.value; saveCardio(); }
 });
 

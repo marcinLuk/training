@@ -120,6 +120,8 @@ textarea { resize: vertical; min-height: 70px; }
 .dots { display: flex; gap: 3px; margin-top: auto; margin-bottom: 3px; flex-wrap: wrap; justify-content: center; }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--warn); }
 .dot.done { background: var(--accent); }
+.dot.cardio { background: transparent; border: 2px solid var(--cardio); }
+.dot.cardio.done { background: var(--cardio); }
 
 /* ---------- Dziennik ---------- */
 .log-ex { margin: 6px 0 0; font-size: .9rem; }

@@ -15,7 +15,7 @@ open config proposals: none found
 Ledger:
 - [x] Phase 1: Cardio core logic
 - [x] Phase 2: Cardio data model and API
-- [ ] Phase 3: Cardio tab, runner and journal
+- [x] Phase 3: Cardio tab, runner and journal
 - [ ] Phase 4: Cardio in the calendar
 - [ ] goal review
 - [ ] e2e walkthrough
@@ -34,8 +34,8 @@ Decisions taken from research Unknowns (slice details, not Done-when changes):
 |---|---|---|---|---|---|---|
 | 1 — Cardio core logic | sonnet | 1 | CONCERNS (4 minor, 2 nit) → `d7dbb2b` | feature | 8m / 6m | 232k |
 | 2 — Cardio data model and API | sonnet | 1 | CONCERNS (3 minor, 4 nit) → `525b781` | feature | 13m / 12m | 309k |
-| 3 — Cardio tab, runner and journal | sonnet | 1 | in progress | feature | — | — |
-| 4 — Cardio in the calendar | sonnet | 0 | waiting | feature | — | — |
+| 3 — Cardio tab, runner and journal | sonnet | 2 | CONCERNS (4 minor, 1 nit) → `2867e53` | feature | 51m / 47m | 739k |
+| 4 — Cardio in the calendar | sonnet | 1 | in progress | feature | — | — |
 
 Routing (Step 1): every slice is `sonnet` — each writes production code and tests (1, 2) or frontend
 logic with manual items (3, 4). Categories: all `feature` — each delivers new user-visible behaviour
@@ -43,22 +43,75 @@ logic with manual items (3, 4). Categories: all `feature` — each delivers new 
 
 ## Run totals
 
-phases measured: 2 of 4 executed (0 wall unknown)   ·   tokens are subagents only
+phases measured: 3 of 4 executed (0 wall unknown)   ·   tokens are subagents only
 research agent: 107k tok / 11 calls / 1m (not a phase)
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 2 | 541k | 100% | 21m | 100% | 18m |
+| feature | 3 | 1,280k | 100% | 72m | 100% | 65m |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 2 | 541k | 100% | 21m | 100% | 18m |
+| **total** | 3 | 1,280k | 100% | 72m | 100% | 65m |
 
 ---
 
+## Phase 4 — Cardio in the calendar
+
+phase:     feature  ·  start 2026-10-17T15:07:07+0200  ·  end <pending>  ·  user wait 6m  ·  paused 0m
+
+### round 3          builder sonnet → critic opus   (user-supplied brief: tests for the 5 listed gaps only, no app code change)
+  cost:      builder 84k tok / 9 calls / 1m  ·  critic 243k tok / 60 calls / 12m
+  automated: 3/3   manual: 6/6 passed (0 unreachable)
+  verdict:   CONCERNS (2 minor, 1 nit)
+  blockers:  none
+  majors:    none
+  closures:  `calendar-clauses-unpinned` closed — all 4 round-2 variants red (#10–#15) plus a second variant of each; 3 further variants beyond the termination standard recorded, not filed
+  report:    reviews/phase-4-round-3.md
+  spot-check: re-ran 4.2 (# tests 90, # fail 0, "ok 15 - syncCardioBuilder…") → confirmed
+  diff:      test/calendar-view.test.js 252 lines (15 tests); public/ unchanged since round 1 (+73/-12)
+  scripted:  test/calendar-view.test.js (python replace) — node --check clean
+  inconclusive: none
+  integrity: plan-freeze clean; slice details unchanged; no skip/todo, 'gone' case kept
+  builder:   tests 11–15 + extended test 10, persistent querySelector harness
+
+### round 2          builder sonnet → critic opus
+  cost:      builder 88k tok / 9 calls / 1m  ·  critic 221k tok / 55 calls / 14m
+  automated: 3/3   manual: 6/6 passed (0 unreachable)
+  verdict:   FAIL
+  blockers:  none
+  majors:    `calendar-clauses-unpinned` (REPEATED) — the 4 named clauses are now pinned (mutants C1–C4c red); still unpinned: dayItems "done by scheduleId", a deleted-plan strength entry with planId null (test feeds 'gone'), a stale-scheduleId loose workout, the empty-date gate and the live name gate in syncCardioBuilder — 5 mutants pass all 85 tests
+  closures:  `calendar-clauses-unpinned` → still-open (partially closed)
+  report:    reviews/phase-4-round-2.md
+  spot-check: test/calendar-view.test.js:103 feeds planId 'gone' (not null, as deletePlan produces) → confirmed
+  diff:      +1 test file (test/calendar-view.test.js, 10 tests); public/ unchanged since round 1 (+73/-12)
+  scripted:  test/calendar-view.test.js (heredoc + sed) — node --check clean
+  inconclusive: none
+  integrity: plan-freeze clean; slice details unchanged
+  valve:     repeated finding — `calendar-clauses-unpinned` Major in rounds 1 and 2 after a claimed close → Step 2d, asked 15:41:35, answered 15:47:11
+  wait:      6m
+  user:      chose "one more round" — a builder adds tests for exactly the 5 listed gaps, no app code change
+  builder:   added node:vm harness over the real app.js pinning the 4 named clauses
+
+### round 1          builder sonnet → critic opus
+  cost:      builder 129k tok / 19 calls / 3m  ·  critic 216k tok / 62 calls / 13m
+  automated: 3/3   manual: 6/6 passed (0 unreachable)
+  verdict:   FAIL
+  blockers:  none
+  majors:    `calendar-clauses-unpinned` — 4 slice clauses (Usuń on a cardio card, form shown with templates only, builder date defaults to selected day, "Dodaj do kalendarza" disabled on empty name) pinned by no test and no row; public/app.js:184, 192, 702, 704
+  report:    reviews/phase-4-round-1.md
+  spot-check: opened app.js:702 (cardioSchedDate falls back to ui.selected) and the report's supplementary observations; no node test covers app.js → confirmed
+  diff:      2 files, +73/-12
+  clauses:   all frontend clauses mapped to manual rows by the builder; the critic found 4 the rows do not cover
+  scripted:  public/app.js (python replace), public/styles.css + brief.md (sed) — node --check clean
+  inconclusive: none
+  integrity: plan-freeze clean; slice details unchanged
+  builder:   cardio items in dayItems, cardio dots/cards, optgroup form, builder "Dodaj do kalendarza"
+
 ## Phase 3 — Cardio tab, runner and journal
 
-phase:     feature  ·  start 2026-10-17T14:16:20+0200  ·  end <pending>  ·  user wait 0m  ·  paused 0m
+phase:     feature  ·  start 2026-10-17T14:16:20+0200  ·  end 2026-10-17T15:06:58+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 51m  ·  subagent time 47m  ·  tokens 739k (subagents only)  ·  rounds 2
 
 ### round 2          builder sonnet → critic opus
   cost:      builder 96k tok / 22 calls / 2m  ·  critic 230k tok / 64 calls / 18m
