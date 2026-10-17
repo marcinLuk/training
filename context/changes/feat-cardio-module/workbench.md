@@ -13,7 +13,7 @@ owner-run: D3 audible beep + phone vibration on a real device (no row; walkthrou
 open config proposals: none found
 
 Ledger:
-- [ ] Phase 1: Cardio core logic
+- [x] Phase 1: Cardio core logic
 - [ ] Phase 2: Cardio data model and API
 - [ ] Phase 3: Cardio tab, runner and journal
 - [ ] Phase 4: Cardio in the calendar
@@ -32,7 +32,7 @@ Decisions taken from research Unknowns (slice details, not Done-when changes):
 
 | Phase | Builder | Rounds | State | Category | Wall / subagent | Tokens |
 |---|---|---|---|---|---|---|
-| 1 — Cardio core logic | sonnet | 0 | waiting | feature | — | — |
+| 1 — Cardio core logic | sonnet | 1 | CONCERNS (4 minor, 2 nit) → `d7dbb2b` | feature | 8m / 6m | 232k |
 | 2 — Cardio data model and API | sonnet | 0 | waiting | feature | — | — |
 | 3 — Cardio tab, runner and journal | sonnet | 0 | waiting | feature | — | — |
 | 4 — Cardio in the calendar | sonnet | 0 | waiting | feature | — | — |
@@ -43,22 +43,43 @@ logic with manual items (3, 4). Categories: all `feature` — each delivers new 
 
 ## Run totals
 
-phases measured: 0 of 4 executed   ·   tokens are subagents only
+phases measured: 1 of 4 executed (0 wall unknown)   ·   tokens are subagents only
 research agent: 107k tok / 11 calls / 1m (not a phase)
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 0 | 0 | 0% | 0m | 0% | 0m |
+| feature | 1 | 232k | 100% | 8m | 100% | 6m |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 0 | 0 | 100% | 0m | 100% | 0m |
+| **total** | 1 | 232k | 100% | 8m | 100% | 6m |
 
 ---
 
+## Phase 2 — Cardio data model and API
+
+phase:     feature  ·  start 2026-10-17T14:02:51+0200  ·  end <pending>  ·  user wait 0m  ·  paused 0m
+
+### round 1          builder sonnet → critic opus
+  cost:      builder 118k tok / 12 calls / 3m  ·  critic 191k tok / 37 calls / 9m
+  automated: 5/5   manual: n/a (no manual items in this slice)
+  verdict:   CONCERNS (3 minor, 4 nit)
+  blockers:  none
+  majors:    none
+  report:    reviews/phase-2-round-1.md
+  spot-check: re-ran 2.5 (# tests 70, # fail 0); opened db.js:361 → new "Podaj dokładnie jedno" message as cited → confirmed
+  diff:      db.js +149/-~15, server.js +6, 3 new test files (320 + 106 + 132 lines)
+  clauses:   34/35 mapped to a test (1 unmapped: "every multi-statement write in tx()" — code property; critic's mutants M31/M32 confirm no reachable effect)
+  scripted:  db.js, server.js (python anchor replace) — node --check clean at 2f; brief.md (sed checkbox flip; integrity clean)
+  inconclusive: none
+  integrity: plan-freeze clean; slice details unchanged (md5 match)
+  foreign:   documentation/pain-points-research-brief.md appeared at 14:09 — written by neither builder nor critic; left unstaged
+  builder:   migration v3, cardio repo + routes, addSchedule plan XOR template, replaceAll with cardio; 34 tests; HEAD check red 34/34
+
 ## Phase 1 — Cardio core logic
 
-phase:     feature  ·  start 2026-10-17T13:54:55+0200  ·  end <pending>  ·  user wait 0m  ·  paused 0m
+phase:     feature  ·  start 2026-10-17T13:54:55+0200  ·  end 2026-10-17T14:02:41+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 8m  ·  subagent time 6m  ·  tokens 232k (subagents only)  ·  rounds 1
 
 ### round 1          builder sonnet → critic opus
   cost:      builder 98k tok / 9 calls / 2m  ·  critic 135k tok / 18 calls / 4m

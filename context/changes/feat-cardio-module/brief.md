@@ -60,17 +60,17 @@ db.js:284 addSchedule, app.js:93 dayItems, app.js:310 viewJournal, app.js:466 ti
 
 ### Phase 1: Cardio core logic
 #### Automated Verification:
-- [x] 1.1 `node --disable-warning=ExperimentalWarning --test test/cardio-core.test.js` passes: summary shows `# tests N` with N > 0 and `# fail 0` (D1, D2, D3, D4)
-- [x] 1.2 `node --check public/cardio-core.js` exits 0
-- [x] 1.3 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0`
+- [x] 1.1 `node --disable-warning=ExperimentalWarning --test test/cardio-core.test.js` passes: summary shows `# tests N` with N > 0 and `# fail 0` (D1, D2, D3, D4) — d7dbb2b
+- [x] 1.2 `node --check public/cardio-core.js` exits 0 — d7dbb2b
+- [x] 1.3 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0` — d7dbb2b
 
 ### Phase 2: Cardio data model and API
 #### Automated Verification:
-- [ ] 2.1 `node --disable-warning=ExperimentalWarning --test test/cardio-repo.test.js` passes with N > 0 and `# fail 0` (D5, D6, D7, D9)
-- [ ] 2.2 `node --disable-warning=ExperimentalWarning --test test/migration.test.js` passes with N > 0 and `# fail 0` (D8)
-- [ ] 2.3 `node --disable-warning=ExperimentalWarning --test test/cardio-api.test.js` passes with N > 0 and `# fail 0` (D2)
-- [ ] 2.4 `node --check server.js && node --check db.js && node --check public/app.js && node --check public/cardio-core.js` exits 0, and the auto-loop.md §2 smoke command exits 0
-- [ ] 2.5 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0`
+- [x] 2.1 `node --disable-warning=ExperimentalWarning --test test/cardio-repo.test.js` passes with N > 0 and `# fail 0` (D5, D6, D7, D9)
+- [x] 2.2 `node --disable-warning=ExperimentalWarning --test test/migration.test.js` passes with N > 0 and `# fail 0` (D8)
+- [x] 2.3 `node --disable-warning=ExperimentalWarning --test test/cardio-api.test.js` passes with N > 0 and `# fail 0` (D2)
+- [x] 2.4 `node --check server.js && node --check db.js && node --check public/app.js && node --check public/cardio-core.js` exits 0, and the auto-loop.md §2 smoke command exits 0
+- [x] 2.5 `node --disable-warning=ExperimentalWarning --test` passes with `# fail 0`
 
 ### Phase 3: Cardio tab, runner and journal
 #### Automated Verification:

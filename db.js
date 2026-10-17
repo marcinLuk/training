@@ -4,6 +4,7 @@ const { DatabaseSync } = require('node:sqlite');
 const { randomUUID } = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
+const CardioCore = require('./public/cardio-core');
 
 // Kolejne wersje schematu; numer wersji bazy trzymamy w PRAGMA user_version
 const MIGRATIONS = [
@@ -96,6 +97,37 @@ const MIGRATIONS = [
     FROM plan_exercises_v1 o JOIN exercises e ON e.name = o.name COLLATE NOCASE;
 
   DROP TABLE plan_exercises_v1;
+  `,
+
+  // v3: cardio – szablony interwałów, wpisy w kalendarzu i dziennik treningów cardio
+  `
+  CREATE TABLE cardio_templates (
+    id         TEXT PRIMARY KEY,
+    name       TEXT NOT NULL,
+    total_sec  INTEGER NOT NULL,
+    intervals  TEXT NOT NULL,        -- JSON: tablica czasów interwałów w sekundach
+    created_at INTEGER NOT NULL
+  );
+
+  ALTER TABLE schedule ADD COLUMN cardio_template_id TEXT REFERENCES cardio_templates(id) ON DELETE SET NULL;
+  CREATE INDEX schedule_cardio_template ON schedule(cardio_template_id);
+
+  -- Kopia migawkowa jak workouts: nazwa i interwały zostają w dzienniku po usunięciu szablonu
+  CREATE TABLE cardio_workouts (
+    id          TEXT PRIMARY KEY,
+    template_id TEXT REFERENCES cardio_templates(id) ON DELETE SET NULL,
+    schedule_id TEXT REFERENCES schedule(id) ON DELETE SET NULL,
+    name        TEXT NOT NULL,
+    mode        TEXT NOT NULL CHECK (mode IN ('free', 'interval')),
+    intervals   TEXT,                -- JSON; NULL w trybie swobodnym
+    total_sec   INTEGER,             -- NULL w trybie swobodnym
+    date        TEXT NOT NULL,       -- YYYY-MM-DD
+    started_at  INTEGER NOT NULL,
+    finished_at INTEGER NOT NULL,
+    active_sec  INTEGER NOT NULL,
+    note        TEXT NOT NULL DEFAULT ''
+  );
+  CREATE INDEX cardio_workouts_date ON cardio_workouts(date);
   `,
 ];
 
@@ -192,6 +224,13 @@ function createRepo(file) {
     return db.prepare('DELETE FROM exercises WHERE id = ?').run(exId).changes > 0;
   }
 
+  // Interwały i czas całkowity (szablon, trening interwałowy) przechodzą przez checkPlan; błąd to 400, nigdy przycinanie
+  function checkedPlan(intervals, totalSec) {
+    const result = CardioCore.checkPlan(intervals, totalSec);
+    if (!result.ok) throw new ValidationError(result.message);
+    return { intervals: [...intervals], totalSec };
+  }
+
   // ---------- Odczyt ----------
   function getPlans() {
     const plans = db.prepare('SELECT id, name FROM plans ORDER BY created_at, rowid').all()
@@ -229,13 +268,28 @@ function createRepo(file) {
     return workouts;
   }
 
+  const getCardioTemplates = () => db.prepare('SELECT * FROM cardio_templates ORDER BY created_at, rowid').all()
+    .map(t => ({ id: t.id, name: t.name, intervals: JSON.parse(t.intervals), totalSec: t.total_sec }));
+
+  function getCardioLog(workoutId) {
+    const where = workoutId ? 'WHERE id = ?' : '';
+    return db.prepare(`SELECT * FROM cardio_workouts ${where} ORDER BY started_at, rowid`).all(...(workoutId ? [workoutId] : []))
+      .map(w => ({
+        id: w.id, templateId: w.template_id, scheduleId: w.schedule_id, name: w.name, mode: w.mode,
+        intervals: w.intervals == null ? null : JSON.parse(w.intervals), totalSec: w.total_sec,
+        date: w.date, startedAt: w.started_at, finishedAt: w.finished_at, activeSec: w.active_sec, note: w.note,
+      }));
+  }
+
   function getState() {
     return {
       exercises: getExercises(),
       plans: getPlans(),
-      schedule: db.prepare('SELECT id, date, plan_id AS planId FROM schedule ORDER BY date').all()
-        .map(s => ({ id: s.id, date: s.date, planId: s.planId })),
+      schedule: db.prepare('SELECT id, date, plan_id AS planId, cardio_template_id AS cardioTemplateId FROM schedule ORDER BY date').all()
+        .map(s => ({ id: s.id, date: s.date, planId: s.planId, cardioTemplateId: s.cardioTemplateId })),
       log: getLog(),
+      cardioTemplates: getCardioTemplates(),
+      cardioLog: getCardioLog(),
     };
   }
 
@@ -280,19 +334,54 @@ function createRepo(file) {
     });
   }
 
+  // ---------- Szablony cardio ----------
+  function insertCardioTemplate(t, createdAt = Date.now()) {
+    const template = { id: id(t?.id), name: text(t?.name, 'nazwa szablonu'), ...checkedPlan(t?.intervals, t?.totalSec) };
+    db.prepare('INSERT INTO cardio_templates (id, name, total_sec, intervals, created_at) VALUES (?, ?, ?, ?, ?)')
+      .run(template.id, template.name, template.totalSec, JSON.stringify(template.intervals), createdAt);
+    return template;
+  }
+
+  const createCardioTemplate = body => tx(() => insertCardioTemplate(body));
+
+  // Usuwa szablon razem z jego niewykonanymi terminami; terminy ukończone treningiem cardio zostają w kalendarzu
+  function deleteCardioTemplate(templateId) {
+    return tx(() => {
+      db.prepare(`DELETE FROM schedule WHERE cardio_template_id = ?
+                  AND id NOT IN (SELECT schedule_id FROM cardio_workouts WHERE schedule_id IS NOT NULL)`).run(templateId);
+      return db.prepare('DELETE FROM cardio_templates WHERE id = ?').run(templateId).changes > 0;
+    });
+  }
+
   // ---------- Kalendarz ----------
+  // Termin dotyczy dokładnie jednego: planu siłowego albo szablonu cardio
   function addSchedule(body) {
-    if (!exists('plans', body?.planId)) throw new ValidationError('Wybrany plan nie istnieje');
+    const hasPlan = body?.planId != null;
+    const hasTemplate = body?.cardioTemplateId != null;
+    if (hasPlan === hasTemplate) throw new ValidationError('Podaj dokładnie jedno: plan albo szablon cardio');
+    if (hasPlan && !exists('plans', body.planId)) throw new ValidationError('Wybrany plan nie istnieje');
+    if (hasTemplate && !exists('cardio_templates', body.cardioTemplateId)) throw new ValidationError('Wybrany szablon cardio nie istnieje');
+    const planId = hasPlan ? body.planId : null;
+    const cardioTemplateId = hasTemplate ? body.cardioTemplateId : null;
     const dates = (Array.isArray(body.dates) ? body.dates : [body.date]).slice(0, 366).map(date);
-    const insert = db.prepare('INSERT INTO schedule (id, date, plan_id) VALUES (?, ?, ?)');
+    const insert = db.prepare('INSERT INTO schedule (id, date, plan_id, cardio_template_id) VALUES (?, ?, ?, ?)');
     return tx(() => dates.map(d => {
-      const entry = { id: randomUUID(), date: d, planId: body.planId };
-      insert.run(entry.id, entry.date, entry.planId);
+      const entry = { id: randomUUID(), date: d, planId, cardioTemplateId };
+      insert.run(entry.id, entry.date, entry.planId, entry.cardioTemplateId);
       return entry;
     }));
   }
 
   const deleteSchedule = schedId => db.prepare('DELETE FROM schedule WHERE id = ?').run(schedId).changes > 0;
+
+  // Trening siłowy może zamknąć tylko termin siłowy, a cardio tylko termin cardio – niezgodne powiązanie jest zerowane.
+  // Termin bez planu i bez szablonu (po usunięciu planu lub szablonu) należy do rodzaju treningu, który go wykonał,
+  // więc pozostaje dostępny tylko dla tego rodzaju (np. przy imporcie kopii zapasowej).
+  const existsScheduleEntry = (scheduleId, cardio) => scheduleId != null && !!db.prepare(cardio
+    ? `SELECT 1 FROM schedule WHERE id = ? AND (cardio_template_id IS NOT NULL
+         OR (plan_id IS NULL AND id NOT IN (SELECT schedule_id FROM workouts WHERE schedule_id IS NOT NULL)))`
+    : `SELECT 1 FROM schedule WHERE id = ? AND cardio_template_id IS NULL
+         AND id NOT IN (SELECT schedule_id FROM cardio_workouts WHERE schedule_id IS NOT NULL)`).get(scheduleId);
 
   // ---------- Dziennik ----------
   function insertWorkout(w) {
@@ -302,7 +391,7 @@ function createRepo(file) {
       workoutId,
       exists('plans', w.planId) ? w.planId : null,
       text(w.planName, 'nazwa planu'),
-      exists('schedule', w.scheduleId) ? w.scheduleId : null,
+      existsScheduleEntry(w.scheduleId, false) ? w.scheduleId : null,
       date(w.date),
       timestamp(w.startedAt),
       timestamp(w.finishedAt),
@@ -321,23 +410,58 @@ function createRepo(file) {
   const addWorkout = body => getLog(tx(() => insertWorkout(body ?? {})))[0];
   const deleteWorkout = workoutId => db.prepare('DELETE FROM workouts WHERE id = ?').run(workoutId).changes > 0;
 
+  // ---------- Dziennik cardio ----------
+  function insertCardioWorkout(w) {
+    const mode = w.mode;
+    if (mode !== 'free' && mode !== 'interval') throw new ValidationError('Nieprawidłowy tryb treningu cardio');
+    const plan = mode === 'interval' ? checkedPlan(w.intervals, w.totalSec) : { intervals: null, totalSec: null };
+    const workoutId = id(w.id);
+    db.prepare(`INSERT INTO cardio_workouts
+                  (id, template_id, schedule_id, name, mode, intervals, total_sec, date, started_at, finished_at, active_sec, note)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+      workoutId,
+      exists('cardio_templates', w.templateId) ? w.templateId : null,
+      existsScheduleEntry(w.scheduleId, true) ? w.scheduleId : null,
+      text(w.name, 'nazwa treningu'),
+      mode,
+      plan.intervals && JSON.stringify(plan.intervals),
+      plan.totalSec,
+      date(w.date),
+      timestamp(w.startedAt),
+      timestamp(w.finishedAt),
+      int(w.activeSec, 0, 86400),
+      typeof w.note === 'string' ? w.note.trim().slice(0, 2000) : '');
+    return workoutId;
+  }
+
+  const addCardioWorkout = body => getCardioLog(tx(() => insertCardioWorkout(body ?? {})))[0];
+  const deleteCardioWorkout = workoutId => db.prepare('DELETE FROM cardio_workouts WHERE id = ?').run(workoutId).changes > 0;
+
   // ---------- Kopia zapasowa ----------
-  // Przyjmuje też starsze kopie bez bazy ćwiczeń – ćwiczenia powstaną wtedy z nazw w planach
+  // Przyjmuje też starsze kopie bez bazy ćwiczeń – ćwiczenia powstaną wtedy z nazw w planach,
+  // oraz kopie bez danych cardio (cardioTemplates / cardioLog są opcjonalne)
   function replaceAll(data) {
     if (!Array.isArray(data?.plans) || !Array.isArray(data.schedule) || !Array.isArray(data.log)) {
       throw new ValidationError('Nieprawidłowy plik kopii zapasowej');
     }
     tx(() => {
-      db.exec('DELETE FROM workouts; DELETE FROM schedule; DELETE FROM plans; DELETE FROM exercises;');
+      db.exec(`DELETE FROM cardio_workouts; DELETE FROM workouts; DELETE FROM schedule;
+               DELETE FROM cardio_templates; DELETE FROM plans; DELETE FROM exercises;`);
       for (const e of Array.isArray(data.exercises) ? data.exercises : []) {
         const name = text(e?.name, 'nazwa ćwiczenia');
         if (!findExerciseByName(name)) insertExercise(name, e.id);
       }
       const now = Date.now();
       data.plans.forEach((p, i) => insertPlan(p, now + i));
-      const insert = db.prepare('INSERT INTO schedule (id, date, plan_id) VALUES (?, ?, ?)');
-      for (const s of data.schedule) insert.run(id(s.id), date(s.date), exists('plans', s.planId) ? s.planId : null);
+      (Array.isArray(data.cardioTemplates) ? data.cardioTemplates : []).forEach((t, i) => insertCardioTemplate(t, now + i));
+      const insert = db.prepare('INSERT INTO schedule (id, date, plan_id, cardio_template_id) VALUES (?, ?, ?, ?)');
+      for (const s of data.schedule) {
+        const planId = exists('plans', s.planId) ? s.planId : null;
+        const cardioTemplateId = !planId && exists('cardio_templates', s.cardioTemplateId) ? s.cardioTemplateId : null;
+        insert.run(id(s.id), date(s.date), planId, cardioTemplateId);
+      }
       for (const w of data.log) insertWorkout(w);
+      for (const w of Array.isArray(data.cardioLog) ? data.cardioLog : []) insertCardioWorkout(w);
     });
   }
 
@@ -361,9 +485,10 @@ function createRepo(file) {
     getState,
     createExercise, renameExercise, deleteExercise,
     createPlan, updatePlan, deletePlan,
+    createCardioTemplate, deleteCardioTemplate, addCardioWorkout, deleteCardioWorkout,
     addSchedule, deleteSchedule, addWorkout, deleteWorkout, replaceAll,
     close: () => db.close(),
   };
 }
 
-module.exports = { createRepo, ValidationError, ConflictError };
+module.exports = { createRepo, MIGRATIONS, ValidationError, ConflictError };

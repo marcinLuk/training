@@ -60,6 +60,12 @@ app.delete('/api/schedule/:id', (req, res) => (repo.deleteSchedule(req.params.id
 app.post('/api/workouts', (req, res) => res.status(201).json(repo.addWorkout(req.body)));
 app.delete('/api/workouts/:id', (req, res) => (repo.deleteWorkout(req.params.id) ? res.sendStatus(204) : notFound(res)));
 
+app.post('/api/cardio-templates', (req, res) => res.status(201).json(repo.createCardioTemplate(req.body)));
+app.delete('/api/cardio-templates/:id', (req, res) => (repo.deleteCardioTemplate(req.params.id) ? res.sendStatus(204) : notFound(res)));
+
+app.post('/api/cardio-workouts', (req, res) => res.status(201).json(repo.addCardioWorkout(req.body)));
+app.delete('/api/cardio-workouts/:id', (req, res) => (repo.deleteCardioWorkout(req.params.id) ? res.sendStatus(204) : notFound(res)));
+
 app.get('/api/export', (req, res) => {
   res.attachment(`trening-backup-${new Date().toISOString().slice(0, 10)}.json`);
   res.send(JSON.stringify(repo.getState(), null, 2));
