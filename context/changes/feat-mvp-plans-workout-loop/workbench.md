@@ -17,7 +17,7 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 
 - [x] Phase 1 — Unit test harness
 - [x] Phase 2 — Plan model and device storage
-- [ ] Phase 3 — App shell, plan list and new-plan editor
+- [x] Phase 3 — App shell, plan list and new-plan editor
 - [ ] Phase 4 — Workout engine
 - [ ] Phase 5 — Workout screens, rest timer and sound
 - [ ] Phase 6 — Resume, expiry, Wake Lock and early end
@@ -47,7 +47,7 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 |---|---|---|---|---|---|---|
 | 1 — Unit test harness | sonnet | 1 | CONCERNS (1 minor, 1 nit) → `5eff3e6` | stabilization | 7m / 6m | 230k |
 | 2 — Plan model and device storage | sonnet | 4 | CONCERNS (3 nits) → `f00c8ad` | feature | 25m / 22m | 882k |
-| 3 — App shell, plan list and new-plan editor | sonnet | 0 | waiting | feature | — | — |
+| 3 — App shell, plan list and new-plan editor | sonnet | 2 | CONCERNS (2 minor, 4 nits) → `c8b1567` | feature | 22m / 19m | 603k |
 | 4 — Workout engine | sonnet | 0 | waiting | feature | — | — |
 | 5 — Workout screens, rest timer and sound | sonnet | 0 | waiting | feature | — | — |
 | 6 — Resume, expiry, Wake Lock and early end | sonnet | 0 | waiting | feature | — | — |
@@ -56,15 +56,15 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 
 ## Run totals
 
-phases measured: 2 of 8 (0 wall unknown)   ·   tokens are subagents only
+phases measured: 3 of 8 (0 wall unknown)   ·   tokens are subagents only
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 1 | 882k | 79% | 25m | 78% | 22m |
-| stabilization | 1 | 230k | 21% | 7m | 22% | 6m |
+| feature | 2 | 1485k | 87% | 47m | 87% | 41m |
+| stabilization | 1 | 230k | 13% | 7m | 13% | 6m |
 | refactor | 0 | 0k | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 2 | 1112k | 100% | 32m | 100% | 28m |
+| **total** | 3 | 1715k | 100% | 54m | 100% | 47m |
 
 research (not a phase): 75k tok, 1m
 
@@ -157,7 +157,8 @@ totals:    wall 25m  ·  subagent time 22m  ·  tokens 882k (subagents only)  ·
 
 ## Phase 3 — App shell, plan list and new-plan editor
 
-phase:     feature  ·  start 2026-10-18T17:46:57+0200
+phase:     feature  ·  start 2026-10-18T17:46:57+0200  ·  end 2026-10-18T18:08:37+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 22m (includes one unstamped user wait — the lane-breach question)  ·  subagent time 19m  ·  tokens 603k (subagents only)  ·  rounds 2
 
 ### round 1          builder sonnet → critic opus
   cost:      builder 135k tok / 20 calls / 4m  ·  critic 201k tok / 45 calls / 8m
@@ -188,3 +189,38 @@ phase:     feature  ·  start 2026-10-18T17:46:57+0200
   diff:      PlanEditor.test.ts (+23), CLAUDE.md (1 paragraph)
   inconclusive: none
   builder:   validation-failure retention test; CLAUDE.md layout paragraph
+
+## Phase 4 — Workout engine
+
+phase:     feature  ·  start 2026-10-18T18:08:51+0200
+
+### round 1          builder sonnet → critic opus
+  cost:      builder 97k tok / 10 calls / 3m  ·  critic 150k tok / 25 calls / 6m
+  automated: 2/2   manual: n/a
+  verdict:   FAIL
+  blockers:  none
+  majors:    `islastset-test-not-on-last-exercise` — test named for the last exercise stops on exercise 2; src/workout/engine.test.ts:170-176
+             `adjustrest-end-stamp-unpinned` — lastActivityAt on the −15 s rest-ending path unpinned; engine.ts:253
+             `finished-cursor-docblock-unpinned` — "cursor = sets.length when finished" unasserted; engine.ts:51-53
+  minors:    `elapsed-rest-reports-rest-mode` (note for p5/p6), `rest-remaining-exceeds-duration-on-clock-backstep` (licensed for round 2 as its own instruction), `max-set-count-magic-number`
+  report:    reviews/phase-4-round-1.md
+  spot-check: opened engine.test.ts:170-176 → confirmed (asserts 'Rozpiętki', not the last exercise)
+  diff:      2 new files (+800)
+  clauses:   all mapped; 9 builder mutants killed; critic: 39 mutants, 35 killed, 3 real gaps, 1 equivalent; 48k-action random invariant probe clean
+  inconclusive: none
+  builder:   pure workout engine + 54 tests
+
+### round 2          builder sonnet → critic opus
+  cost:      builder 79k tok / 7 calls / 1m  ·  critic 142k tok / 23 calls / 6m
+  automated: 2/2   manual: n/a
+  verdict:   CONCERNS
+  closures:  `islastset-test-not-on-last-exercise`, `adjustrest-end-stamp-unpinned`, `finished-cursor-docblock-unpinned` → closed (C1–C3 killed); rest cap pinned (C4), differential probe 0 divergences on a forward clock
+  blockers:  none
+  majors:    none
+  minors:    `last-activity-stamp-branch-unasserted`, `rest-view-fields-unasserted`, `canundo-dead-finished-check`, `docblock-new-state-on-noop`
+  report:    reviews/phase-4-round-2.md
+  spot-check: re-ran `npm test` before the critic → 176 passed; confirmed by the critic's 4.1 line
+  note:      critic saw `curl localhost:4199` exit 28 (timeout, no local listener: no vite process in `ps`); not this run's server — watched in p5
+  diff:      engine.ts (cap) + engine.test.ts (+12)
+  inconclusive: none
+  builder:   closed 3 test gaps; capped remaining rest at durationMs

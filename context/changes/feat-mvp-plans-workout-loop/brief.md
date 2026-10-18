@@ -54,17 +54,17 @@ See `research.md` (entry points: `package.json:6-10`, `tsconfig.json:2-5`, `vite
 
 ### Phase 3: App shell, plan list and new-plan editor
 #### Automated Verification:
-- [x] 3.1 `npx vitest run src/components` passes, with tests for creating a plan with default values, the −/+ steppers (rest in 15 s steps), the empty-name error, saving, and the list summary with Polish plural forms (D2)
-- [x] 3.2 `npm test` exits 0
-- [x] 3.3 `npm run build` exits 0, `public/fonts/` holds the woff2 files and the OFL license, and no `http://` or `https://` URL appears in the built CSS (`dist/assets/*.css`)
+- [x] 3.1 `npx vitest run src/components` passes, with tests for creating a plan with default values, the −/+ steppers (rest in 15 s steps), the empty-name error, saving, and the list summary with Polish plural forms (D2) — c8b1567
+- [x] 3.2 `npm test` exits 0 — c8b1567
+- [x] 3.3 `npm run build` exits 0, `public/fonts/` holds the woff2 files and the OFL license, and no `http://` or `https://` URL appears in the built CSS (`dist/assets/*.css`) — c8b1567
 #### Manual Verification:
-- [x] 3.4 at 412×915: create plan "Wiosłowanie i przysiady" with two exercises ("Wiosłowanie" with the defaults, "Przysiady" with changed values), save, see it in the list with its summary, reload, still there (D2)
-- [x] 3.5 at 412×915: dark "guma" background, Barlow fonts loaded from `/fonts/`, targets at least 44 px, no emoji or Unicode icons, no demo scaffold content left
+- [x] 3.4 at 412×915: create plan "Wiosłowanie i przysiady" with two exercises ("Wiosłowanie" with the defaults, "Przysiady" with changed values), save, see it in the list with its summary, reload, still there (D2) — c8b1567
+- [x] 3.5 at 412×915: dark "guma" background, Barlow fonts loaded from `/fonts/`, targets at least 44 px, no emoji or Unicode icons, no demo scaffold content left — c8b1567
 
 ### Phase 4: Workout engine
 #### Automated Verification:
-- [ ] 4.1 `npx vitest run src/workout` passes, with tests for the current position, sets left and next exercise; "done" starting a rest; the remaining rest after the clock moves with no ticks; the rest end returning to the set; the last set ending the workout; a 0 s rest; undo; skip; ±15 s with the clamp at zero; the 2 h idle boundary; and the plan copy staying unchanged when the source plan changes (D3, D4, D5, D6, D7)
-- [ ] 4.2 `npm run build` exits 0
+- [x] 4.1 `npx vitest run src/workout` passes, with tests for the current position, sets left and next exercise; "done" starting a rest; the remaining rest after the clock moves with no ticks; the rest end returning to the set; the last set ending the workout; a 0 s rest; undo; skip; ±15 s with the clamp at zero; the 2 h idle boundary; and the plan copy staying unchanged when the source plan changes (D3, D4, D5, D6, D7)
+- [x] 4.2 `npm run build` exits 0
 
 ### Phase 5: Workout screens, rest timer and sound
 #### Automated Verification:
