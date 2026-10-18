@@ -1,0 +1,184 @@
+{
+  "study": "problemy-cwiczacych",
+  "goal": "Check whether people who work out at home or at the gym share two problems: (A) losing count or skipping sets because of distraction, and (B) planning workouts in a notebook or notes being slow and hard to change. Informs hypotheses HA0-HA6 and HB1-HB4 in documentation/hipotezy-produktowe.md. Note: in this study 'app_type' is a group of exercisers and 'app_name' is a community or topic, not an app.",
+  "language": "en",
+  "csv": "documentation/problemy-cwiczacych-pain-points.csv",
+  "app_types": [
+    {
+      "key": "home_gym",
+      "label": "people working out at home (home gym, bodyweight, small equipment)",
+      "apps": [
+        "home workout",
+        "home gym",
+        "bodyweight workout",
+        "calisthenics routine"
+      ]
+    },
+    {
+      "key": "gym",
+      "label": "people lifting at a commercial gym",
+      "apps": [
+        "gym workout",
+        "weightlifting routine",
+        "lifting program",
+        "powerlifting training"
+      ]
+    },
+    {
+      "key": "beginners",
+      "label": "beginners and casual exercisers building a routine",
+      "apps": [
+        "beginner workout",
+        "workout routine",
+        "starting lifting",
+        "workout consistency"
+      ]
+    },
+    {
+      "key": "tracking_methods",
+      "label": "how people track and plan workouts: notebook, notes, spreadsheet, app",
+      "apps": [
+        "workout notebook",
+        "workout log",
+        "workout spreadsheet",
+        "workout planner"
+      ]
+    }
+  ],
+  "sources": [
+    "reddit",
+    "forums and blogs"
+  ],
+  "source_types": [
+    "reddit",
+    "forum",
+    "blog",
+    "other"
+  ],
+  "reddit": {
+    "enabled": true,
+    "env_file": "~/.config/trening-research/reddit.env"
+  },
+  "problem_keywords": [
+    "\"lose track\"",
+    "\"lost count\"",
+    "forgot",
+    "skipped",
+    "distracted",
+    "\"wish there\"",
+    "annoying",
+    "tedious",
+    "\"rewrite\"",
+    "\"cross out\""
+  ],
+  "categories": [
+    {
+      "name": "Losing Count/Reps",
+      "use_for": "forgetting how many reps or sets were done within a set or exercise, losing the count mid-set"
+    },
+    {
+      "name": "Skipped Sets/Exercises",
+      "use_for": "accidentally skipping a set or an exercise, realizing afterwards that part of the plan was not done"
+    },
+    {
+      "name": "Lost Place After Break",
+      "use_for": "not knowing where one is after a rest, a pause, a phone call, or switching away"
+    },
+    {
+      "name": "Distraction/Interruptions",
+      "use_for": "being talked to, mind wandering, or distracted by people or noise during the workout"
+    },
+    {
+      "name": "Rest Timing",
+      "use_for": "tracking rest between sets, resting too long or too short, timers"
+    },
+    {
+      "name": "Planning Effort",
+      "use_for": "planning workouts takes too much time or effort, building a program from scratch"
+    },
+    {
+      "name": "Plan Changes/Editing",
+      "use_for": "changing a plan is hard or messy, crossing out, rewriting, adjusting weights or exercises"
+    },
+    {
+      "name": "Reuse/Templates",
+      "use_for": "rewriting the same plan again, copying previous weeks, wanting templates or repeatable routines"
+    },
+    {
+      "name": "Paper vs App",
+      "use_for": "comparisons or trade-offs between a notebook, notes, a spreadsheet and an app"
+    },
+    {
+      "name": "Progress Tracking",
+      "use_for": "remembering last weights, seeing progress, reviewing history"
+    },
+    {
+      "name": "Phone During Workout",
+      "use_for": "using or avoiding the phone during training, screen locking, phone as a distraction"
+    },
+    {
+      "name": "Coping Workarounds",
+      "use_for": "tricks people use to avoid losing track, such as counting aloud, marking sets, writing on hand"
+    },
+    {
+      "name": "Motivation/Consistency",
+      "use_for": "staying motivated, sticking to a routine, skipping whole workouts"
+    },
+    {
+      "name": "Other",
+      "use_for": "anything that does not fit above"
+    }
+  ],
+  "columns": [
+    "summary",
+    "category",
+    "app_name",
+    "app_type",
+    "severity",
+    "review_date",
+    "source_type",
+    "source_url"
+  ],
+  "severity": {
+    "high": "the problem recurs and hurts the workout, or makes the person abandon their method",
+    "medium": "regular frustration or time lost",
+    "low": "occasional annoyance"
+  },
+  "rules": {
+    "undated": "drop",
+    "year_less_dates": "drop",
+    "reddit_mirrors": "drop",
+    "duplicates": "one row per opinion; drop only exact duplicates",
+    "store_review_url": "app store or aggregator page when the review has no own link",
+    "inferred_dates": "keep (decided 2026-10-18): dates inferred from 'N months ago' or item ids are kept when inside the range; mark them in the run note",
+    "developer_posts": "keep (decided 2026-10-18): first-person anecdotes by app builders or authors who sell tools are kept; mark them in the run note",
+    "weak_fit_rows": "keep (decided 2026-10-18): rows flagged as weak fits stay, with low severity and category Motivation/Consistency or Other"
+  },
+  "target_per_type": {
+    "exa": "30-40, soft",
+    "reddit": "15-20, soft"
+  },
+  "exa_caps_per_agent": {
+    "searches": 80,
+    "fetched_urls": 100
+  },
+  "budget_usd_per_run": 5,
+  "runs": [
+    {
+      "n": 1,
+      "mode": "research",
+      "from": "2024-10-18",
+      "to": "2026-10-18",
+      "run_date": "2026-10-18",
+      "rows_added": 188,
+      "rows_total": 188,
+      "by_source": {
+        "forum": 64,
+        "reddit": 61,
+        "blog": 53,
+        "other": 10
+      },
+      "note": "Exa 4 types + Reddit two passes (second targeted). Kept per user: 9 HN rows with inferred dates, developer/seller posts, weak-fit rows. Reddit gave mostly noise; problem B has no Reddit voices."
+    }
+  ]
+}
