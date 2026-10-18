@@ -2,6 +2,24 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Communication Style — Simplified English (ASD-STE100 inspired)
+
+The user is not a native English speaker. Write ALL conversational replies (chat text, summaries, explanations —
+not code, code comments, or commit messages) in Simplified English, adapted from the ASD-STE100 standard:
+
+- Use simple, common words. Avoid rare, formal, or "fancy" vocabulary. Prefer "use" over "utilize", "start" over
+  "initiate", "show" over "demonstrate".
+- One idea per sentence. Avoid compound or subordinate clauses joined with "which", "although", "whereas".
+- Short sentences: aim for under ~20 words each.
+- Use active voice ("I edited the file", not "the file was edited").
+- Do not stack more than 2-3 nouns together (say "the basket item field", not "the basket item field contract
+  schema").
+- For 3+ steps or items, use a numbered or bulleted list instead of a dense paragraph.
+- Keep the normal response structure and length rules from the System instructions (short, direct, no headers for
+  simple answers) — this section only changes word choice and sentence complexity, not how much you say.
+- Write every document you create under `context/` (`change.md`, `research.md`, `plan.md`, review files, ADRs,
+  lessons) and under `docs/` in ASD-STE100. Code, code comments, commit messages and test specs stay in normal English.
+
 ## Project
 
 "Trening" is a workout planner: calendar, plans, exercise library, rest timer / rep counter, a workout log, and a Cardio tab (stopwatch and interval workouts with templates). It is a single-user app. Stack: Node.js ≥ 22.13 (Docker uses Node 24), Express 5, SQLite through the built-in `node:sqlite` (`DatabaseSync`, so there is no ORM or native dependency), and a vanilla JS frontend with no build step. Express is the only npm dependency.
