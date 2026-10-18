@@ -230,12 +230,14 @@ Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla c
 - **Shadow Strategy:** brak, patrz Elevation & Depth.
 - **Internal Padding:** 16–20 px.
 - Karta planu: nazwa, podsumowanie („5 ćwiczeń, 18 serii"), Start jako główna akcja, edycja i usuwanie rozdzielone szerokim odstępem.
+- Lista planów bez planów: „Nie masz jeszcze planów. Dodaj pierwszy plan, a potem uruchom trening." Dopóki karta nie ma Start, „Nowy plan" jest główną akcją listy.
 
 ### Inputs / Fields
 - **Style:** tło powierzchnia 2, obramowanie 2 px w kolorze linii, promień 10 px, wysokość 56 px, cyfry Barlow Condensed 700.
 - **Krok liczby:** pole serii, powtórzeń i przerwy z przyciskami −/+ (56 px), bez konieczności klawiatury. Przerwa zmienia się co 15 s.
 - **Focus:** obramowanie w kolorze fokusu.
 - **Error:** komunikat z kolorem błędu i ikoną ostrzeżenia, treść nazywa problem i sposób naprawy.
+- **Edytor planu:** napisy „Nazwa planu", „Nazwa ćwiczenia", „Serie", „Powtórzenia", „Przerwa", przyciski „Dodaj ćwiczenie", „Usuń ćwiczenie", „Zapisz plan" (główna), „Anuluj"; nowy plan startuje z jednym ćwiczeniem. Nieudany zapis pokazuje komunikat „Nie udało się zapisać planu…" i zostawia wpisane dane na ekranie.
 
 ### Widok serii (ekran treningu)
 - Od góry: nazwa ćwiczenia (Headline), powtórzenia (Figure), pod nimi Counter z liczbą pozostałych serii i podpisem „serii zostało". Niżej wiersz „Dalej:" z nazwą następnego ćwiczenia (Title, kolor drugorzędny). Na dole „Gotowe" (64 px, kreda), a nad nim „Cofnij" i „Pomiń serię" (56 px).

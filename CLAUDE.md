@@ -58,7 +58,7 @@ When you need to use a browser (open the app, click, check UI, take a screenshot
 
 Vite 8, Vue 3.5 with `<script setup>` single-file components, TypeScript ~6.0 (strict, from `@vue/tsconfig`), type-checked by `vue-tsc`. Tests: Vitest with Vue Test Utils and jsdom. Node 22 or newer. npm.
 
-The repo is a fresh `create-vite` `vue-ts` scaffold. `src/components/HelloWorld.vue`, `src/assets/*` and the demo content in `src/App.vue` are template leftovers; replace them as features land.
+Code layout: `src/plans/` holds the plan model and device storage, `src/components/` holds the screens, and `src/styles/` holds the `DESIGN.md` tokens. Local fonts are in `public/fonts/`. Tests are `src/**/*.test.ts` files next to the code.
 
 ## Commands
 

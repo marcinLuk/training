@@ -1,0 +1,42 @@
+/* Design tokens from DESIGN.md ("Talerze", dark "guma" only). */
+:root {
+  --ground: #121314;
+  --surface: #1b1c1e;
+  --surface-2: #26272a;
+  --line: #3a3c40;
+  --ink: #f2f2ef;
+  --muted: #a7aaaf;
+  --steel: #8e929a;
+  --chalk: #f2f2ef;
+  --on-chalk: #121314;
+  --danger: #ff6b6b;
+  --focus: #8ab4ff;
+
+  --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
+  --font-body: 'Barlow Semi Condensed', 'Arial Narrow', system-ui, sans-serif;
+
+  --text-counter: 11rem;
+  --text-figure: 3.5rem;
+  --text-headline: 2.25rem;
+  --text-title: 1.375rem;
+  --text-body: 1.0625rem;
+  --text-label: 0.8125rem;
+
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 24px;
+  --space-2xl: 32px;
+  --space-3xl: 48px;
+  --space-4xl: 64px;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-pill: 999px;
+
+  --target: 56px;
+  --target-large: 64px;
+  --target-min: 44px;
+  --column: 32rem;
+}

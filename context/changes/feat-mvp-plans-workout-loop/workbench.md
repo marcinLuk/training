@@ -16,7 +16,7 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 ## Ledger
 
 - [x] Phase 1 — Unit test harness
-- [ ] Phase 2 — Plan model and device storage
+- [x] Phase 2 — Plan model and device storage
 - [ ] Phase 3 — App shell, plan list and new-plan editor
 - [ ] Phase 4 — Workout engine
 - [ ] Phase 5 — Workout screens, rest timer and sound
@@ -46,7 +46,7 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 | Phase | Builder | Rounds | State | Category | Wall / subagent | Tokens |
 |---|---|---|---|---|---|---|
 | 1 — Unit test harness | sonnet | 1 | CONCERNS (1 minor, 1 nit) → `5eff3e6` | stabilization | 7m / 6m | 230k |
-| 2 — Plan model and device storage | sonnet | 0 | waiting | feature | — | — |
+| 2 — Plan model and device storage | sonnet | 4 | CONCERNS (3 nits) → `f00c8ad` | feature | 25m / 22m | 882k |
 | 3 — App shell, plan list and new-plan editor | sonnet | 0 | waiting | feature | — | — |
 | 4 — Workout engine | sonnet | 0 | waiting | feature | — | — |
 | 5 — Workout screens, rest timer and sound | sonnet | 0 | waiting | feature | — | — |
@@ -56,15 +56,15 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 
 ## Run totals
 
-phases measured: 1 of 8 (0 wall unknown)   ·   tokens are subagents only
+phases measured: 2 of 8 (0 wall unknown)   ·   tokens are subagents only
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 0 | 0 | 0% | 0m | 0% | 0m |
-| stabilization | 1 | 230k | 100% | 7m | 100% | 6m |
-| refactor | 0 | 0 | 0% | 0m | 0% | 0m |
+| feature | 1 | 882k | 79% | 25m | 78% | 22m |
+| stabilization | 1 | 230k | 21% | 7m | 22% | 6m |
+| refactor | 0 | 0k | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 1 | 230k | 100% | 7m | 100% | 6m |
+| **total** | 2 | 1112k | 100% | 32m | 100% | 28m |
 
 research (not a phase): 75k tok, 1m
 
@@ -93,7 +93,8 @@ totals:    wall 7m  ·  subagent time 6m  ·  tokens 230k (subagents only)  ·  
 
 ## Phase 2 — Plan model and device storage
 
-phase:     feature  ·  start 2026-10-18T17:21:48+0200
+phase:     feature  ·  start 2026-10-18T17:21:48+0200  ·  end 2026-10-18T17:46:38+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 25m  ·  subagent time 22m  ·  tokens 882k (subagents only)  ·  rounds 4
 
 ### round 1          builder sonnet → critic opus
   cost:      builder 98k tok / 10 calls / 2m  ·  critic 149k tok / 24 calls / 6m
@@ -153,3 +154,37 @@ phase:     feature  ·  start 2026-10-18T17:21:48+0200
   diff:      plan.test.ts only (summary table, 20 rows)
   inconclusive: none
   builder:   table-driven summary test over every plural pairing
+
+## Phase 3 — App shell, plan list and new-plan editor
+
+phase:     feature  ·  start 2026-10-18T17:46:57+0200
+
+### round 1          builder sonnet → critic opus
+  cost:      builder 135k tok / 20 calls / 4m  ·  critic 201k tok / 45 calls / 8m
+  automated: 3/3   manual: 2/2 (0 unreachable)
+  verdict:   FAIL
+  blockers:  none
+  majors:    `validation-error-input-retention-unpinned` — the "a failed save keeps typed data" clause is pinned only for the storage-failure branch; src/components/PlanEditor.vue:47-50
+  minors:    `claude-md-scaffold-note-stale` (licensed for round 2 as its own instruction), `design-md-primary-line-phase-scoped`, `design-md-copy-gaps`, `column-width-not-in-design`, `draft-lost-without-confirm`, `backup-failed-message-unpinned`, `field-label-uses-label-scale`, 4 nits
+  report:    reviews/phase-3-round-1.md
+  spot-check: opened PlanEditor.vue:47-50 and grep of PlanEditor.test.ts (only the storage-failure retention test at :125) → confirmed
+  lane breach: the builder ran `git rm --cached` on HelloWorld.vue and undid it with `git update-index`; index verified equal to HEAD, no commit. Owner chose "continue" and delegated such stop/continue decisions to the orchestrator for this run. Shared rules now forbid git rm/mv/update-index by name.
+  diff:      12 tracked files (+~60/-~420, scaffold deletions), ~25 new files
+  clauses:   15/17 mapped (2 unmapped: visual checks → manual 3.5, build CSS check → row 3.3)
+  scripted:  public/fonts (cp), fonts.css (shell loop), package.json (sed), PlanEditor/NumberStepper (python), DESIGN.md (python) — vue-tsc clean
+  inconclusive: none
+  builder:   tokens, local Barlow fonts, App switcher, plan list, plan editor with steppers, 22 component tests
+
+### round 2          builder sonnet → critic opus
+  cost:      builder 79k tok / 8 calls / 1m  ·  critic 188k tok / 43 calls / 6m
+  automated: 3/3   manual: 2/2 (0 unreachable)
+  verdict:   CONCERNS
+  closures:  `validation-error-input-retention-unpinned` → closed (8 mutants killed; browser walk confirmed)
+  blockers:  none
+  majors:    none
+  minors:    `backup-failed-copy-differs-from-design`, `column-width-undocumented`, `stepper-text-glyphs`, `empty-state-copy-partially-pinned`, `unused-target-min-token`, `claude-md-layout-omits-lib`
+  report:    reviews/phase-3-round-2.md
+  spot-check: re-ran 3.2 `npm test` → confirmed (121 passed)
+  diff:      PlanEditor.test.ts (+23), CLAUDE.md (1 paragraph)
+  inconclusive: none
+  builder:   validation-failure retention test; CLAUDE.md layout paragraph

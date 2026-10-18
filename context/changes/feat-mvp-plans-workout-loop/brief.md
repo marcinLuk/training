@@ -49,17 +49,17 @@ See `research.md` (entry points: `package.json:6-10`, `tsconfig.json:2-5`, `vite
 
 ### Phase 2: Plan model and device storage
 #### Automated Verification:
-- [x] 2.1 `npx vitest run src/plans` passes, with tests for the defaults, the validation, a save read back through a fresh read of `localStorage`, corrupt stored data kept and not overwritten, and `navigator.storage.persist()` called at the first save only (D2, D9)
-- [x] 2.2 `npm run build` exits 0
+- [x] 2.1 `npx vitest run src/plans` passes, with tests for the defaults, the validation, a save read back through a fresh read of `localStorage`, corrupt stored data kept and not overwritten, and `navigator.storage.persist()` called at the first save only (D2, D9) — f00c8ad
+- [x] 2.2 `npm run build` exits 0 — f00c8ad
 
 ### Phase 3: App shell, plan list and new-plan editor
 #### Automated Verification:
-- [ ] 3.1 `npx vitest run src/components` passes, with tests for creating a plan with default values, the −/+ steppers (rest in 15 s steps), the empty-name error, saving, and the list summary with Polish plural forms (D2)
-- [ ] 3.2 `npm test` exits 0
-- [ ] 3.3 `npm run build` exits 0, `public/fonts/` holds the woff2 files and the OFL license, and no `http://` or `https://` URL appears in the built CSS (`dist/assets/*.css`)
+- [x] 3.1 `npx vitest run src/components` passes, with tests for creating a plan with default values, the −/+ steppers (rest in 15 s steps), the empty-name error, saving, and the list summary with Polish plural forms (D2)
+- [x] 3.2 `npm test` exits 0
+- [x] 3.3 `npm run build` exits 0, `public/fonts/` holds the woff2 files and the OFL license, and no `http://` or `https://` URL appears in the built CSS (`dist/assets/*.css`)
 #### Manual Verification:
-- [ ] 3.4 at 412×915: create plan "Wiosłowanie i przysiady" with two exercises ("Wiosłowanie" with the defaults, "Przysiady" with changed values), save, see it in the list with its summary, reload, still there (D2)
-- [ ] 3.5 at 412×915: dark "guma" background, Barlow fonts loaded from `/fonts/`, targets at least 44 px, no emoji or Unicode icons, no demo scaffold content left
+- [x] 3.4 at 412×915: create plan "Wiosłowanie i przysiady" with two exercises ("Wiosłowanie" with the defaults, "Przysiady" with changed values), save, see it in the list with its summary, reload, still there (D2)
+- [x] 3.5 at 412×915: dark "guma" background, Barlow fonts loaded from `/fonts/`, targets at least 44 px, no emoji or Unicode icons, no demo scaffold content left
 
 ### Phase 4: Workout engine
 #### Automated Verification:
