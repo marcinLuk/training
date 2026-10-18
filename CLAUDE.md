@@ -22,55 +22,65 @@ not code, code comments, or commit messages) in Simplified English, adapted from
 
 ## Project
 
-"Trening" is a workout planner: calendar, plans, exercise library, rest timer / rep counter, a workout log, and a Cardio tab (stopwatch and interval workouts with templates). It is a single-user app. Stack: Node.js ≥ 22.13 (Docker uses Node 24), Express 5, SQLite through the built-in `node:sqlite` (`DatabaseSync`, so there is no ORM or native dependency), and a vanilla JS frontend with no build step. Express is the only npm dependency.
+"Trening" is a single-user workout app for a phone. The user builds plans (exercises with sets, reps and rest time), then runs a workout: the app shows the current exercise, sets left and the next exercise, the user taps once per finished set, a rest timer runs, and a sound marks the end of the rest. The goal is to stop the user from losing their place and skipping a set after a break.
 
-The UI text, error messages and code comments are in **Polish**. Keep new strings and comments in Polish to match.
+It ships as an installable PWA. There is no backend: all data stays on the device.
+
+The app was rebuilt from scratch in October 2026. The old Express + SQLite prototype is gone; do not look for it or follow its patterns.
+
+Source of truth for scope and decisions:
+
+- `context/foundation/prd.md` — requirements (FR-001…FR-015), non-goals, open questions.
+- `PRODUCT.md` — users, purpose, principles and accessibility rules (in Polish).
+- `DESIGN.md` — the approved visual system "Talerze": colors, type, layout, components, Do's and Don'ts (in Polish).
+- `context/foundation/tech-stack.md` — stack choice and why.
+- `context/foundation/shape-notes.md` — the discovery notes behind the PRD.
+
+The UI text is in **Polish**.
+
+## Design rules — read DESIGN.md first
+
+Every AI agent MUST read `DESIGN.md` (and `PRODUCT.md`) before it creates or changes any UI: components, styles, copy, icons, colors, fonts or layout. Do this even for a small change.
+
+- Use only the tokens, type scale, spacing and component rules from `DESIGN.md`. Do not invent new colors, fonts or sizes.
+- The design is approved. Do not redesign it. If a task needs something `DESIGN.md` does not cover, ask the user, then update `DESIGN.md` in the same change.
+- The MVP has no cardio, calendar, history or weight field. Plate colors and the plate stack are reserved for later ("po MVP"). Do not use them now.
+- Keep the key rules: one chalk primary action per screen, the biggest number is sets left (rest time during rest), touch targets 56 px (64 px for the main action), no emoji as icons, no gradients, no left color stripe on cards.
+- The MVP is dark theme only ("guma"). Do not build the light theme or a theme switch.
+- Fonts are served locally from `public/`, not from a CDN.
+- When code and `DESIGN.md` disagree, tell the user. Do not change one silently.
+
+## Stack
+
+Vite 8, Vue 3.5 with `<script setup>` single-file components, TypeScript ~6.0 (strict, from `@vue/tsconfig`), type-checked by `vue-tsc`. Node 22 or newer. npm.
+
+The repo is a fresh `create-vite` `vue-ts` scaffold. `src/components/HelloWorld.vue`, `src/assets/*` and the demo content in `src/App.vue` are template leftovers; replace them as features land.
 
 ## Commands
 
 ```bash
 npm install
-npm run dev          # node --watch; DB at ./data/trening.db
-npm start            # production-style run
-npm test             # node --test: all files in test/
-docker compose up -d --build   # DB in the `trening-data` volume (/data/trening.db)
+npm run dev          # Vite dev server
+npm run build        # vue-tsc -b (type check), then vite build into dist/
+npm run preview      # serve the built dist/ locally
 ```
 
-Tests use the built-in `node:test` and `node:assert` (no test dependency) and live in `test/`. Run one file with `node --disable-warning=ExperimentalWarning --test test/<file>.test.js`. `test/cardio-api.test.js` spawns `server.js` on port 3997 with a temp `DB_PATH`; the other tests use temp files or `createRepo(':memory:')`, never `./data`. `test/calendar-view.test.js` runs `public/app.js` in a `node:vm` context with minimal browser stubs, so a new top-level browser API used at load time in `app.js` needs a stub there. There is no linter or formatter configured. `docker compose down -v` deletes the database volume.
+`npm run build` is the only check today: it fails on type errors and on unused locals/parameters (`noUnusedLocals`, `noUnusedParameters` in `tsconfig.app.json`). There is no test runner, linter or formatter yet.
 
-Env vars: `PORT` (default 3000), `DB_PATH` (default `./data/trening.db`), `APP_USER` (default `admin`), `APP_PASSWORD`. Setting `APP_PASSWORD` turns on HTTP Basic auth for everything except `/api/health`.
+TypeScript config is split: `tsconfig.app.json` covers `src/`, `tsconfig.node.json` covers `vite.config.ts`. Both set `erasableSyntaxOnly`, so do not use `enum`, `namespace` or constructor parameter properties.
 
-## Architecture
+## Product constraints (from the PRD)
 
-Four files hold almost all the logic:
+These are requirements, not preferences. Check `context/foundation/prd.md` before you change any of them.
 
-- **`db.js`**: `createRepo(file)` returns a repository object with all data access and validation. It throws `ValidationError` (→ 400) and `ConflictError` (→ 409, a subclass of `ValidationError`), which the error middleware in `server.js` maps to status codes.
-- **`server.js`**: thin Express routes over the repo, plus Basic auth, static serving of `public/`, and a graceful shutdown that closes the DB on SIGTERM/SIGINT.
-- **`public/app.js`**: the whole SPA.
-- **`public/cardio-core.js`**: pure cardio logic (plan check, pause-aware session time, interval timeline, Polish plurals), with no DOM and no `Date.now()` (callers pass `now`). One UMD-style file: `index.html` loads it as a classic script before `app.js` (global `CardioCore`), and `db.js` and the tests `require` it. `db.js` validates cardio plans with the same `CardioCore.checkPlan` the UI uses.
+- **No server for user data.** Plans and workout state live only on the device. Do not add API calls, accounts or sync.
+- **Offline after the first load.** The app shell must work with no network.
+- **A workout survives interruptions.** After a screen lock, an app switch or a page reload, the user returns to the same set and the same rest state (FR-009). Persist the running workout, not only the plans.
+- **Rest time comes from timestamps.** Compute the remaining rest from the stored start time and the current time. Never count timer ticks; a hidden tab stops ticking.
+- **The screen stays on during a workout** (FR-012).
+- **Target: Android phone, current Chrome.** Design for a phone first. iOS and desktop are not targets.
+- **Out of scope for the MVP:** workout history, statistics, calendar, exercise library, cardio, rep counting, voice guidance, vibration, Google Play. See `## Non-Goals` in the PRD.
 
-### Data model and invariants (`db.js`)
+## Deployment (planned, not set up yet)
 
-- **Migrations** are an append-only array `MIGRATIONS`, versioned with `PRAGMA user_version`. Each one runs in its own transaction. Never edit an existing migration; append a new one. Example data is seeded only when the starting version was 0 (a fresh DB).
-- **`exercises`** is the exercise library, and names are unique case-insensitively. SQLite `NOCASE` only covers ASCII, so the Polish-aware uniqueness check is done in JS (`nameKey` with `toLocaleLowerCase('pl')`). Deleting an exercise that is used in a plan throws `ConflictError`.
-- **`plan_exercises`** links a plan to library exercises by `exercise_id`. `PUT /api/plans/:id` replaces the plan's whole item list (`writePlanItems` deletes the old items and reinserts them). `exerciseIdFor` accepts either an `exerciseId` or just a `name`, and finds or creates the library entry from the name. This keeps old backups and the import working.
-- **`workouts` / `workout_exercises` / `workout_sets`** are deliberately **denormalized snapshots**: they store `plan_name` and the exercise names as text, so the log survives when a plan or exercise is renamed or deleted (the FKs are `ON DELETE SET NULL`).
-- **Cardio** (migration v3): `cardio_templates` (name, `total_sec`, `intervals` as a JSON array of seconds), `schedule.cardio_template_id` (nullable FK, `ON DELETE SET NULL`), and `cardio_workouts` (`mode` is `free` or `interval`; `intervals` / `total_sec` are NULL in free mode). Like `workouts`, `cardio_workouts` is a **denormalized snapshot**: it stores the name and intervals as text, and `template_id` / `schedule_id` are `ON DELETE SET NULL`, so the log survives deleting a template.
-- **Cardio plans are validated, never clamped**: the interval list and total time of a template or of an `interval` workout go through `checkPlan` (via `checkedPlan` in `db.js`), and a plan that is not a whole number of cycles of the interval sequence (or breaks a limit) throws `ValidationError` with the Polish message. Other cardio fields use the usual sanitizers.
-- A schedule entry belongs to exactly one of `planId` / `cardioTemplateId` (`addSchedule`: both or neither → `ValidationError`, unknown id → `ValidationError`). A strength workout can close only a strength entry and a cardio workout only a cardio one (`existsScheduleEntry`); a mismatching `scheduleId` is dropped to NULL.
-- **Deleting a plan** also removes its *unfinished* schedule entries. Schedule entries already linked to a workout stay. **Deleting a cardio template** works the same way: its unfinished schedule entries go, entries linked to a cardio workout stay.
-- Input sanitizers (`text`, `int`, `weight`, `date`, `id`, `timestamp`) clamp or validate every field. A `NULL` weight means bodyweight. Client-provided ids are accepted if they match `[\w-]{1,64}`; otherwise a UUID is generated.
-- Any multi-statement write goes through the `tx()` helper.
-
-### API
-
-`GET /api/state` returns the entire dataset `{ exercises, plans, schedule, log, cardioTemplates, cardioLog }` (each schedule entry is `{ id, date, planId, cardioTemplateId }`, with `cardioTemplateId` null for strength), and the frontend keeps that whole object in memory. Mutations are REST endpoints per resource (`/api/exercises`, `/api/plans`, `/api/schedule`, `/api/workouts`, `/api/cardio-templates`, `/api/cardio-workouts`); `POST /api/schedule` takes exactly one of `planId` / `cardioTemplateId`. `GET /api/export` and `POST /api/import` cover JSON backup and restore (`replaceAll` wipes all tables and reloads them in one transaction). `cardioTemplates` / `cardioLog` are optional in an import, so older backups without cardio data still load.
-
-### Frontend (`public/app.js`)
-
-- Global state: `db` holds the server state and `ui` holds view state (tab, month, selected day, editors). `render()` rebuilds `#view` with `innerHTML` from the `view*()` template-string functions. Always escape interpolated data with `esc()`.
-- Event handling is delegated: elements carry `data-action="name"`, which dispatches to the `actions` map (handlers receive `btn.dataset`). Forms go through `onSubmit`. Errors surface through `showError` (a toast).
-- Plan saves go through a promise chain (`savePlan`) so that quick edits stay in order.
-- The active workout ("runner") lives only on the client. It is kept in `localStorage` (`trening.run.v1`) so a reload doesn't lose it, and it is POSTed to `/api/workouts` only when the user saves the summary. The runner uses the Web Audio API for beeps and the Wake Lock API to keep the screen on.
-- The cardio runner has its own overlay (`#cardio-runner`, not `#runner`) and its own session variable `cardio`, kept in `localStorage` under `trening.cardio.v1` (validated on load by `CardioCore.isValidStored`), separate from `trening.run.v1`. Its time comes only from `CardioCore` and stored timestamps, ticked on an interval, so a reload or a sleeping tab lands on the right time. It is POSTed to `/api/cardio-workouts` only when the user saves the summary. Only one of the two sessions runs at a time: `startRun` refuses while `cardio` is set and `startCardio` refuses while `run` is set, each with a Polish error. Cardio items are marked with the class `cardio` and the `--cardio` colour token in `styles.css`.
-- API URLs are relative (`api/state`, with no leading slash), so the app can be served under a reverse-proxy subpath. Keep it that way.
+Static files from `dist/`, served by Docker on the author's private server, deployed by GitHub Actions on merge to `main`, behind htpasswd Basic auth. With Basic auth in front, the manifest link must use `crossorigin="use-credentials"`, or Chrome cannot install the PWA. No PWA manifest, service worker, Dockerfile or CI workflow exists yet.

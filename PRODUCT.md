@@ -8,42 +8,49 @@ web
 
 ## Users
 
-Jedna osoba (aplikacja single-user, własna). Główna sytuacja: telefon w ręku na siłowni, w trakcie treningu: timer przerw, licznik powtórzeń, szybkie odhaczanie serii. Planowanie (kalendarz, plany, biblioteka ćwiczeń) odbywa się też poza siłownią, na większym ekranie.
+Jedna osoba: autor aplikacji. Trenuje sam w domu, telefon leży obok. Moment potrzeby: po przerwie między seriami, gdy nie wie, w którym miejscu jest i co dalej. Plany układa spokojnie, poza treningiem. Znajomi to nieformalna kontrola, nie osobna persona.
 
 ## Product Purpose
 
-Planer treningów: kalendarz, plany treningowe, biblioteka ćwiczeń, timer przerw i licznik powtórzeń, dziennik treningów oraz zakładka Cardio (stoper i treningi interwałowe z szablonami). Sukces: trening da się przeprowadzić i zapisać bez wysiłku, a historia jest zawsze pod ręką.
+Aplikacja prowadzi przez trening krok po kroku, żeby użytkownik nie gubił miejsca i nie pomijał serii po przerwie. Użytkownik układa plan (ćwiczenia z seriami, powtórzeniami i czasem przerwy), potem uruchamia trening. Ekran zawsze pokazuje bieżące ćwiczenie, liczbę pozostałych serii i następne ćwiczenie. Jedno dotknięcie kończy serię, uruchamia się timer przerwy, a dźwięk oznacza jej koniec.
+
+Sukces: 0 pominiętych serii w 3 treningach z rzędu. Co najmniej 95% serii odhaczonych w aplikacji. Aplikacja nie wydłuża przerw i nie jest rozpraszaczem.
+
+Źródło prawdy: `context/foundation/prd.md`.
 
 ## Positioning
 
-Własna, prosta, self-hosted aplikacja: bez konta w chmurze, subskrypcji i reklam. Wszystkie dane w jednej bazie SQLite z kopią JSON; trening siłowy i cardio w jednym miejscu.
+Własna, prosta aplikacja bez konta, serwera na dane i subskrypcji. Wszystkie dane zostają na telefonie. Jedno zadanie: pokazać, gdzie jestem i co dalej, jednym spojrzeniem po przerwie.
 
 ## Operating Context
 
-Użycie głównie mobilne, w ruchu, na siłowni. Aktywna sesja (runner) żyje po stronie klienta w localStorage, korzysta z Web Audio (sygnały) i Wake Lock (ekran włączony). Hostowana samodzielnie (Docker), opcjonalnie za reverse proxy pod podścieżką, z Basic auth.
+Android, aktualny Chrome, instalowalna PWA. Telefon w jednej ręce lub oparty obok, ekran włączony przez cały trening (Wake Lock). Użycie z odczytem z 1–2 m, spocone palce, często ze słuchawkami. Działa offline po pierwszym uruchomieniu. Trwający trening przeżywa blokadę ekranu, przełączenie aplikacji i przeładowanie. Pozostały czas przerwy liczy się z zapisanego znacznika czasu, nigdy z tyknięć zegara. Nieużywany trening wygasa po czasie bezczynności (wartość do ustalenia, pytanie otwarte 1).
 
 ## Capabilities and Constraints
 
-- Node.js, Express 5, SQLite (`node:sqlite`), frontend w czystym JS bez builda; jedyna zależność npm to Express.
-- Interfejs, komunikaty i komentarze po polsku.
-- Treningi siłowe i cardio to osobne, wzajemnie wykluczające się sesje; cardio oznaczone osobnym kolorem (`--cardio`).
-- Adresy API względne (podścieżka reverse proxy).
+- Vite 8, Vue 3.5 (`<script setup>`), TypeScript strict. Brak backendu.
+- Dane planów i bieżącego treningu tylko na urządzeniu. Brak kont, API i synchronizacji.
+- Interfejs i komunikaty po polsku.
+- Poza zakresem MVP: historia i statystyki, kalendarz, biblioteka ćwiczeń, cardio, liczenie powtórzeń, głos, wibracje, Google Play, niezawodny sygnał przy zablokowanym ekranie.
+- Brak pola ciężaru w ćwiczeniu w MVP. Plan ma tylko serie, powtórzenia i czas przerwy.
 
 ## Brand Commitments
 
-Nazwa: „Trening". Obecny ciemny motyw z zielonym akcentem i fioletowym kolorem cardio jest istniejącą implementacją, nie zatwierdzonym wiążącym wyborem.
+Nazwa: „Trening". Wygląd jest zatwierdzony: system „Talerze" z `DESIGN.md` (ciemna „guma", kreda jako główna akcja, Barlow, płaskie powierzchnie). Zakres systemu zawężono do MVP: bez cardio, kalendarza i wag. Kolory talerzy zostają zarezerwowane na późniejszy ciężar.
 
 ## Evidence on Hand
 
-Badanie pain-pointów użytkowników aplikacji treningowych: `documentation/pain-points.csv` oraz podsumowania w `documentation/pain-points-*.md`. Brak opinii klientów ani danych o użytkownikach poza tym.
+Badanie pain-pointów użytkowników aplikacji treningowych: `documentation/pain-points.csv` i podsumowania w `documentation/pain-points-*.md`. Notatki z odkrywania: `context/foundation/shape-notes.md`. Brak danych o użytkownikach poza autorem.
 
 ## Product Principles
 
-- Prostota ponad liczbę funkcji: każda funkcja musi ułatwiać sam trening lub jego zapis.
-- Użycie w trakcie wysiłku: najważniejsze akcje dostępne od razu, jedną ręką, bez nawigowania.
-- Dane należą do użytkownika: lokalna baza, pełny eksport i import.
-- Niezawodność sesji: przeładowanie strony lub uśpiony ekran nie psują treningu ani czasu.
+- Jedno spojrzenie po przerwie odpowiada na pytania „gdzie jestem" i „co dalej". To jest cała wartość produktu.
+- Telefon nie jest pułapką: zero powiadomień, reklam i dodatkowych ekranów, które wydłużają przerwę.
+- Jedno dotknięcie na serię. Główna akcja leży w dolnej części ekranu, w zasięgu kciuka.
+- Stan treningu jest święty: blokada ekranu, przełączenie aplikacji i przeładowanie nie gubią miejsca ani czasu przerwy.
+- Dane należą do użytkownika i zostają na telefonie.
+- Prostota ponad liczbę funkcji: nic, co nie pomaga przejść przez trening.
 
 ## Accessibility & Inclusion
 
-Brak szczególnych wymagań poza standardem (kontrast, wystarczające cele dotykowe).
+Kontrast tekstu co najmniej 4,5:1 (3:1 dla dużego) w obu motywach. Cele dotykowe: 56 px w trakcie treningu, 64 px dla głównej akcji. Koniec przerwy sygnalizuje dźwięk, który słychać też w słuchawkach, oraz wyraźna zmiana ekranu (nie sam dźwięk). Informacja nigdy tylko kolorem. Szanuj `prefers-reduced-motion`.

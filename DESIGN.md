@@ -1,6 +1,6 @@
 ---
 name: Trening
-description: Kolory talerzy sztangi jako język wagi: ciemna „guma" lub jasny „magnez", kreda jako główna akcja, fiolet tylko dla cardio.
+description: Ciemna „guma" lub jasny „magnez", kreda jako jedyna główna akcja, ogromne wąskie cyfry. Kolory talerzy sztangi zarezerwowane na przyszły ciężar.
 colors:
   ground: "#121314"
   surface: "#1b1c1e"
@@ -21,8 +21,6 @@ colors:
   on-plate-10: "#07210f"
   plate-5-white: "#f2f2ef"
   on-plate-5: "#121314"
-  cardio-violet: "#a98bf5"
-  on-cardio: "#140d2b"
   danger: "#ff6b6b"
   focus: "#8ab4ff"
   ground-light: "#eceeef"
@@ -35,7 +33,6 @@ colors:
   plate-20-blue-light: "#1f5ccc"
   plate-15-yellow-light: "#e6ad00"
   plate-10-green-light: "#187a3a"
-  cardio-violet-light: "#6a4bd0"
   danger-light: "#c4262e"
 typography:
   counter:
@@ -108,12 +105,6 @@ components:
     rounded: "{rounded.md}"
     height: "56px"
     padding: "0 24px"
-  button-cardio:
-    backgroundColor: "{colors.cardio-violet}"
-    textColor: "{colors.on-cardio}"
-    rounded: "{rounded.md}"
-    height: "56px"
-    padding: "0 24px"
   button-danger:
     backgroundColor: "transparent"
     textColor: "{colors.danger}"
@@ -131,24 +122,9 @@ components:
     textColor: "{colors.ink}"
     rounded: "{rounded.md}"
     padding: "16px"
-  weight-chip-20:
-    backgroundColor: "{colors.plate-20-blue}"
-    textColor: "{colors.on-plate-20}"
-    rounded: "{rounded.sm}"
-    padding: "3px 10px"
-  tag-cardio:
-    backgroundColor: "{colors.cardio-violet}"
-    textColor: "{colors.on-cardio}"
-    rounded: "{rounded.pill}"
-    height: "32px"
-    padding: "0 12px"
-  tab-bar:
-    backgroundColor: "{colors.surface}"
-    textColor: "{colors.muted}"
-    height: "64px"
 ---
 
-<!-- SEED: system zdefiniowany z użytkownikiem i pokazany w documentation/system-design.html; aplikacja nadal używa starego wyglądu. Po wdrożeniu uruchom /impeccable document ponownie, żeby uzupełnić tokeny z kodu i sidecar .impeccable/design.json. -->
+<!-- Zakres: MVP z context/foundation/prd.md. System zawężono do planów i runnera: bez cardio, kalendarza, dziennika, wag i dolnego paska zakładek. Elementy zarezerwowane są oznaczone „po MVP". Po wdrożeniu uruchom /impeccable document ponownie, żeby uzupełnić tokeny z kodu i sidecar .impeccable/design.json. -->
 
 # Design System: Trening
 
@@ -156,35 +132,29 @@ components:
 
 **Creative North Star: "Talerze"**
 
-Waga na sztandze jest kolorem i kształtem, nie tylko liczbą. System pożycza język, który każdy na siłowni zna bez nauki: kody kolorów talerzy sztangi (25 kg czerwony, 20 niebieski, 15 żółty, 10 zielony, 5 biały). Wszystko inne jest neutralne i spokojne, żeby kolor niósł znaczenie, a nie dekorację.
+Siła tego systemu to czytelność z dwóch metrów. Po przerwie jedno spojrzenie ma pokazać: gdzie jestem, ile serii zostało, co dalej. Nazwa „Talerze" pochodzi z języka siłowni: kody kolorów talerzy sztangi (25 kg czerwony, 20 niebieski, 15 żółty, 10 zielony, 5 biały). W MVP plan nie ma ciężaru, więc kolory talerzy czekają w rezerwie. Zostaje reszta charakteru: ciężkie, wąskie cyfry, neutralne tło, kolor tylko tam, gdzie niesie znaczenie.
 
-Scena użycia wyznacza resztę: telefon w jednej ręce, jasna siłownia, spocone palce, odczyt z 1–2 m. Stąd ogromne, wąskie, ciężkie cyfry, wysoki kontrast, duże cele dotykowe i żadnej ozdoby, która nie pracuje. Ton jest rzeczowy i pewny, nie krzykliwy: bez gradientów, neonów, maskotek i emoji.
+Scena użycia wyznacza resztę: telefon w jednej ręce lub oparty obok, spocone palce, odczyt z 1–2 m, często ze słuchawkami. Stąd ogromne cyfry, wysoki kontrast, duże cele dotykowe i żadnej ozdoby, która nie pracuje. Ton jest rzeczowy i pewny, nie krzykliwy: bez gradientów, neonów, maskotek i emoji. Ekran treningu nie ma się niczym rozpraszać, bo wydłużona przerwa to porażka produktu.
 
-Dwa motywy należą do jednego systemu: ciemna „guma" (domyślna) i jasny „magnez". Wybór motywu domyślnego pozostaje do potwierdzenia w kompach.
+MVP ma jeden motyw: ciemną „gumę" (decyzja autora). Jasny „magnez" zostaje w systemie jako zarezerwowany wariant na później. Nie buduj go ani nie przełączaj motywu według `prefers-color-scheme`.
 
 **Key Characteristics:**
-- Kolor niesie wagę i rodzaj treningu, nigdy nie jest samotnym nośnikiem informacji (zawsze liczba obok).
-- Główna akcja jest „kredowa", nigdy w kolorze talerza.
-- Jeden ruch sygnaturowy: stos talerzy rysowany z boku sztangi.
-- Liczby są największym elementem ekranu w runnerze.
+- Stan treningu czyta się bez dotykania telefonu: liczba serii do końca jest największym elementem ekranu serii.
+- Główna akcja jest „kredowa", jedna na ekran.
+- Koniec przerwy to zmiana całego ekranu i dźwięk, nigdy sam dźwięk.
+- Kolor niesie znaczenie, nigdy nie jest samotnym nośnikiem informacji.
 - Standardowe kontrolki, bez kostiumów.
 
 ## Colors
 
-Paleta ma sześć zadań: pięć kolorów wag, jeden kolor cardio, neutralna skala trzech poziomów tła, kreda dla akcji, kolor błędu i kolor fokusu.
+Paleta w MVP ma cztery zadania: neutralna skala trzech poziomów tła, kreda dla akcji, kolor błędu i kolor fokusu. Kolory talerzy są zarezerwowane.
 
 ### Primary
-- **Kreda** (#f2f2ef na gumie, #14171a na magnezie): główna akcja (Start, Zakończ serię), aktywna zakładka, wypełnione dni treningu siłowego. Tekst na kredzie to `on-chalk`.
+- **Kreda** (#f2f2ef na gumie, #14171a na magnezie): główna akcja (Start, Gotowe), aktywne elementy, pierścień przerwy. Tekst na kredzie to `on-chalk`.
 
-### Secondary
-- **Cardio fiolet** (#a98bf5 guma, #6a4bd0 magnez): wyłącznie trening cardio: znaczniki, pola dni, przycisk Start cardio, całe pole runnera cardio. Talerze nie mają fioletu, więc kod siła/cardio jest jednoznaczny.
-
-### Tertiary (kolory wag)
-- **Czerwień 25** (#d42d32): waga, której najcięższy talerz na stronę to 25 kg. Tekst biały.
-- **Błękit 20** (#2f6fe0): 20 kg. Tekst biały.
-- **Żółć 15** (#f2c230): 15 kg. Tekst ciemny.
-- **Zieleń 10** (#2fb35a): 10 kg. Tekst ciemny.
-- **Biel 5** (#f2f2ef): 5 kg. Tekst ciemny. Drobne talerze dziedziczą kolor „starszego brata": 2,5 kg czerwony, 1,25 kg biały.
+### Reserved (po MVP): kolory wag
+Plan w MVP nie ma pola ciężaru, więc te kolory nie występują w interfejsie. Tokeny zostają w systemie na dodanie ciężaru.
+- **Czerwień 25** (#d42d32), **Błękit 20** (#2f6fe0), **Żółć 15** (#f2c230), **Zieleń 10** (#2fb35a), **Biel 5** (#f2f2ef). Drobne talerze dziedziczą kolor „starszego brata": 2,5 kg czerwony, 1,25 kg biały.
 
 ### Neutral
 - **Guma** (#121314): tło aplikacji.
@@ -192,18 +162,16 @@ Paleta ma sześć zadań: pięć kolorów wag, jeden kolor cardio, neutralna ska
 - **Żelazo 2** (#26272a): pola formularzy, nieaktywne segmenty.
 - **Linia** (#3a3c40): obramowania i separatory.
 - **Tekst** (#f2f2ef) i **Tekst drugorzędny** (#a7aaaf, min. 4,5:1 na każdej powierzchni).
-- **Stal** (#8e929a): sztanga, gryf, ikony drugorzędne.
+- **Stal** (#8e929a): ikony drugorzędne.
 - **Błąd** (#ff6b6b) i **Fokus** (#8ab4ff).
-- Magnez (jasny): tło #eceeef, powierzchnia #ffffff, linia #c2c7cb, tekst #14171a, drugorzędny #50565c, wagi nieco ciemniejsze (czerwień #c42429, błękit #1f5ccc, żółć #e6ad00, zieleń #187a3a), cardio #6a4bd0.
+- Magnez (jasny): tło #eceeef, powierzchnia #ffffff, linia #c2c7cb, tekst #14171a, drugorzędny #50565c.
 
 ### Named Rules
-**The Weight-Only Rule.** Kolory talerzy znaczą wyłącznie wagę. Interfejs (przyciski, zakładki, stany) nigdy ich nie używa do niczego innego.
+**The Chalk Rule.** Główna akcja jest w kolorze kredy i jest jedna na ekran. Nigdy w kolorze talerza ani w kolorze błędu.
 
-**The Chalk Rule.** Główna akcja jest w kolorze kredy, nie talerza. „Start" nie może udawać ciężaru.
+**The Weight-Only Rule.** Gdy ciężar wejdzie do aplikacji, kolory talerzy znaczą wyłącznie wagę. Interfejs nigdy ich nie używa do niczego innego.
 
-**The One Violet Rule.** Fiolet należy tylko do cardio, w całej aplikacji.
-
-**The Number Beside Rule.** Kolor wagi zawsze towarzyszy liczbie. Nigdy sam.
+**The Number Beside Rule.** Kolor zawsze towarzyszy liczbie lub słowu. Nigdy sam.
 
 ## Typography
 
@@ -213,9 +181,9 @@ Paleta ma sześć zadań: pięć kolorów wag, jeden kolor cardio, neutralna ska
 **Character:** Wąska i ciężka rodzina o rodowodzie oznakowania drogowego. Ma polskie znaki, czyta się z dwóch metrów i daje najwięcej cyfr na szerokość telefonu. Cyfry zawsze tabelaryczne, żeby licznik i czas nie „pływały". Czcionki mają być serwowane lokalnie z `public/`, nie z zewnętrznego CDN.
 
 ### Hierarchy
-- **Counter** (800, 11rem, 0,82): licznik powtórzeń w runnerze, największy element aplikacji.
-- **Figure** (800, 3,5rem, 1): czas przerwy, waga, czas cardio.
-- **Headline** (800, 2,25rem, 1, wersaliki): tytuł ekranu, nazwa ćwiczenia w runnerze.
+- **Counter** (800, 11rem, 0,82): liczba pozostałych serii w widoku serii, największy element aplikacji.
+- **Figure** (800, 3,5rem, 1): powtórzenia w widoku serii, czas przerwy.
+- **Headline** (800, 2,25rem, 1, wersaliki): tytuł ekranu, nazwa ćwiczenia w treningu.
 - **Title** (700, 1,375rem, 1,2, wersaliki, 0,02em): nagłówki kart i sekcji.
 - **Body** (500, 1,0625rem, 1,5): treść i etykiety kontrolek. Linie nie dłuższe niż 65–75 znaków.
 - **Label** (600, 0,8125rem): podpisy zakładek, drobne opisy, legenda.
@@ -223,18 +191,18 @@ Paleta ma sześć zadań: pięć kolorów wag, jeden kolor cardio, neutralna ska
 Skala rośnie co najmniej 1,33 razy między poziomami: 0,8125 · 0,9375 · 1,0625 · 1,375 · 2,25 · 3,5 · 7 · 11 rem.
 
 ### Named Rules
-**The Biggest Number Rule.** W runnerze liczba powtórzeń jest największym elementem ekranu, zawsze.
+**The Biggest Number Rule.** W widoku serii liczba pozostałych serii jest największym elementem ekranu, zawsze. W przerwie jest nim czas.
 
 **The Tabular Rule.** Każda liczba zmieniająca się w czasie używa cyfr tabelarycznych.
 
 ## Layout
 
-Układ jest mobile-first i jednokolumnowy. Główna nawigacja to dolny pasek czterech zakładek w zasięgu kciuka: Dziś, Plany, Cardio, Dziennik („Ćwiczenia" żyją w Planach). Pierwszy ekran „Dziś" pokazuje dzisiejszy trening z wielkim Start, a pod nim tydzień jako siedem pól koloru z legendą.
+Układ jest mobile-first i jednokolumnowy. Nie ma dolnego paska zakładek: aplikacja ma dwa tryby. Poza treningiem to lista planów (Start przy każdym planie, „Nowy plan") i edytor planu. W treningu ekran należy w całości do treningu, bez nawigacji, która kusiłaby do wyjścia.
 
-Skala odstępów co 4 px: 4, 8, 12, 16, 24, 32, 48, 64. Cele dotykowe: 44 px poza treningiem (zakładki, ikony, pola listy), 56 px w runnerze (−1, cofnij, krok wagi), 64 px dla głównej akcji (Start, Zakończ serię). Główna akcja runnera leży w dolnej części ekranu, w zasięgu kciuka. Na szerszych ekranach treść zostaje w wyśrodkowanej kolumnie, bez rozciągania.
+Skala odstępów co 4 px: 4, 8, 12, 16, 24, 32, 48, 64. Cele dotykowe: 44 px poza treningiem (pola listy, ikony), 56 px w treningu (cofnij, pomiń, ±15 s), 64 px dla głównej akcji (Start, Gotowe). Główna akcja treningu leży w dolnej części ekranu, w zasięgu kciuka. Na szerszych ekranach treść zostaje w wyśrodkowanej kolumnie, bez rozciągania. Edytor ćwiczenia ma sensowne wartości domyślne, by cztery pola nie tworzyły długiego formularza.
 
 ### Named Rules
-**The Thumb Rule.** Akcje używane w trakcie serii leżą w dolnej połowie ekranu.
+**The Thumb Rule.** Akcje używane w trakcie treningu leżą w dolnej połowie ekranu.
 
 ## Elevation & Depth
 
@@ -245,7 +213,7 @@ System jest płaski, głębię daje warstwowanie tonalne: tło, powierzchnia, po
 
 ## Shapes
 
-Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla chipów wagi, pełna pigułka dla znaczników. Talerze w stosie to proste prostokąty o promieniu 3 px, z grubością i wysokością zależną od ciężaru (25–10 kg pełnej wysokości, 5 kg mniejszy, 2,5 i 1,25 kg najmniejsze). Ikony są rysowane jedną kreską 2 px z zaokrąglonymi zakończeniami. Brak lewych kolorowych pasków na kartach.
+Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla chipów, pełna pigułka dla znaczników. Ikony są rysowane jedną kreską 2 px z zaokrąglonymi zakończeniami. Brak lewych kolorowych pasków na kartach.
 
 ## Components
 
@@ -253,59 +221,60 @@ Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla c
 - **Shape:** zaokrąglenie 10 px, wysokość 56 px (duży: 64 px).
 - **Primary:** kreda z tekstem `on-chalk`, tekst Body 700. Tylko jedna główna akcja na ekran.
 - **Secondary:** przezroczysty z linią 2 px, tekst w kolorze tekstu.
-- **Cardio:** fiolet z tekstem `on-cardio`, tylko w kontekście cardio.
-- **Danger:** przezroczysty z obramowaniem i tekstem w kolorze błędu (np. „Zakończ trening").
+- **Danger:** przezroczysty z obramowaniem i tekstem w kolorze błędu (np. „Zakończ trening", „Usuń plan"). Leży daleko od akcji głównej.
 - **Hover / Focus:** wciśnięcie przesuwa o 1 px; fokus to obrys 3 px w kolorze fokusu z odsunięciem 2 px. Nieaktywny: 40% krycia.
-
-### Stos talerzy (komponent sygnaturowy)
-- Sztanga z boku: gryf w kolorze stali, kołnierz i talerze jedna strona, w kolejności od najcięższego.
-- Pokazuje, co założyć na jedną stronę (gryf 20 kg, talerze 25, 20, 15, 10, 5, 2,5, 1,25 kg). Obok zawsze tekst, np. „20 + 1,25 na stronę".
-- Waga bez sztangi (masa ciała) pokazuje znacznik „masa ciała", bez grafiki. Poniżej 20 kg: „Poniżej wagi gryfu".
-- Kolor wagi (chip) to kolor najcięższego talerza na stronę.
-
-### Chips i znaczniki
-- **Chip wagi:** kolor talerza z odpowiednim tekstem, cyfry Barlow Condensed 800, promień 6 px.
-- **Znacznik typu:** „Siła" w neutralnym tle, „Cardio" w fiolecie, „Masa ciała" jako obrys. Pigułka 32 px wysokości.
 
 ### Cards / Containers
 - **Corner Style:** 10 px.
 - **Background:** powierzchnia (#1b1c1e) z obramowaniem 1 px w kolorze linii.
 - **Shadow Strategy:** brak, patrz Elevation & Depth.
 - **Internal Padding:** 16–20 px.
+- Karta planu: nazwa, podsumowanie („5 ćwiczeń, 18 serii"), Start jako główna akcja, edycja i usuwanie rozdzielone szerokim odstępem.
 
 ### Inputs / Fields
 - **Style:** tło powierzchnia 2, obramowanie 2 px w kolorze linii, promień 10 px, wysokość 56 px, cyfry Barlow Condensed 700.
-- **Krok wagi:** pole z przyciskami −/+ (56 px) zmieniającymi o 2,5 kg, bez konieczności klawiatury.
+- **Krok liczby:** pole serii, powtórzeń i przerwy z przyciskami −/+ (56 px), bez konieczności klawiatury. Przerwa zmienia się co 15 s.
 - **Focus:** obramowanie w kolorze fokusu.
-- **Error:** komunikat w toaście z kolorem błędu, ikona ostrzeżenia, treść nazywa problem i sposób naprawy.
+- **Error:** komunikat z kolorem błędu i ikoną ostrzeżenia, treść nazywa problem i sposób naprawy.
 
-### Navigation
-- Dolny pasek czterech zakładek, wysokość 64 px, ikona 26 px i podpis Label. Aktywna zakładka: tekst w kolorze tekstu i kreska 3 px u góry (kreda, a dla Cardio fiolet). Nieaktywne w kolorze drugorzędnym. Safe-area na dole.
+### Widok serii (ekran treningu)
+- Od góry: nazwa ćwiczenia (Headline), powtórzenia (Figure), pod nimi Counter z liczbą pozostałych serii i podpisem „serii zostało". Niżej wiersz „Dalej:" z nazwą następnego ćwiczenia (Title, kolor drugorzędny). Na dole „Gotowe" (64 px, kreda), a nad nim „Cofnij" i „Pomiń serię" (56 px).
+- Każde dotknięcie aktualizuje liczby w miejscu, bez przebudowy ekranu.
+- Ostatnia seria ćwiczenia pokazuje „Dalej:" z następnym ćwiczeniem, a ostatnie ćwiczenie pokazuje „To ostatnia seria".
 
-### Tydzień (kalendarz)
-- Siedem pól dni: wypełnione kredą to trening siłowy zrobiony, wypełnione fioletem to cardio, obrys to planowane, dzisiejszy dzień z obrysem 2 px. Pod spodem legenda trzech stanów.
+### Przerwa
+- Pierścień czasu z Figure w środku. Czas wynika z zapisanego znacznika startu. Pod spodem „Dalej:" z następną serią i ćwiczeniem. „−15 s" i „+15 s" (56 px), „Gotowy, zaczynam" (64 px, kreda) kończy przerwę wcześniej.
+- Koniec przerwy: dźwięk i zmiana całego ekranu na widok następnej serii. Dźwięk nigdy nie jest jedynym sygnałem.
+- Zielone podświetlenia, konfetti i animacje świętowania są zabronione. Przerwa ma być krótka.
 
-### Runner (ekrany sesji)
-- **Siła:** licznik Counter na środku, pod nim waga ze stosem talerzy, na dole „−1" i „Cofnij serię" (56 px) oraz „Zakończ serię" (64 px). Aktualizacje liczników w miejscu, bez przebudowy całego ekranu.
-- **Przerwa:** pierścień czasu z liczbą w środku, następna seria z wagą i stosem, „−15 s", „+15 s", „Gotowy, zaczynam".
-- **Cardio:** całe pole w fiolecie, słowo fazy („Praca" / „Odpoczynek") i duży zegar, pasek postępu interwału i oś czasu segmentów, „Pauza" jako pełny przycisk.
+### Ekran końca
+- Nazwa planu, krótkie „Koniec treningu" i jedna główna akcja „Wróć do planów". Bez historii i statystyk. Bez gratulacji w stylu gry.
+
+### Wznowienie treningu
+- Po powrocie z blokady, innej aplikacji lub przeładowania ekran od razu pokazuje to samo miejsce i ten sam stan przerwy, w mniej niż 3 s. Wygasły trening (po czasie bezczynności) pokazuje krótką informację i wraca do listy planów.
+
+### Po MVP (zarezerwowane)
+- **Stos talerzy:** sztanga z boku z talerzami w kolorach wag. Wejdzie razem z polem ciężaru. Obok zawsze tekst, np. „20 + 1,25 na stronę".
+- **Chip wagi:** kolor najcięższego talerza na stronę, zawsze z liczbą.
 
 ## Do's and Don'ts
 
 ### Do:
-- **Do** używać koloru talerza wyłącznie dla wagi i zawsze z liczbą obok.
 - **Do** dawać głównej akcji kolor kredy (#f2f2ef / #14171a) i jedną na ekran.
+- **Do** pokazywać na ekranie serii zawsze trzy rzeczy: ćwiczenie, powtórzenia i serie do końca, plus „Dalej:".
 - **Do** utrzymywać kontrast tekstu co najmniej 4,5:1 (3:1 dla dużego) w obu motywach.
-- **Do** trzymać cele dotykowe w runnerze na 56 px, a główną akcję na 64 px, w dolnej połowie ekranu.
+- **Do** trzymać cele dotykowe w treningu na 56 px, a główną akcję na 64 px, w dolnej połowie ekranu.
 - **Do** używać cyfr tabelarycznych dla liczników i czasu.
 - **Do** rozdzielać edycję i usuwanie szerokim odstępem, by nie pomylić ich spoconym kciukiem.
 - **Do** rysować ikony jedną kreską 2 px z zaokrąglonymi zakończeniami.
+- **Do** szanować `prefers-reduced-motion`.
 
 ### Don't:
-- **Don't** używać kolorów talerzy do stanów interfejsu, przycisków ani dekoracji.
-- **Don't** używać fioletu poza cardio.
+- **Don't** używać kolorów talerzy w MVP. Czekają na ciężar.
 - **Don't** dodawać gradientów, neonowych poświat, cieni jako ozdoby ani zaokrąglonych „kart z ikoną" jako struktury strony. Aplikacja nie ma wyglądać jak typowy tracker fitness.
 - **Don't** stosować kolorowego paska po lewej stronie karty (`border-left` powyżej 1 px).
-- **Don't** używać emoji ani znaków Unicode jako ikon, ani maskotek i konfetti. Ton jest rzeczowy, nie zabawkowy ani agresywny.
-- **Don't** przebudowywać całego ekranu runnera przy każdym tapnięciu.
-- **Don't** polegać wyłącznie na kolorze do przekazania wagi, stanu ani typu treningu.
+- **Don't** używać emoji ani znaków Unicode jako ikon, ani maskotek i konfetti.
+- **Don't** dodawać elementów, które wydłużają przerwę: powiadomień, reklam, feedu, wyskakujących okien, kart „motywacja dnia".
+- **Don't** przebudowywać całego ekranu treningu przy każdym tapnięciu.
+- **Don't** polegać wyłącznie na kolorze ani wyłącznie na dźwięku do przekazania stanu.
+- **Don't** liczyć czasu przerwy z tyknięć zegara. Czas zawsze wynika ze znacznika czasu.

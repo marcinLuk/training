@@ -1,41 +1,45 @@
 # Trening
 
-Planer treningów z kalendarzem, timerem przerw, licznikiem powtórzeń, dziennikiem i zakładką **Cardio**
-(trening swobodny ze stoperem oraz interwałowy z szablonami; treningi cardio widać w kalendarzu i dzienniku w osobnym kolorze).
-Node.js 24 + Express 5 + SQLite (wbudowany moduł `node:sqlite`), frontend bez frameworka w `public/`.
+A workout app for one person who trains at home with a phone. You build a plan once. During a workout, the app shows where you are, runs the rest timer and plays a sound when the rest ends. If you lock the screen or switch apps, you come back to the same set.
 
-## Uruchomienie (Docker)
+The app is an installable web app (PWA). It has no accounts and no server: all data stays on your phone and the app works offline.
 
-```bash
-cp .env.example .env      # ustaw APP_PASSWORD, jeśli aplikacja ma być dostępna publicznie
-docker compose up -d --build
-```
+Status: early development. The project is a fresh Vite + Vue scaffold.
 
-Aplikacja: http://localhost:3000 (port zmienisz zmienną `PORT` w `.env`).
+## Requirements
 
-Baza SQLite leży w wolumenie `trening-data` (`/data/trening.db` w kontenerze) i przetrwa
-przebudowę oraz restart kontenera. `docker compose down -v` **usuwa bazę**.
+- Node.js 22 or newer
+- npm
 
-## Konfiguracja (`.env`)
-
-| Zmienna        | Domyślnie | Opis                                                     |
-|----------------|-----------|----------------------------------------------------------|
-| `PORT`         | `3000`    | port na hoście                                           |
-| `APP_USER`     | `admin`   | login                                                    |
-| `APP_PASSWORD` | _(puste)_ | hasło – gdy ustawione, aplikacja wymaga logowania (HTTP Basic) |
-
-Na serwerze postaw przed aplikacją reverse proxy z HTTPS (np. Caddy, nginx, Traefik) –
-logowanie Basic bez HTTPS przesyła hasło otwartym tekstem.
-
-## Kopia zapasowa
-
-- z aplikacji: zakładka **Dziennik → Eksportuj / Importuj** (plik JSON; obejmuje też szablony i treningi cardio oraz terminy cardio w kalendarzu, a starsze kopie bez cardio nadal się importują),
-- plik bazy: `docker compose cp trening:/data/trening.db ./trening-backup.db`
-
-## Lokalnie bez Dockera
+## Run locally
 
 ```bash
 npm install
-npm run dev               # baza w ./data/trening.db
-npm test                  # testy (node:test)
+npm run dev
 ```
+
+Open the address that Vite prints (by default http://localhost:5173).
+
+To test on a phone, connect it over USB and forward the port:
+
+```bash
+adb reverse tcp:5173 tcp:5173
+```
+
+Then open http://localhost:5173 in Chrome on the phone.
+
+## Build
+
+```bash
+npm run build      # type check, then build into dist/
+npm run preview    # serve dist/ locally
+```
+
+## Project documents
+
+- [PRD](context/foundation/prd.md): what the app does and does not do
+- [Tech stack](context/foundation/tech-stack.md): the stack choice and why
+
+## Stack
+
+Vite, Vue 3, TypeScript.
