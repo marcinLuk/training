@@ -63,17 +63,17 @@ See `research.md` (entry points: `package.json:6-10`, `tsconfig.json:2-5`, `vite
 
 ### Phase 4: Workout engine
 #### Automated Verification:
-- [x] 4.1 `npx vitest run src/workout` passes, with tests for the current position, sets left and next exercise; "done" starting a rest; the remaining rest after the clock moves with no ticks; the rest end returning to the set; the last set ending the workout; a 0 s rest; undo; skip; ±15 s with the clamp at zero; the 2 h idle boundary; and the plan copy staying unchanged when the source plan changes (D3, D4, D5, D6, D7)
-- [x] 4.2 `npm run build` exits 0
+- [x] 4.1 `npx vitest run src/workout` passes, with tests for the current position, sets left and next exercise; "done" starting a rest; the remaining rest after the clock moves with no ticks; the rest end returning to the set; the last set ending the workout; a 0 s rest; undo; skip; ±15 s with the clamp at zero; the 2 h idle boundary; and the plan copy staying unchanged when the source plan changes (D3, D4, D5, D6, D7) — e2ffda4
+- [x] 4.2 `npm run build` exits 0 — e2ffda4
 
 ### Phase 5: Workout screens, rest timer and sound
 #### Automated Verification:
-- [ ] 5.1 `npx vitest run src/components` passes, with tests for Start from a plan card, the set view content, "Gotowe" opening the rest view, the clock moved past the rest end returning to the set view and calling the sound once, "Gotowy, zaczynam" ending the rest early, and the last set opening the end screen whose "Wróć do planów" opens the plan list (D3)
-- [ ] 5.2 `npm test` exits 0
-- [ ] 5.3 `npm run build` exits 0
+- [x] 5.1 `npx vitest run src/components` passes, with tests for Start from a plan card, the set view content, "Gotowe" opening the rest view, the clock moved past the rest end returning to the set view and calling the sound once, "Gotowy, zaczynam" ending the rest early, and the last set opening the end screen whose "Wróć do planów" opens the plan list (D3)
+- [x] 5.2 `npm test` exits 0
+- [x] 5.3 `npm run build` exits 0
 #### Manual Verification:
-- [ ] 5.4 at 412×915: run a plan with 2 exercises × 2 sets and a 15 s rest from start to the end screen: the set view shows the exercise, the reps, the sets left as the biggest number and "Dalej:"; the rest view counts down from 0:15 and the set view returns by itself; the end screen leads back to the plan list (D3)
-- [ ] 5.5 at 412×915: "Gotowy, zaczynam" ends a running rest at once (D3)
+- [x] 5.4 at 412×915: run a plan with 2 exercises × 2 sets and a 15 s rest from start to the end screen: the set view shows the exercise, the reps, the sets left as the biggest number and "Dalej:"; the rest view counts down from 0:15 and the set view returns by itself; the end screen leads back to the plan list (D3)
+- [x] 5.5 at 412×915: "Gotowy, zaczynam" ends a running rest at once (D3)
 
 ### Phase 6: Resume, expiry, Wake Lock and early end
 #### Automated Verification:

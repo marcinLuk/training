@@ -201,3 +201,12 @@ ul {
     transform: none;
   }
 }
+
+/* Workout screens: the main action sits at the bottom, in thumb reach. */
+.workout {
+  min-height: 100dvh;
+}
+
+.workout-action {
+  margin-top: auto;
+}

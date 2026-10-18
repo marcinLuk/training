@@ -2,7 +2,7 @@
 import { summarizePlan, type Plan } from '../plans/plan'
 
 defineProps<{ plans: Plan[] }>()
-defineEmits<{ 'new-plan': [] }>()
+defineEmits<{ 'new-plan': []; start: [planId: string] }>()
 </script>
 
 <template>
@@ -13,11 +13,24 @@ defineEmits<{ 'new-plan': [] }>()
       <li v-for="plan in plans" :key="plan.id" class="card plan-card">
         <h2>{{ plan.name }}</h2>
         <p class="muted">{{ summarizePlan(plan) }}</p>
+        <button
+          type="button"
+          class="btn btn-primary btn-large btn-block"
+          :aria-label="`Start: ${plan.name}`"
+          @click="$emit('start', plan.id)"
+        >
+          Start
+        </button>
       </li>
     </ul>
     <p v-else class="muted">Nie masz jeszcze planów. Dodaj pierwszy plan, a potem uruchom trening.</p>
 
-    <button type="button" class="btn btn-primary btn-block" @click="$emit('new-plan')">Nowy plan</button>
+    <button
+      type="button"
+      class="btn btn-block"
+      :class="{ 'btn-primary': plans.length === 0 }"
+      @click="$emit('new-plan')"
+    >Nowy plan</button>
   </main>
 </template>
 

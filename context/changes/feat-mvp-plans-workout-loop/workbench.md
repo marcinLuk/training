@@ -18,7 +18,7 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 - [x] Phase 1 — Unit test harness
 - [x] Phase 2 — Plan model and device storage
 - [x] Phase 3 — App shell, plan list and new-plan editor
-- [ ] Phase 4 — Workout engine
+- [x] Phase 4 — Workout engine
 - [ ] Phase 5 — Workout screens, rest timer and sound
 - [ ] Phase 6 — Resume, expiry, Wake Lock and early end
 - [ ] Phase 7 — Undo, skip and rest adjustment on screen
@@ -48,7 +48,7 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 | 1 — Unit test harness | sonnet | 1 | CONCERNS (1 minor, 1 nit) → `5eff3e6` | stabilization | 7m / 6m | 230k |
 | 2 — Plan model and device storage | sonnet | 4 | CONCERNS (3 nits) → `f00c8ad` | feature | 25m / 22m | 882k |
 | 3 — App shell, plan list and new-plan editor | sonnet | 2 | CONCERNS (2 minor, 4 nits) → `c8b1567` | feature | 22m / 19m | 603k |
-| 4 — Workout engine | sonnet | 0 | waiting | feature | — | — |
+| 4 — Workout engine | sonnet | 2 | CONCERNS (2 minor, 2 nits) → `e2ffda4` | feature | 17m / 15m | 468k |
 | 5 — Workout screens, rest timer and sound | sonnet | 0 | waiting | feature | — | — |
 | 6 — Resume, expiry, Wake Lock and early end | sonnet | 0 | waiting | feature | — | — |
 | 7 — Undo, skip and rest adjustment on screen | sonnet | 0 | waiting | feature | — | — |
@@ -56,15 +56,15 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 
 ## Run totals
 
-phases measured: 3 of 8 (0 wall unknown)   ·   tokens are subagents only
+phases measured: 4 of 8 (0 wall unknown)   ·   tokens are subagents only
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 2 | 1485k | 87% | 47m | 87% | 41m |
-| stabilization | 1 | 230k | 13% | 7m | 13% | 6m |
+| feature | 3 | 1953k | 89% | 64m | 90% | 56m |
+| stabilization | 1 | 230k | 11% | 7m | 10% | 6m |
 | refactor | 0 | 0k | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 3 | 1715k | 100% | 54m | 100% | 47m |
+| **total** | 4 | 2183k | 100% | 71m | 100% | 62m |
 
 research (not a phase): 75k tok, 1m
 
@@ -192,7 +192,8 @@ totals:    wall 22m (includes one unstamped user wait — the lane-breach questi
 
 ## Phase 4 — Workout engine
 
-phase:     feature  ·  start 2026-10-18T18:08:51+0200
+phase:     feature  ·  start 2026-10-18T18:08:51+0200  ·  end 2026-10-18T18:25:46+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 17m  ·  subagent time 15m  ·  tokens 468k (subagents only)  ·  rounds 2
 
 ### round 1          builder sonnet → critic opus
   cost:      builder 97k tok / 10 calls / 3m  ·  critic 150k tok / 25 calls / 6m
@@ -224,3 +225,61 @@ phase:     feature  ·  start 2026-10-18T18:08:51+0200
   diff:      engine.ts (cap) + engine.test.ts (+12)
   inconclusive: none
   builder:   closed 3 test gaps; capped remaining rest at durationMs
+
+## Phase 5 — Workout screens, rest timer and sound
+
+phase:     feature  ·  start 2026-10-18T18:25:50+0200
+
+### round 1          builder sonnet → critic opus
+  cost:      builder 124k tok / 17 calls / 3m  ·  critic 205k tok / 51 calls / 11m
+  automated: 3/3   manual: 2/2 (0 unreachable)
+  verdict:   FAIL
+  blockers:  none
+  majors:    `double-tap-crosses-screens` — a double tap on "Gotowe"/"Gotowy, zaczynam" lands on the next screen and marks a set done with no tap meant for it; App.vue:34-43 (browser-proven)
+             `gotowe-audio-unlock-unpinned` — useWorkout.ts:62
+             `start-plan-lookup-unpinned` — App.vue:22-25
+             `rest-time-rounding-unpinned` — WorkoutRest.vue:12-13
+             `hidden-rest-end-later-silence-unexercised` — Workout.test.ts:195-202
+  minors:    `settle-before-tap-docblock-overclaims`, `design-md-last-exercise-line-reworded` (owner to confirm), `plan-list-multiple-chalk-starts` (owner to confirm), `return-beep-depends-on-hidden-tick` (decided for round 2: no sound for a rest end detected > 2 s late)
+  report:    reviews/phase-5-round-1.md
+  spot-check: opened useWorkout.ts:61-66 (unlockAudio in finishSet; tests use an already-running fake) → consistent with the finding
+  COMMANDS_RUN mismatch: 5.1 ran `npx vitest run src`, plan says `npx vitest run src/components` — the critic ran the plan's command (pass)
+  diff:      5 tracked files (+80/-10), 9 new files (~800 lines)
+  clauses:   20/21 mapped (1 admitted unpinned: resolveRest before a tap — judged a harmless safety net by the critic)
+  scripted:  PlanList.vue/.test.ts, DESIGN.md (python), base.css (append) — vue-tsc clean
+  inconclusive: none
+  builder:   useWorkout composable, set/rest/end screens, Web Audio beeps, clock seam, Start on cards
+
+### round 2          builder sonnet → critic opus
+  cost:      builder 102k tok / 13 calls / 2m  ·  critic 207k tok / 59 calls / 12m
+  automated: 3/3   manual: 2/2 (0 unreachable)
+  verdict:   FAIL
+  closures:  `double-tap-crosses-screens` (browser + mutant), `gotowe-audio-unlock-unpinned`, `rest-time-rounding-unpinned`, `hidden-rest-end-later-silence-unexercised` → closed; `start-plan-lookup-unpinned` → still-open ("take the last plan" survives)
+  blockers:  `plan-card-start-below-64px` — plan-card Start is 56 px; DESIGN.md Layout: 64 px for the main action (Start, Gotowe); PlanList.vue:18
+  majors:    `start-plan-lookup-unpinned` (repeated), `guard-window-size-unpinned` — tests move the clock by the constant itself; useWorkout.ts:23
+  minors:    `end-screen-back-unguarded`, `return-beep-depends-on-hidden-tick`, `settle-before-tap-docblock-overclaims`, `plan-list-multiple-chalk-starts`, `design-md-last-exercise-line-reworded`
+  report:    reviews/phase-5-round-2.md
+  spot-check: opened PlanList.vue:16-22 (btn-primary btn-block, no btn-large) and DESIGN.md:202 → confirmed
+  diff:      useWorkout.ts (+28), Workout.test.ts (+150)
+  inconclusive: none
+  builder:   500 ms action guard, 2 s late-sound rule, four test gaps
+  decisions (round-2 contract): action guard after a screen change; sound only when visible and ≤ 2 s late
+
+### valve trip — phase 5 after round 2
+  valve:     repeated finding — `start-plan-lookup-unpinned` returned as Major after round 2 claimed to close it
+  evidence:  reviews/phase-5-round-2.md:144 — the only two-plan test taps the last card; "always start the last plan" passes 209/209
+  decision:  orchestrator, under the owner's standing delegation for this run ("make these decisions, do not ask me"): continue with a user-supplied-style instruction — the test taps BOTH cards (first and last of three) and asserts each starts its own plan. Also decided for round 3: the guard covers "Wróć do planów" on the end screen; "ended while hidden → silent" is read strictly (the page must have been visible at the rest's end time).
+
+### round 3          builder sonnet → critic opus
+  cost:      builder 97k tok / 9 calls / 2m  ·  critic 210k tok / 57 calls / 12m
+  automated: 3/3   manual: 2/2 (0 unreachable)
+  verdict:   CONCERNS
+  closures:  `plan-card-start-below-64px`, `start-plan-lookup-unpinned`, `guard-window-size-unpinned` → closed; earlier closed ids re-checked by mutants, none back
+  blockers:  none
+  majors:    none
+  minors:    `start-after-back-unguarded` (licensed into phase 6 as its own instruction), `plan-list-multiple-chalk-starts` (owner to confirm), `design-md-last-exercise-line-reworded` (owner to confirm), `settle-before-tap-docblock-overclaims`, `hidden-return-test-skips-hide-event`, `next-row-title-not-uppercase`
+  report:    reviews/phase-5-round-3.md
+  spot-check: re-ran `npm test` → confirmed (216 passed)
+  diff:      useWorkout.ts, App.vue, PlanList.vue (+btn-large), 2 test files
+  inconclusive: none
+  builder:   64 px card Start, three-plan Start tests, literal-time guard tests, guarded "Wróć do planów", strict hidden-rest silence

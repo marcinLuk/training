@@ -33,12 +33,30 @@ describe('PlanList', () => {
     ])
   })
 
-  it('has "Nowy plan" as the only chalk action and emits new-plan on tap', async () => {
-    const wrapper = mount(PlanList, { props: { plans: [plan('A', [3])] } })
+  it('has "Nowy plan" as the chalk action when there are no plans', async () => {
+    const wrapper = mount(PlanList, { props: { plans: [] } })
     const buttons = wrapper.findAll('button')
     expect(buttons).toHaveLength(1)
     expect(buttons[0]?.classes()).toContain('btn-primary')
     await button(wrapper.element, 'Nowy plan').trigger('click')
     expect(wrapper.emitted('new-plan')).toHaveLength(1)
+  })
+
+  it('makes each Start the main action and "Nowy plan" secondary when there are plans', async () => {
+    const wrapper = mount(PlanList, { props: { plans: [plan('A', [3]), plan('B', [2])] } })
+    expect(button(wrapper.element, 'Start: A').classes()).toContain('btn-primary')
+    expect(button(wrapper.element, 'Start: B').classes()).toContain('btn-primary')
+    expect(button(wrapper.element, 'Start: A').classes()).toContain('btn-large')
+    expect(button(wrapper.element, 'Start: B').classes()).toContain('btn-large')
+    expect(button(wrapper.element, 'Nowy plan').classes()).not.toContain('btn-large')
+    expect(button(wrapper.element, 'Nowy plan').classes()).not.toContain('btn-primary')
+    await button(wrapper.element, 'Nowy plan').trigger('click')
+    expect(wrapper.emitted('new-plan')).toHaveLength(1)
+  })
+
+  it('emits start with the id of the tapped plan', async () => {
+    const wrapper = mount(PlanList, { props: { plans: [plan('A', [3]), plan('B', [2])] } })
+    await button(wrapper.element, 'Start: B').trigger('click')
+    expect(wrapper.emitted('start')).toEqual([['B']])
   })
 })

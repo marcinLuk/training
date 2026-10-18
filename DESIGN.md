@@ -230,7 +230,7 @@ Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla c
 - **Shadow Strategy:** brak, patrz Elevation & Depth.
 - **Internal Padding:** 16–20 px.
 - Karta planu: nazwa, podsumowanie („5 ćwiczeń, 18 serii"), Start jako główna akcja, edycja i usuwanie rozdzielone szerokim odstępem.
-- Lista planów bez planów: „Nie masz jeszcze planów. Dodaj pierwszy plan, a potem uruchom trening." Dopóki karta nie ma Start, „Nowy plan" jest główną akcją listy.
+- Lista planów bez planów: „Nie masz jeszcze planów. Dodaj pierwszy plan, a potem uruchom trening." Bez planów „Nowy plan" jest główną akcją listy. Gdy są plany, główną akcją są przyciski Start na kartach, a „Nowy plan" jest akcją drugorzędną.
 
 ### Inputs / Fields
 - **Style:** tło powierzchnia 2, obramowanie 2 px w kolorze linii, promień 10 px, wysokość 56 px, cyfry Barlow Condensed 700.
@@ -242,7 +242,7 @@ Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla c
 ### Widok serii (ekran treningu)
 - Od góry: nazwa ćwiczenia (Headline), powtórzenia (Figure), pod nimi Counter z liczbą pozostałych serii i podpisem „serii zostało". Niżej wiersz „Dalej:" z nazwą następnego ćwiczenia (Title, kolor drugorzędny). Na dole „Gotowe" (64 px, kreda), a nad nim „Cofnij" i „Pomiń serię" (56 px).
 - Każde dotknięcie aktualizuje liczby w miejscu, bez przebudowy ekranu.
-- Ostatnia seria ćwiczenia pokazuje „Dalej:" z następnym ćwiczeniem, a ostatnie ćwiczenie pokazuje „To ostatnia seria".
+- Ostatnia seria ćwiczenia pokazuje „Dalej:" z następnym ćwiczeniem, ostatnie ćwiczenie pokazuje „To ostatnie ćwiczenie", a ostatnia seria planu pokazuje „To ostatnia seria".
 
 ### Przerwa
 - Pierścień czasu z Figure w środku. Czas wynika z zapisanego znacznika startu. Pod spodem „Dalej:" z następną serią i ćwiczeniem. „−15 s" i „+15 s" (56 px), „Gotowy, zaczynam" (64 px, kreda) kończy przerwę wcześniej.
