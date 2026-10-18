@@ -41,16 +41,16 @@ See `research.md` (entry points: `package.json:6-10`, `tsconfig.json:2-5`, `vite
 
 ### Phase 1: Unit test harness
 #### Automated Verification:
-- [x] 1.1 `npm test` exits 0 and runs `src/harness.test.ts`, which mounts a small component with `@vue/test-utils` in jsdom (D1)
-- [x] 1.2 `npm run test:watch` is defined as Vitest watch mode in `package.json` (D1)
-- [x] 1.3 `npm run build` exits 0 (D1)
-- [x] 1.4 a type error added to a `*.test.ts` file in a scratch copy makes `npx vue-tsc -b` fail there (D1)
-- [x] 1.5 `CLAUDE.md` (Commands, Stack) and `context/foundation/tech-stack.md` name Vitest, `npm test` and `npm run test:watch` (D1)
+- [x] 1.1 `npm test` exits 0 and runs `src/harness.test.ts`, which mounts a small component with `@vue/test-utils` in jsdom (D1) — 5eff3e6
+- [x] 1.2 `npm run test:watch` is defined as Vitest watch mode in `package.json` (D1) — 5eff3e6
+- [x] 1.3 `npm run build` exits 0 (D1) — 5eff3e6
+- [x] 1.4 a type error added to a `*.test.ts` file in a scratch copy makes `npx vue-tsc -b` fail there (D1) — 5eff3e6
+- [x] 1.5 `CLAUDE.md` (Commands, Stack) and `context/foundation/tech-stack.md` name Vitest, `npm test` and `npm run test:watch` (D1) — 5eff3e6
 
 ### Phase 2: Plan model and device storage
 #### Automated Verification:
-- [ ] 2.1 `npx vitest run src/plans` passes, with tests for the defaults, the validation, a save read back through a fresh read of `localStorage`, corrupt stored data kept and not overwritten, and `navigator.storage.persist()` called at the first save only (D2, D9)
-- [ ] 2.2 `npm run build` exits 0
+- [x] 2.1 `npx vitest run src/plans` passes, with tests for the defaults, the validation, a save read back through a fresh read of `localStorage`, corrupt stored data kept and not overwritten, and `navigator.storage.persist()` called at the first save only (D2, D9)
+- [x] 2.2 `npm run build` exits 0
 
 ### Phase 3: App shell, plan list and new-plan editor
 #### Automated Verification:
