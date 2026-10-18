@@ -1,13 +1,15 @@
 <script setup lang="ts">
 import { summarizePlan, type Plan } from '../plans/plan'
 
-defineProps<{ plans: Plan[] }>()
+defineProps<{ plans: Plan[]; expiredNotice?: boolean }>()
 defineEmits<{ 'new-plan': []; start: [planId: string] }>()
 </script>
 
 <template>
   <main class="screen">
     <h1>Plany</h1>
+
+    <p v-if="expiredNotice" class="card" role="status">Trening wygasł po 2 godzinach bez dotknięcia.</p>
 
     <ul v-if="plans.length > 0" class="stack" aria-label="Zapisane plany">
       <li v-for="plan in plans" :key="plan.id" class="card plan-card">

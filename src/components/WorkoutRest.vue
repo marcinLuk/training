@@ -4,7 +4,7 @@ import { formatRest } from '../plans/format'
 import type { WorkoutView } from '../workout/engine'
 
 const props = defineProps<{ view: WorkoutView; durationMs: number }>()
-defineEmits<{ ready: [] }>()
+defineEmits<{ ready: []; end: [] }>()
 
 const RING_RADIUS = 90
 const RING_LENGTH = 2 * Math.PI * RING_RADIUS
@@ -25,6 +25,9 @@ const nextText = computed(() => {
 
 <template>
   <main class="screen workout">
+    <div class="workout-top">
+      <button type="button" class="btn btn-danger" @click="$emit('end')">Zakończ trening</button>
+    </div>
     <h1>Przerwa</h1>
     <div class="ring">
       <svg viewBox="0 0 200 200" aria-hidden="true" focusable="false">

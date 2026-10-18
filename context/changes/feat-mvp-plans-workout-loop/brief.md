@@ -68,24 +68,24 @@ See `research.md` (entry points: `package.json:6-10`, `tsconfig.json:2-5`, `vite
 
 ### Phase 5: Workout screens, rest timer and sound
 #### Automated Verification:
-- [x] 5.1 `npx vitest run src/components` passes, with tests for Start from a plan card, the set view content, "Gotowe" opening the rest view, the clock moved past the rest end returning to the set view and calling the sound once, "Gotowy, zaczynam" ending the rest early, and the last set opening the end screen whose "Wróć do planów" opens the plan list (D3)
-- [x] 5.2 `npm test` exits 0
-- [x] 5.3 `npm run build` exits 0
+- [x] 5.1 `npx vitest run src/components` passes, with tests for Start from a plan card, the set view content, "Gotowe" opening the rest view, the clock moved past the rest end returning to the set view and calling the sound once, "Gotowy, zaczynam" ending the rest early, and the last set opening the end screen whose "Wróć do planów" opens the plan list (D3) — ea79ecb
+- [x] 5.2 `npm test` exits 0 — ea79ecb
+- [x] 5.3 `npm run build` exits 0 — ea79ecb
 #### Manual Verification:
-- [x] 5.4 at 412×915: run a plan with 2 exercises × 2 sets and a 15 s rest from start to the end screen: the set view shows the exercise, the reps, the sets left as the biggest number and "Dalej:"; the rest view counts down from 0:15 and the set view returns by itself; the end screen leads back to the plan list (D3)
-- [x] 5.5 at 412×915: "Gotowy, zaczynam" ends a running rest at once (D3)
+- [x] 5.4 at 412×915: run a plan with 2 exercises × 2 sets and a 15 s rest from start to the end screen: the set view shows the exercise, the reps, the sets left as the biggest number and "Dalej:"; the rest view counts down from 0:15 and the set view returns by itself; the end screen leads back to the plan list (D3) — ea79ecb
+- [x] 5.5 at 412×915: "Gotowy, zaczynam" ends a running rest at once (D3) — ea79ecb
 
 ### Phase 6: Resume, expiry, Wake Lock and early end
 #### Automated Verification:
-- [ ] 6.1 `npx vitest run src/workout` passes, with tests for saving on every change, a fresh read mid-set and mid-rest giving the same position and the timestamp-based remaining rest, the 2 h expiry removing the workout, unreadable or old-shape data not crashing and not touching the plans, and the Wake Lock requested at start, requested again when the page becomes visible, and released at the end and at an early end (D4)
-- [ ] 6.2 `npx vitest run src/components` passes, with tests for an app mounted over a stored workout opening the workout view in the same state, the expiry notice, and "Zakończ trening" with confirm and with cancel (D4, D8)
-- [ ] 6.3 `npm test` exits 0
-- [ ] 6.4 `npm run build` exits 0
+- [x] 6.1 `npx vitest run src/workout` passes, with tests for saving on every change, a fresh read mid-set and mid-rest giving the same position and the timestamp-based remaining rest, the 2 h expiry removing the workout, unreadable or old-shape data not crashing and not touching the plans, and the Wake Lock requested at start, requested again when the page becomes visible, and released at the end and at an early end (D4)
+- [x] 6.2 `npx vitest run src/components` passes, with tests for an app mounted over a stored workout opening the workout view in the same state, the expiry notice, and "Zakończ trening" with confirm and with cancel (D4, D8)
+- [x] 6.3 `npm test` exits 0
+- [x] 6.4 `npm run build` exits 0
 #### Manual Verification:
-- [ ] 6.5 at 412×915: reload in the middle of a set: the same exercise and sets left show in under 3 s (D4)
-- [ ] 6.6 at 412×915: reload in the middle of a rest: the rest view continues with the remaining time, not a restarted one (D4)
-- [ ] 6.7 at 412×915: a stored workout whose last tap is more than 2 h old shows the expiry notice and the plan list after a reload (D4)
-- [ ] 6.8 at 412×915: "Zakończ trening" → confirm → plan list; "Zakończ trening" → cancel → the workout stays (D8)
+- [x] 6.5 at 412×915: reload in the middle of a set: the same exercise and sets left show in under 3 s (D4)
+- [x] 6.6 at 412×915: reload in the middle of a rest: the rest view continues with the remaining time, not a restarted one (D4)
+- [x] 6.7 at 412×915: a stored workout whose last tap is more than 2 h old shows the expiry notice and the plan list after a reload (D4)
+- [x] 6.8 at 412×915: "Zakończ trening" → confirm → plan list; "Zakończ trening" → cancel → the workout stays (D8)
 
 ### Phase 7: Undo, skip and rest adjustment on screen
 #### Automated Verification:

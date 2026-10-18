@@ -253,7 +253,8 @@ Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla c
 - Nazwa planu, krótkie „Koniec treningu" i jedna główna akcja „Wróć do planów". Bez historii i statystyk. Bez gratulacji w stylu gry.
 
 ### Wznowienie treningu
-- Po powrocie z blokady, innej aplikacji lub przeładowania ekran od razu pokazuje to samo miejsce i ten sam stan przerwy, w mniej niż 3 s. Wygasły trening (po czasie bezczynności) pokazuje krótką informację i wraca do listy planów.
+- Po powrocie z blokady, innej aplikacji lub przeładowania ekran od razu pokazuje to samo miejsce i ten sam stan przerwy, w mniej niż 3 s. Wygasły trening (po czasie bezczynności) pokazuje krótką informację i wraca do listy planów. Treść informacji: „Trening wygasł po 2 godzinach bez dotknięcia." Znika, gdy użytkownik uruchomi trening lub otworzy edytor planu.
+- „Zakończ trening" (Danger, 56 px) leży u góry widoku serii i przerwy, daleko od akcji głównej. Dotknięcie otwiera w aplikacji pytanie „Zakończyć trening?" z przyciskami „Wróć do treningu" (drugorzędny) i „Zakończ trening" (Danger), bez przycisku kredowego. Potwierdzenie usuwa trening i otwiera listę planów; „Wróć do treningu" zostawia trening bez zmian.
 
 ### Po MVP (zarezerwowane)
 - **Stos talerzy:** sztanga z boku z talerzami w kolorach wag. Wejdzie razem z polem ciężaru. Obok zawsze tekst, np. „20 + 1,25 na stronę".

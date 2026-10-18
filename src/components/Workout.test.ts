@@ -160,12 +160,14 @@ describe('Start with three saved plans', () => {
     const wrapper = mountApp()
     await button(wrapper.element, 'Start: Wiosłowanie i przysiady').trigger('click')
     expect(wrapper.get('h1').text()).toBe('Wiosłowanie')
-    wrapper.unmount()
-    mounted = null
-    const second = mountApp()
-    await button(second.element, 'Start: Plecy').trigger('click')
-    expect(second.get('h1').text()).toBe('Podciąganie')
-    expect(setsLeft(second)).toBe('3')
+    await tap(wrapper, 'Zakończ trening')
+    vi.setSystemTime(Date.now() + ACTION_GUARD_MS)
+    await button(wrapper.get('[role="alertdialog"]').element, 'Zakończ trening').trigger('click')
+    expect(wrapper.get('h1').text()).toBe('Plany')
+    vi.setSystemTime(Date.now() + ACTION_GUARD_MS)
+    await button(wrapper.element, 'Start: Plecy').trigger('click')
+    expect(wrapper.get('h1').text()).toBe('Podciąganie')
+    expect(setsLeft(wrapper)).toBe('3')
   })
 })
 
@@ -342,13 +344,14 @@ describe('rest view', () => {
     expect(wrapper.get('h1').text()).toBe('Przerwa')
   })
 
+  // A running workout always holds one idle-expiry timeout; the rest adds the display interval.
   it('stops the display timer when the rest ends and when the app unmounts', async () => {
     const wrapper = await startAndFinishFirstSet()
-    expect(vi.getTimerCount()).toBe(1)
+    expect(vi.getTimerCount()).toBe(2)
     await tap(wrapper, 'Gotowy, zaczynam')
-    expect(vi.getTimerCount()).toBe(0)
-    await tap(wrapper, 'Gotowe')
     expect(vi.getTimerCount()).toBe(1)
+    await tap(wrapper, 'Gotowe')
+    expect(vi.getTimerCount()).toBe(2)
     wrapper.unmount()
     mounted = null
     expect(vi.getTimerCount()).toBe(0)

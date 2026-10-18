@@ -19,7 +19,7 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 - [x] Phase 2 — Plan model and device storage
 - [x] Phase 3 — App shell, plan list and new-plan editor
 - [x] Phase 4 — Workout engine
-- [ ] Phase 5 — Workout screens, rest timer and sound
+- [x] Phase 5 — Workout screens, rest timer and sound
 - [ ] Phase 6 — Resume, expiry, Wake Lock and early end
 - [ ] Phase 7 — Undo, skip and rest adjustment on screen
 - [ ] Phase 8 — Edit and delete a plan
@@ -49,22 +49,22 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 | 2 — Plan model and device storage | sonnet | 4 | CONCERNS (3 nits) → `f00c8ad` | feature | 25m / 22m | 882k |
 | 3 — App shell, plan list and new-plan editor | sonnet | 2 | CONCERNS (2 minor, 4 nits) → `c8b1567` | feature | 22m / 19m | 603k |
 | 4 — Workout engine | sonnet | 2 | CONCERNS (2 minor, 2 nits) → `e2ffda4` | feature | 17m / 15m | 468k |
-| 5 — Workout screens, rest timer and sound | sonnet | 0 | waiting | feature | — | — |
+| 5 — Workout screens, rest timer and sound | sonnet | 3 | CONCERNS (5 minor, 1 nit) → `ea79ecb` | feature | 44m / 41m | 945k |
 | 6 — Resume, expiry, Wake Lock and early end | sonnet | 0 | waiting | feature | — | — |
 | 7 — Undo, skip and rest adjustment on screen | sonnet | 0 | waiting | feature | — | — |
 | 8 — Edit and delete a plan | sonnet | 0 | waiting | feature | — | — |
 
 ## Run totals
 
-phases measured: 4 of 8 (0 wall unknown)   ·   tokens are subagents only
+phases measured: 5 of 8 (0 wall unknown)   ·   tokens are subagents only
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 3 | 1953k | 89% | 64m | 90% | 56m |
-| stabilization | 1 | 230k | 11% | 7m | 10% | 6m |
+| feature | 4 | 2898k | 93% | 108m | 94% | 97m |
+| stabilization | 1 | 230k | 7% | 7m | 6% | 6m |
 | refactor | 0 | 0k | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 4 | 2183k | 100% | 71m | 100% | 62m |
+| **total** | 5 | 3128k | 100% | 115m | 100% | 103m |
 
 research (not a phase): 75k tok, 1m
 
@@ -228,7 +228,8 @@ totals:    wall 17m  ·  subagent time 15m  ·  tokens 468k (subagents only)  ·
 
 ## Phase 5 — Workout screens, rest timer and sound
 
-phase:     feature  ·  start 2026-10-18T18:25:50+0200
+phase:     feature  ·  start 2026-10-18T18:25:50+0200  ·  end 2026-10-18T19:10:05+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 44m  ·  subagent time 41m  ·  tokens 945k (subagents only)  ·  rounds 3
 
 ### round 1          builder sonnet → critic opus
   cost:      builder 124k tok / 17 calls / 3m  ·  critic 205k tok / 51 calls / 11m
@@ -283,3 +284,54 @@ phase:     feature  ·  start 2026-10-18T18:25:50+0200
   diff:      useWorkout.ts, App.vue, PlanList.vue (+btn-large), 2 test files
   inconclusive: none
   builder:   64 px card Start, three-plan Start tests, literal-time guard tests, guarded "Wróć do planów", strict hidden-rest silence
+
+## Phase 6 — Resume, expiry, Wake Lock and early end
+
+phase:     feature  ·  start 2026-10-18T19:10:10+0200
+
+### round 1          builder sonnet → critic opus
+  cost:      builder 150k tok / 23 calls / 5m  ·  critic 228k tok / 59 calls / 12m
+  automated: 4/4   manual: 4/4 (0 unreachable)
+  verdict:   FAIL
+  blockers:  none
+  majors:    `idle-expiry-never-fires-while-visible` — expiry only on rest ticks / visibilitychange; a visible set view never expires, a tap after 3 h continues the old workout; useWorkout.ts:99-117,140-146
+             `restore-tap-guard-unpinned` — useWorkout.ts:65-66
+             `askend-end-screen-test-misnamed` — useWorkout.test.ts:514-518
+  minors:    `confirm-dialog-focus`
+  report:    reviews/phase-6-round-1.md
+  spot-check: grep of useWorkout.ts — isExpired only at load (:40) and in refresh (:104), refresh called from tick/visibility (:202) → confirmed
+  COMMANDS_RUN mismatch: 6.1/6.2 run as single files, plan says `npx vitest run src/workout` / `src/components` — the critic ran the plan's commands (pass)
+  diff:      8 tracked files (+~170), 7 new files (~1370 lines)
+  clauses:   all mapped (HEAD check: 51/55 new tests red against HEAD useWorkout.ts)
+  scripted:  most edits via python/sed/heredoc — vue-tsc clean
+  inconclusive: none
+  builder:   workout store, restore, 2 h expiry notice, Wake Lock, "Zakończ trening" confirm, guarded start
+
+### round 2          builder sonnet → critic opus
+  cost:      builder 95k tok / 15 calls / 2m  ·  critic 206k tok / 45 calls / 10m
+  automated: 4/4   manual: 4/4 (0 unreachable)
+  verdict:   FAIL
+  closures:  `idle-expiry-never-fires-while-visible` (browser fake clock + mutants), `restore-tap-guard-unpinned`, `askend-end-screen-test-misnamed` → closed
+  blockers:  none
+  majors:    `expiry-decision-clauses-unpinned` — no armExpiry at restore / delay from arm time / no expiry check in askEnd all survive; useWorkout.ts:241/105/195 (production correct; test-only)
+  minors:    `expiry-rearm-unpinned`, `confirm-step-skips-expiry-check`, `confirm-dialog-focus`
+  report:    reviews/phase-6-round-2.md
+  spot-check: critic's browser probe screenshots exist (p6-r2-probe-*.png) and the 3 test runs re-ran green → consistent
+  diff:      useWorkout.ts (+expiry timer, +checks), 2 test files
+  inconclusive: none
+  builder:   expiry check first in every action + one idle timeout; restore-guard and askEnd tests
+
+### round 3          builder sonnet → critic opus
+  cost:      builder 81k tok / 8 calls / 1m  ·  critic 141k tok / 19 calls / 3m
+  automated: 4/4   manual: 0/0 performed (4 carried — production bytes identical to round 2, `cmp` of useWorkout.ts, workoutStore.ts, wakeLock.ts, App.vue, components/*.vue → all "same"; ticked on round-2 evidence)
+  verdict:   CONCERNS
+  closures:  `expiry-decision-clauses-unpinned` → closed (C1d/C1e/C1f + 2 variants killed); earlier ids still closed
+  blockers:  none
+  majors:    none
+  minors:    `expiry-rearm-unpinned`, `confirm-step-skips-expiry-check`, `confirm-dialog-focus`
+  report:    reviews/phase-6-round-3.md
+  spot-check: re-ran `npm test` → confirmed (323 passed)
+  note:      carrying non-side-effect manual items on `cmp` evidence is an orchestrator decision beyond the skill's carry rule (that rule names external side effects only) — recorded for the retrospective
+  diff:      useWorkout.test.ts only (+3 tests)
+  inconclusive: none
+  builder:   restore-path expiry and askEnd-expired tests

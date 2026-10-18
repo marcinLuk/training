@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import type { WorkoutView } from '../workout/engine'
 
 const props = defineProps<{ view: WorkoutView }>()
-defineEmits<{ done: [] }>()
+defineEmits<{ done: []; end: [] }>()
 
 /** The "Dalej:" row: the next exercise, or a note when nothing follows. */
 const upNext = computed(() => {
@@ -16,6 +16,9 @@ const upNext = computed(() => {
 
 <template>
   <main class="screen workout">
+    <div class="workout-top">
+      <button type="button" class="btn btn-danger" @click="$emit('end')">Zakończ trening</button>
+    </div>
     <h1 class="workout-name">{{ view.exerciseName }}</h1>
     <p class="figure">{{ view.reps }} <span class="figure-unit">powtórzeń</span></p>
     <div class="counter-block">
