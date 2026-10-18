@@ -50,9 +50,13 @@ Every AI agent MUST read `DESIGN.md` (and `PRODUCT.md`) before it creates or cha
 - Fonts are served locally from `public/`, not from a CDN.
 - When code and `DESIGN.md` disagree, tell the user. Do not change one silently.
 
+## Browser rule
+
+When you need to use a browser (open the app, click, check UI, take a screenshot, test a flow), ALWAYS use the Playwright CLI. Do not use the built-in browser pane tools (`mcp__Claude_Browser__*`) or Claude in Chrome for this project.
+
 ## Stack
 
-Vite 8, Vue 3.5 with `<script setup>` single-file components, TypeScript ~6.0 (strict, from `@vue/tsconfig`), type-checked by `vue-tsc`. Node 22 or newer. npm.
+Vite 8, Vue 3.5 with `<script setup>` single-file components, TypeScript ~6.0 (strict, from `@vue/tsconfig`), type-checked by `vue-tsc`. Tests: Vitest with Vue Test Utils and jsdom. Node 22 or newer. npm.
 
 The repo is a fresh `create-vite` `vue-ts` scaffold. `src/components/HelloWorld.vue`, `src/assets/*` and the demo content in `src/App.vue` are template leftovers; replace them as features land.
 
@@ -63,11 +67,15 @@ npm install
 npm run dev          # Vite dev server
 npm run build        # vue-tsc -b (type check), then vite build into dist/
 npm run preview      # serve the built dist/ locally
+npm test             # Vitest, one run (vitest run)
+npm run test:watch   # Vitest watch mode
 ```
 
-`npm run build` is the only check today: it fails on type errors and on unused locals/parameters (`noUnusedLocals`, `noUnusedParameters` in `tsconfig.app.json`). There is no test runner, linter or formatter yet.
+`npm run build` type-checks `src/` and the test files, and fails on type errors and on unused locals/parameters (`noUnusedLocals`, `noUnusedParameters`). `npm test` runs the unit and component tests. There is no linter or formatter yet.
 
-TypeScript config is split: `tsconfig.app.json` covers `src/`, `tsconfig.node.json` covers `vite.config.ts`. Both set `erasableSyntaxOnly`, so do not use `enum`, `namespace` or constructor parameter properties.
+Tests live next to the code as `src/**/*.test.ts`. Import `describe`, `it`, `expect` and `vi` from `vitest` (no globals). Vitest is configured in the `test` block of `vite.config.ts` (jsdom environment).
+
+TypeScript config is split: `tsconfig.app.json` covers `src/` without test files, `tsconfig.test.json` covers `src/` with the `*.test.ts` files, `tsconfig.node.json` covers `vite.config.ts`. All set `erasableSyntaxOnly`, so do not use `enum`, `namespace` or constructor parameter properties.
 
 ## Product constraints (from the PRD)
 
