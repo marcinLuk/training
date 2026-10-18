@@ -246,6 +246,7 @@ Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla c
 
 ### Przerwa
 - Pierścień czasu z Figure w środku. Czas wynika z zapisanego znacznika startu. Pod spodem „Dalej:" z następną serią i ćwiczeniem. „−15 s" i „+15 s" (56 px), „Gotowy, zaczynam" (64 px, kreda) kończy przerwę wcześniej.
+- Widok przerwy ma też „Cofnij" (56 px, drugorzędny) nad „Gotowy, zaczynam". Cofa serię, która rozpoczęła przerwę.
 - Koniec przerwy: dźwięk i zmiana całego ekranu na widok następnej serii. Dźwięk nigdy nie jest jedynym sygnałem.
 - Zielone podświetlenia, konfetti i animacje świętowania są zabronione. Przerwa ma być krótka.
 

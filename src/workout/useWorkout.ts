@@ -8,7 +8,10 @@ import {
   IDLE_EXPIRY_MS,
   isExpired,
   resolveRest,
+  skipSet,
   startWorkout,
+  undo,
+  adjustRest,
   type WorkoutState,
   type WorkoutView,
 } from './engine'
@@ -28,6 +31,9 @@ export const ACTION_GUARD_MS = 500
 
 /** The end-of-rest sound plays only if the rest end is seen at most this long after it happened. */
 export const SOUND_MAX_LATE_MS = 2_000
+
+/** One tap on "−15 s" or "+15 s". */
+export const REST_STEP_MS = 15_000
 
 /**
  * What a stored workout becomes at app start. A finished workout opens the end screen; one
@@ -75,9 +81,17 @@ export function useWorkout() {
     else releaseWakeLock()
   }
 
+  /**
+   * Saves a new state. The tap guard starts only when the screen changes: another mode, another
+   * current set, or no workout. A change that keeps the screen (±15 s on the rest view) leaves
+   * the guard alone, so two quick taps on the same button both count.
+   */
   function commit(next: WorkoutState | null): void {
+    const previous = state.value
+    const screenChanged =
+      previous === null || next === null || previous.mode !== next.mode || previous.cursor !== next.cursor
     state.value = next
-    guardUntil = now() + ACTION_GUARD_MS
+    if (screenChanged) guardUntil = now() + ACTION_GUARD_MS
     if (next === null) {
       clearWorkout()
       confirmingEnd.value = false
@@ -182,6 +196,39 @@ export function useWorkout() {
     if (current !== null) commit(endRestEarly(current, at))
   }
 
+  /** Takes back the last "Gotowe" or "Pomiń serię". Does nothing when there is nothing to undo. */
+  function undoLast(): void {
+    const at = now()
+    if (expireIfIdle(at) || guarded(at)) return
+    const current = settled(at)
+    if (current === null) return
+    const next = undo(current, at)
+    if (next !== state.value) commit(next)
+  }
+
+  /** Skips the current set: no rest, on to the next set. */
+  function skip(): void {
+    const at = now()
+    if (expireIfIdle(at) || guarded(at)) return
+    const current = settled(at)
+    if (current === null) return
+    const next = skipSet(current, at)
+    if (next !== state.value) commit(next)
+  }
+
+  /**
+   * Moves the end of the rest. A change that brings the rest to 0 ends it with no sound: the
+   * user ended it, it did not run out.
+   */
+  function adjustRestBy(deltaMs: number): void {
+    const at = now()
+    if (expireIfIdle(at) || guarded(at)) return
+    const current = settled(at)
+    if (current === null) return
+    const next = adjustRest(current, deltaMs, at)
+    if (next !== state.value) commit(next)
+  }
+
   /** Leaves the end screen. Returns false when the tap came too soon after the screen change. */
   function leave(): boolean {
     if (guarded(now())) return false
@@ -255,6 +302,9 @@ export function useWorkout() {
     start,
     finishSet,
     endRest,
+    undoLast,
+    skip,
+    adjustRestBy,
     leave,
     askEnd,
     cancelEnd,

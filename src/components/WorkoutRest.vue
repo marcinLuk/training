@@ -2,9 +2,10 @@
 import { computed } from 'vue'
 import { formatRest } from '../plans/format'
 import type { WorkoutView } from '../workout/engine'
+import { REST_STEP_MS } from '../workout/useWorkout'
 
 const props = defineProps<{ view: WorkoutView; durationMs: number }>()
-defineEmits<{ ready: []; end: [] }>()
+defineEmits<{ ready: []; end: []; undo: []; adjust: [deltaMs: number] }>()
 
 const RING_RADIUS = 90
 const RING_LENGTH = 2 * Math.PI * RING_RADIUS
@@ -47,13 +48,30 @@ const nextText = computed(() => {
       <span class="muted">Dalej:</span>
       {{ nextText }}
     </p>
-    <button type="button" class="btn btn-primary btn-large btn-block workout-action" @click="$emit('ready')">
-      Gotowy, zaczynam
-    </button>
+    <div class="rest-adjust">
+      <button type="button" class="btn" @click="$emit('adjust', -REST_STEP_MS)">−15 s</button>
+      <button type="button" class="btn" @click="$emit('adjust', REST_STEP_MS)">+15 s</button>
+    </div>
+    <div class="workout-action rest-actions">
+      <button type="button" class="btn btn-block" :disabled="!view.canUndo" @click="$emit('undo')">Cofnij</button>
+      <button type="button" class="btn btn-primary btn-large btn-block" @click="$emit('ready')">Gotowy, zaczynam</button>
+    </div>
   </main>
 </template>
 
 <style scoped>
+.rest-adjust {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
+.rest-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+}
+
 .ring {
   position: relative;
   align-self: center;

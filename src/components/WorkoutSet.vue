@@ -3,7 +3,7 @@ import { computed } from 'vue'
 import type { WorkoutView } from '../workout/engine'
 
 const props = defineProps<{ view: WorkoutView }>()
-defineEmits<{ done: []; end: [] }>()
+defineEmits<{ done: []; end: []; undo: []; skip: [] }>()
 
 /** The "Dalej:" row: the next exercise, or a note when nothing follows. */
 const upNext = computed(() => {
@@ -29,13 +29,21 @@ const upNext = computed(() => {
       <span v-if="upNext.label" class="muted">{{ upNext.label }}</span>
       {{ upNext.text }}
     </p>
-    <button type="button" class="btn btn-primary btn-large btn-block workout-action" @click="$emit('done')">
-      Gotowe
-    </button>
+    <div class="set-actions workout-action">
+      <button type="button" class="btn" :disabled="!view.canUndo" @click="$emit('undo')">Cofnij</button>
+      <button type="button" class="btn" @click="$emit('skip')">Pomiń serię</button>
+    </div>
+    <button type="button" class="btn btn-primary btn-large btn-block" @click="$emit('done')">Gotowe</button>
   </main>
 </template>
 
 <style scoped>
+.set-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-md);
+}
+
 .workout-name {
   overflow-wrap: anywhere;
 }

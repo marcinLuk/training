@@ -77,24 +77,24 @@ See `research.md` (entry points: `package.json:6-10`, `tsconfig.json:2-5`, `vite
 
 ### Phase 6: Resume, expiry, Wake Lock and early end
 #### Automated Verification:
-- [x] 6.1 `npx vitest run src/workout` passes, with tests for saving on every change, a fresh read mid-set and mid-rest giving the same position and the timestamp-based remaining rest, the 2 h expiry removing the workout, unreadable or old-shape data not crashing and not touching the plans, and the Wake Lock requested at start, requested again when the page becomes visible, and released at the end and at an early end (D4)
-- [x] 6.2 `npx vitest run src/components` passes, with tests for an app mounted over a stored workout opening the workout view in the same state, the expiry notice, and "Zakończ trening" with confirm and with cancel (D4, D8)
-- [x] 6.3 `npm test` exits 0
-- [x] 6.4 `npm run build` exits 0
+- [x] 6.1 `npx vitest run src/workout` passes, with tests for saving on every change, a fresh read mid-set and mid-rest giving the same position and the timestamp-based remaining rest, the 2 h expiry removing the workout, unreadable or old-shape data not crashing and not touching the plans, and the Wake Lock requested at start, requested again when the page becomes visible, and released at the end and at an early end (D4) — 8340d96
+- [x] 6.2 `npx vitest run src/components` passes, with tests for an app mounted over a stored workout opening the workout view in the same state, the expiry notice, and "Zakończ trening" with confirm and with cancel (D4, D8) — 8340d96
+- [x] 6.3 `npm test` exits 0 — 8340d96
+- [x] 6.4 `npm run build` exits 0 — 8340d96
 #### Manual Verification:
-- [x] 6.5 at 412×915: reload in the middle of a set: the same exercise and sets left show in under 3 s (D4)
-- [x] 6.6 at 412×915: reload in the middle of a rest: the rest view continues with the remaining time, not a restarted one (D4)
-- [x] 6.7 at 412×915: a stored workout whose last tap is more than 2 h old shows the expiry notice and the plan list after a reload (D4)
-- [x] 6.8 at 412×915: "Zakończ trening" → confirm → plan list; "Zakończ trening" → cancel → the workout stays (D8)
+- [x] 6.5 at 412×915: reload in the middle of a set: the same exercise and sets left show in under 3 s (D4) — 8340d96
+- [x] 6.6 at 412×915: reload in the middle of a rest: the rest view continues with the remaining time, not a restarted one (D4) — 8340d96
+- [x] 6.7 at 412×915: a stored workout whose last tap is more than 2 h old shows the expiry notice and the plan list after a reload (D4) — 8340d96
+- [x] 6.8 at 412×915: "Zakończ trening" → confirm → plan list; "Zakończ trening" → cancel → the workout stays (D8) — 8340d96
 
 ### Phase 7: Undo, skip and rest adjustment on screen
 #### Automated Verification:
-- [ ] 7.1 `npx vitest run src/components` passes, with tests for "Cofnij" after "Gotowe" returning to that set and ending the rest, "Cofnij" after "Pomiń serię", "Pomiń serię" moving on with no rest, "−15 s" and "+15 s" changing the remaining time, and each change read back after a fresh mount (D5, D6)
-- [ ] 7.2 `npm test` exits 0
-- [ ] 7.3 `npm run build` exits 0
+- [x] 7.1 `npx vitest run src/components` passes, with tests for "Cofnij" after "Gotowe" returning to that set and ending the rest, "Cofnij" after "Pomiń serię", "Pomiń serię" moving on with no rest, "−15 s" and "+15 s" changing the remaining time, and each change read back after a fresh mount (D5, D6)
+- [x] 7.2 `npm test` exits 0
+- [x] 7.3 `npm run build` exits 0
 #### Manual Verification:
-- [ ] 7.4 at 412×915: "Gotowe" then "Cofnij" returns to the same set with the same sets left; "Pomiń serię" moves to the next set with no rest (D5)
-- [ ] 7.5 at 412×915: "+15 s" and "−15 s" change the remaining rest, and a reload keeps the changed time (D6)
+- [x] 7.4 at 412×915: "Gotowe" then "Cofnij" returns to the same set with the same sets left; "Pomiń serię" moves to the next set with no rest (D5)
+- [x] 7.5 at 412×915: "+15 s" and "−15 s" change the remaining rest, and a reload keeps the changed time (D6)
 
 ### Phase 8: Edit and delete a plan
 #### Automated Verification:

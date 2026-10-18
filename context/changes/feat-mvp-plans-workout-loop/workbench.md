@@ -20,7 +20,7 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 - [x] Phase 3 — App shell, plan list and new-plan editor
 - [x] Phase 4 — Workout engine
 - [x] Phase 5 — Workout screens, rest timer and sound
-- [ ] Phase 6 — Resume, expiry, Wake Lock and early end
+- [x] Phase 6 — Resume, expiry, Wake Lock and early end
 - [ ] Phase 7 — Undo, skip and rest adjustment on screen
 - [ ] Phase 8 — Edit and delete a plan
 - [ ] goal review
@@ -50,21 +50,21 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 | 3 — App shell, plan list and new-plan editor | sonnet | 2 | CONCERNS (2 minor, 4 nits) → `c8b1567` | feature | 22m / 19m | 603k |
 | 4 — Workout engine | sonnet | 2 | CONCERNS (2 minor, 2 nits) → `e2ffda4` | feature | 17m / 15m | 468k |
 | 5 — Workout screens, rest timer and sound | sonnet | 3 | CONCERNS (5 minor, 1 nit) → `ea79ecb` | feature | 44m / 41m | 945k |
-| 6 — Resume, expiry, Wake Lock and early end | sonnet | 0 | waiting | feature | — | — |
+| 6 — Resume, expiry, Wake Lock and early end | sonnet | 3 | CONCERNS (3 minor) → `8340d96` | feature | 36m / 33m | 901k |
 | 7 — Undo, skip and rest adjustment on screen | sonnet | 0 | waiting | feature | — | — |
 | 8 — Edit and delete a plan | sonnet | 0 | waiting | feature | — | — |
 
 ## Run totals
 
-phases measured: 5 of 8 (0 wall unknown)   ·   tokens are subagents only
+phases measured: 6 of 8 (0 wall unknown)   ·   tokens are subagents only
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 4 | 2898k | 93% | 108m | 94% | 97m |
-| stabilization | 1 | 230k | 7% | 7m | 6% | 6m |
+| feature | 5 | 3799k | 94% | 144m | 95% | 130m |
+| stabilization | 1 | 230k | 6% | 7m | 5% | 6m |
 | refactor | 0 | 0k | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 5 | 3128k | 100% | 115m | 100% | 103m |
+| **total** | 6 | 4029k | 100% | 151m | 100% | 136m |
 
 research (not a phase): 75k tok, 1m
 
@@ -287,7 +287,8 @@ totals:    wall 44m  ·  subagent time 41m  ·  tokens 945k (subagents only)  ·
 
 ## Phase 6 — Resume, expiry, Wake Lock and early end
 
-phase:     feature  ·  start 2026-10-18T19:10:10+0200
+phase:     feature  ·  start 2026-10-18T19:10:10+0200  ·  end 2026-10-18T19:46:12+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 36m  ·  subagent time 33m  ·  tokens 901k (subagents only)  ·  rounds 3
 
 ### round 1          builder sonnet → critic opus
   cost:      builder 150k tok / 23 calls / 5m  ·  critic 228k tok / 59 calls / 12m
@@ -335,3 +336,35 @@ phase:     feature  ·  start 2026-10-18T19:10:10+0200
   diff:      useWorkout.test.ts only (+3 tests)
   inconclusive: none
   builder:   restore-path expiry and askEnd-expired tests
+
+## Phase 7 — Undo, skip and rest adjustment on screen
+
+phase:     feature  ·  start 2026-10-18T19:46:16+0200
+
+### round 1          builder sonnet → critic opus
+  cost:      builder 116k tok / 16 calls / 2m  ·  critic 231k tok / 59 calls / 13m
+  automated: 3/3   manual: 2/2 (0 unreachable)
+  verdict:   FAIL
+  blockers:  `rest-undo-not-in-design-md` — "Cofnij" on the rest view is not in DESIGN.md "Przerwa"; WorkoutRest.vue:56-59
+  majors:    `undo-skip-tap-guard-unpinned` — useWorkout.ts:202/212; `undo-skip-adjust-expiry-unpinned` — useWorkout.ts:202/212/225 (code correct, tests missing)
+  minors:    `ring-refills-on-adjust`, `rest-adjust-above-next-row` (licensed for round 2: put ±15 s under "Dalej:" as DESIGN.md orders it), `rest-step-in-composable`, `size-test-name-overclaims`
+  report:    reviews/phase-7-round-1.md
+  spot-check: grep "Cofnij" DESIGN.md → only in "Widok serii" (:243) → confirmed
+  diff:      4 tracked files (+88/-10), 1 new test file (311 lines)
+  clauses:   13/14 mapped (1 unmapped: disabled rest "Cofnij" has no reachable state)
+  inconclusive: none
+  builder:   Cofnij / Pomiń serię / ±15 s with expiry-first + guard-on-screen-change
+
+### round 2          builder sonnet → critic opus
+  cost:      builder 95k tok / 12 calls / 1m  ·  critic 169k tok / 37 calls / 6m
+  automated: 3/3   manual: 2/2 (0 unreachable)
+  verdict:   CONCERNS
+  closures:  `rest-undo-not-in-design-md` (DESIGN.md:249 + browser measure), `undo-skip-tap-guard-unpinned`, `undo-skip-adjust-expiry-unpinned` → closed (mutants killed)
+  blockers:  none
+  majors:    none
+  minors:    `undo-skip-56px-test-name-overclaims`, `adjust-tap-at-rest-end-silent`
+  report:    reviews/phase-7-round-2.md
+  spot-check: re-ran `npm test` → confirmed; PlanEditor/NumberStepper ×3 green (critic saw one PlanEditor failure in a mutant copy — possible flake, recorded for the retrospective)
+  diff:      DESIGN.md +1, WorkoutRest.vue (row order), UndoSkipAdjust.test.ts (+8 tests)
+  inconclusive: none
+  builder:   DESIGN.md "Przerwa" line, ±15 s below "Dalej:", guard and expiry tests

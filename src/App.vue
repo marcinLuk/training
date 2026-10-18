@@ -41,12 +41,14 @@ function leaveWorkout(): void {
 
 <template>
   <template v-if="workout.view.value !== null">
-    <WorkoutSet v-if="workout.view.value.mode === 'set'" :view="workout.view.value" @done="workout.finishSet" @end="workout.askEnd" />
+    <WorkoutSet v-if="workout.view.value.mode === 'set'" :view="workout.view.value" @done="workout.finishSet" @undo="workout.undoLast" @skip="workout.skip" @end="workout.askEnd" />
     <WorkoutRest
       v-else-if="workout.view.value.mode === 'rest'"
       :view="workout.view.value"
       :duration-ms="workout.restDurationMs.value"
       @ready="workout.endRest"
+      @undo="workout.undoLast"
+      @adjust="workout.adjustRestBy"
       @end="workout.askEnd"
     />
     <WorkoutEnd v-else :plan-name="workout.view.value.planName" @back="leaveWorkout" />
