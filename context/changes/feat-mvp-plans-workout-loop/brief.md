@@ -98,12 +98,12 @@ See `research.md` (entry points: `package.json:6-10`, `tsconfig.json:2-5`, `vite
 
 ### Phase 8: Edit and delete a plan
 #### Automated Verification:
-- [x] 8.1 `npx vitest run src/plans src/components` passes, with tests for opening a saved plan in the editor, saving changes under the same id, delete with confirm and with cancel, and a stored running workout unchanged after its plan is edited or deleted (D7)
-- [x] 8.2 `npm test` exits 0
-- [x] 8.3 `npm run build` exits 0
+- [x] 8.1 `npx vitest run src/plans src/components` passes, with tests for opening a saved plan in the editor, saving changes under the same id, delete with confirm and with cancel, and a stored running workout unchanged after its plan is edited or deleted (D7) — 7683288
+- [x] 8.2 `npm test` exits 0 — 7683288
+- [x] 8.3 `npm run build` exits 0 — 7683288
 #### Manual Verification:
-- [x] 8.4 at 412×915: edit the plan name and one exercise, save, reload: the changes stay (D7)
-- [x] 8.5 at 412×915: delete a plan → confirm → it is gone after a reload; delete → cancel → it stays (D7)
+- [x] 8.4 at 412×915: edit the plan name and one exercise, save, reload: the changes stay (D7) — 7683288
+- [x] 8.5 at 412×915: delete a plan → confirm → it is gone after a reload; delete → cancel → it stays (D7) — 7683288
 
 ## Slice details
 

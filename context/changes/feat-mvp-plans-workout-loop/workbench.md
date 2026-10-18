@@ -22,11 +22,11 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 - [x] Phase 5 — Workout screens, rest timer and sound
 - [x] Phase 6 — Resume, expiry, Wake Lock and early end
 - [x] Phase 7 — Undo, skip and rest adjustment on screen
-- [ ] Phase 8 — Edit and delete a plan
-- [ ] goal review
-- [ ] e2e walkthrough
-- [ ] retrospective
-- [ ] final report
+- [x] Phase 8 — Edit and delete a plan
+- [x] goal review
+- [x] e2e walkthrough
+- [x] retrospective
+- [x] final report
 
 ## Routing (Step 1)
 
@@ -52,21 +52,21 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 | 5 — Workout screens, rest timer and sound | sonnet | 3 | CONCERNS (5 minor, 1 nit) → `ea79ecb` | feature | 44m / 41m | 945k |
 | 6 — Resume, expiry, Wake Lock and early end | sonnet | 3 | CONCERNS (3 minor) → `8340d96` | feature | 36m / 33m | 901k |
 | 7 — Undo, skip and rest adjustment on screen | sonnet | 2 | CONCERNS (1 minor, 1 nit) → `3b3c99c` | feature | 24m / 22m | 611k |
-| 8 — Edit and delete a plan | sonnet | 0 | waiting | feature | — | — |
+| 8 — Edit and delete a plan | sonnet | 2 | CONCERNS (2 minor, 1 nit) → `7683288` | feature | 21m / 20m | 580k |
 
 ## Run totals
 
-phases measured: 7 of 8 (0 wall unknown)   ·   tokens are subagents only
+phases measured: 8 of 8 (0 wall unknown)   ·   tokens are subagents only
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 6 | 4410k | 95% | 168m | 96% | 152m |
-| stabilization | 1 | 230k | 5% | 7m | 4% | 6m |
+| feature | 7 | 4990k | 96% | 189m | 96% | 172m |
+| stabilization | 1 | 230k | 4% | 7m | 4% | 6m |
 | refactor | 0 | 0k | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 7 | 4640k | 100% | 175m | 100% | 158m |
+| **total** | 8 | 5220k | 100% | 196m | 100% | 178m |
 
-research (not a phase): 75k tok, 1m
+research (not a phase): 75k tok, 1m   ·   goal review (not a phase): 212k tok, 9m   ·   whole run incl. both: 5,507k tok
 
 ---
 
@@ -372,7 +372,8 @@ totals:    wall 24m  ·  subagent time 22m  ·  tokens 611k (subagents only)  ·
 
 ## Phase 8 — Edit and delete a plan
 
-phase:     feature  ·  start 2026-10-18T20:10:30+0200
+phase:     feature  ·  start 2026-10-18T20:10:30+0200  ·  end 2026-10-18T20:31:36+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 21m  ·  subagent time 20m  ·  tokens 580k (subagents only)  ·  rounds 2
 
 ### round 1          builder sonnet → critic opus
   cost:      builder 120k tok / 14 calls / 2m  ·  critic 214k tok / 58 calls / 11m
@@ -402,3 +403,16 @@ phase:     feature  ·  start 2026-10-18T20:10:30+0200
   diff:      PlanList.vue (FieldError), App.vue (clear error), PlanDeleteConfirm.vue (clock seam), EditDelete.test.ts
   inconclusive: none
   builder:   size and icon tests, error clearing, clock seam in the confirm
+
+## Goal review
+
+### round 1          critic opus + ultrathink
+  cost:      critic 212k tok / 51 calls / 9m
+  done-when: D1–D9 met (re-ran npm test 377 passed, npm run build; one end-to-end browser walk at 412×915); D10 owner-run
+  verdict:   CONCERNS
+  blockers:  none
+  majors:    none
+  minors:    `g-plan-list-many-chalk` (owner to decide; DESIGN.md contradicts itself), `g-claude-md-layout-stale`, `g-two-confirm-guards`, `g-randomuuid-secure-context` (phone over http://LAN-IP breaks plan creation before F-01)
+  nits:      `g-duplicate-helpers`, `g-dead-exports-tokens`, `g-naming-workoutset`
+  report:    reviews/goal-review.md
+  result:    no appended slice needed (no "not met", no Blocker, no Major)

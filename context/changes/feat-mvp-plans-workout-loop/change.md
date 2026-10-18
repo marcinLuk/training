@@ -1,7 +1,7 @@
 ---
 change_id: feat-mvp-plans-workout-loop
 title: Trening MVP — plans and workout loop (roadmap F-03, S-01…S-06)
-status: implementing
+status: impl_reviewed
 created: 2026-10-18
 updated: 2026-10-18
 archived_at: null
