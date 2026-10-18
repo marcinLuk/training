@@ -230,6 +230,7 @@ Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla c
 - **Shadow Strategy:** brak, patrz Elevation & Depth.
 - **Internal Padding:** 16–20 px.
 - Karta planu: nazwa, podsumowanie („5 ćwiczeń, 18 serii"), Start jako główna akcja, edycja i usuwanie rozdzielone szerokim odstępem.
+- Karta planu ma przyciski „Edytuj" (drugorzędny) i „Usuń plan" (Danger), z nazwą planu w nazwie dostępnej. „Usuń plan" otwiera w aplikacji pytanie „Usunąć plan „nazwa"?" z przyciskami „Anuluj" (drugorzędny) i „Usuń plan" (Danger), bez przycisku kredowego. Pierwsze 0,5 s po otwarciu pytania „Usuń plan" nie działa, by przypadkowe podwójne dotknięcie nie usunęło planu. Nieudane usunięcie pokazuje komunikat błędu na liście i nic nie zmienia.
 - Lista planów bez planów: „Nie masz jeszcze planów. Dodaj pierwszy plan, a potem uruchom trening." Bez planów „Nowy plan" jest główną akcją listy. Gdy są plany, główną akcją są przyciski Start na kartach, a „Nowy plan" jest akcją drugorzędną.
 
 ### Inputs / Fields
@@ -237,7 +238,7 @@ Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla c
 - **Krok liczby:** pole serii, powtórzeń i przerwy z przyciskami −/+ (56 px), bez konieczności klawiatury. Przerwa zmienia się co 15 s.
 - **Focus:** obramowanie w kolorze fokusu.
 - **Error:** komunikat z kolorem błędu i ikoną ostrzeżenia, treść nazywa problem i sposób naprawy.
-- **Edytor planu:** napisy „Nazwa planu", „Nazwa ćwiczenia", „Serie", „Powtórzenia", „Przerwa", przyciski „Dodaj ćwiczenie", „Usuń ćwiczenie", „Zapisz plan" (główna), „Anuluj"; nowy plan startuje z jednym ćwiczeniem. Nieudany zapis pokazuje komunikat „Nie udało się zapisać planu…" i zostawia wpisane dane na ekranie.
+- **Edytor planu:** napisy „Nazwa planu", „Nazwa ćwiczenia", „Serie", „Powtórzenia", „Przerwa", przyciski „Dodaj ćwiczenie", „Usuń ćwiczenie", „Zapisz plan" (główna), „Anuluj"; nowy plan startuje z jednym ćwiczeniem. Edycja istniejącego planu używa tego samego ekranu z tytułem „Edytuj plan" i zapisuje plan pod tym samym identyfikatorem; „Anuluj" nie zmienia zapisanego planu. Nieudany zapis pokazuje komunikat „Nie udało się zapisać planu…" i zostawia wpisane dane na ekranie.
 
 ### Widok serii (ekran treningu)
 - Od góry: nazwa ćwiczenia (Headline), powtórzenia (Figure), pod nimi Counter z liczbą pozostałych serii i podpisem „serii zostało". Niżej wiersz „Dalej:" z nazwą następnego ćwiczenia (Title, kolor drugorzędny). Na dole „Gotowe" (64 px, kreda), a nad nim „Cofnij" i „Pomiń serię" (56 px).

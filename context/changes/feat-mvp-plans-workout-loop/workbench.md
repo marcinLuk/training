@@ -21,7 +21,7 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 - [x] Phase 4 — Workout engine
 - [x] Phase 5 — Workout screens, rest timer and sound
 - [x] Phase 6 — Resume, expiry, Wake Lock and early end
-- [ ] Phase 7 — Undo, skip and rest adjustment on screen
+- [x] Phase 7 — Undo, skip and rest adjustment on screen
 - [ ] Phase 8 — Edit and delete a plan
 - [ ] goal review
 - [ ] e2e walkthrough
@@ -51,20 +51,20 @@ pre-run dirty paths: CLAUDE.md (owner's "Browser rule" section), context/foundat
 | 4 — Workout engine | sonnet | 2 | CONCERNS (2 minor, 2 nits) → `e2ffda4` | feature | 17m / 15m | 468k |
 | 5 — Workout screens, rest timer and sound | sonnet | 3 | CONCERNS (5 minor, 1 nit) → `ea79ecb` | feature | 44m / 41m | 945k |
 | 6 — Resume, expiry, Wake Lock and early end | sonnet | 3 | CONCERNS (3 minor) → `8340d96` | feature | 36m / 33m | 901k |
-| 7 — Undo, skip and rest adjustment on screen | sonnet | 0 | waiting | feature | — | — |
+| 7 — Undo, skip and rest adjustment on screen | sonnet | 2 | CONCERNS (1 minor, 1 nit) → `3b3c99c` | feature | 24m / 22m | 611k |
 | 8 — Edit and delete a plan | sonnet | 0 | waiting | feature | — | — |
 
 ## Run totals
 
-phases measured: 6 of 8 (0 wall unknown)   ·   tokens are subagents only
+phases measured: 7 of 8 (0 wall unknown)   ·   tokens are subagents only
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 5 | 3799k | 94% | 144m | 95% | 130m |
-| stabilization | 1 | 230k | 6% | 7m | 5% | 6m |
+| feature | 6 | 4410k | 95% | 168m | 96% | 152m |
+| stabilization | 1 | 230k | 5% | 7m | 4% | 6m |
 | refactor | 0 | 0k | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 6 | 4029k | 100% | 151m | 100% | 136m |
+| **total** | 7 | 4640k | 100% | 175m | 100% | 158m |
 
 research (not a phase): 75k tok, 1m
 
@@ -339,7 +339,8 @@ totals:    wall 36m  ·  subagent time 33m  ·  tokens 901k (subagents only)  ·
 
 ## Phase 7 — Undo, skip and rest adjustment on screen
 
-phase:     feature  ·  start 2026-10-18T19:46:16+0200
+phase:     feature  ·  start 2026-10-18T19:46:16+0200  ·  end 2026-10-18T20:10:25+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 24m  ·  subagent time 22m  ·  tokens 611k (subagents only)  ·  rounds 2
 
 ### round 1          builder sonnet → critic opus
   cost:      builder 116k tok / 16 calls / 2m  ·  critic 231k tok / 59 calls / 13m
@@ -368,3 +369,36 @@ phase:     feature  ·  start 2026-10-18T19:46:16+0200
   diff:      DESIGN.md +1, WorkoutRest.vue (row order), UndoSkipAdjust.test.ts (+8 tests)
   inconclusive: none
   builder:   DESIGN.md "Przerwa" line, ±15 s below "Dalej:", guard and expiry tests
+
+## Phase 8 — Edit and delete a plan
+
+phase:     feature  ·  start 2026-10-18T20:10:30+0200
+
+### round 1          builder sonnet → critic opus
+  cost:      builder 120k tok / 14 calls / 2m  ·  critic 214k tok / 58 calls / 11m
+  automated: 3/3   manual: 2/2 (0 unreachable)
+  verdict:   FAIL
+  blockers:  none
+  majors:    `card-button-size-test-claims-44px` — test named "44 px or more" asserts no size; removing `btn` leaves 21 px buttons with all tests green; EditDelete.test.ts:52
+             `delete-error-missing-warning-icon` — failed-delete message has no warning icon (DESIGN.md Error); PlanList.vue:29
+  minors:    `delete-unknown-id-unreadable-unpinned`, `delete-backup-failed-text-unpinned`, `stale-delete-error-after-editor-cancel` (licensed for round 2), `delete-guard-bypasses-clock-seam` (licensed for round 2), `delete-dialog-focus-stays-behind`
+  report:    reviews/phase-8-round-1.md
+  spot-check: opened PlanList.vue:29 → bare `<p class="field-error">`, no icon → confirmed
+  diff:      7 tracked files (+210/-17), 2 new files (266 lines)
+  clauses:   22/24 mapped (size and gap → browser)
+  inconclusive: none
+  builder:   deletePlan with shared backup rule, edit an existing plan, card Edytuj / Usuń plan, in-app delete confirm with a 500 ms guard
+
+### round 2          builder sonnet → critic opus
+  cost:      builder 90k tok / 10 calls / 1m  ·  critic 156k tok / 31 calls / 6m
+  automated: 3/3   manual: 2/2 (0 unreachable)
+  verdict:   CONCERNS
+  closures:  `card-button-size-test-claims-44px`, `delete-error-missing-warning-icon` → closed (mutants + browser); licensed minors `stale-delete-error-after-editor-cancel`, `delete-guard-bypasses-clock-seam` also closed
+  blockers:  none
+  majors:    none
+  minors:    `delete-unknown-id-unreadable-unpinned`, `delete-backup-failed-text-unpinned`, `delete-dialog-focus-stays-behind`
+  report:    reviews/phase-8-round-2.md
+  spot-check: re-ran `npm test` → confirmed (377 passed)
+  diff:      PlanList.vue (FieldError), App.vue (clear error), PlanDeleteConfirm.vue (clock seam), EditDelete.test.ts
+  inconclusive: none
+  builder:   size and icon tests, error clearing, clock seam in the confirm

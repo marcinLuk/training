@@ -89,21 +89,21 @@ See `research.md` (entry points: `package.json:6-10`, `tsconfig.json:2-5`, `vite
 
 ### Phase 7: Undo, skip and rest adjustment on screen
 #### Automated Verification:
-- [x] 7.1 `npx vitest run src/components` passes, with tests for "Cofnij" after "Gotowe" returning to that set and ending the rest, "Cofnij" after "Pomiń serię", "Pomiń serię" moving on with no rest, "−15 s" and "+15 s" changing the remaining time, and each change read back after a fresh mount (D5, D6)
-- [x] 7.2 `npm test` exits 0
-- [x] 7.3 `npm run build` exits 0
+- [x] 7.1 `npx vitest run src/components` passes, with tests for "Cofnij" after "Gotowe" returning to that set and ending the rest, "Cofnij" after "Pomiń serię", "Pomiń serię" moving on with no rest, "−15 s" and "+15 s" changing the remaining time, and each change read back after a fresh mount (D5, D6) — 3b3c99c
+- [x] 7.2 `npm test` exits 0 — 3b3c99c
+- [x] 7.3 `npm run build` exits 0 — 3b3c99c
 #### Manual Verification:
-- [x] 7.4 at 412×915: "Gotowe" then "Cofnij" returns to the same set with the same sets left; "Pomiń serię" moves to the next set with no rest (D5)
-- [x] 7.5 at 412×915: "+15 s" and "−15 s" change the remaining rest, and a reload keeps the changed time (D6)
+- [x] 7.4 at 412×915: "Gotowe" then "Cofnij" returns to the same set with the same sets left; "Pomiń serię" moves to the next set with no rest (D5) — 3b3c99c
+- [x] 7.5 at 412×915: "+15 s" and "−15 s" change the remaining rest, and a reload keeps the changed time (D6) — 3b3c99c
 
 ### Phase 8: Edit and delete a plan
 #### Automated Verification:
-- [ ] 8.1 `npx vitest run src/plans src/components` passes, with tests for opening a saved plan in the editor, saving changes under the same id, delete with confirm and with cancel, and a stored running workout unchanged after its plan is edited or deleted (D7)
-- [ ] 8.2 `npm test` exits 0
-- [ ] 8.3 `npm run build` exits 0
+- [x] 8.1 `npx vitest run src/plans src/components` passes, with tests for opening a saved plan in the editor, saving changes under the same id, delete with confirm and with cancel, and a stored running workout unchanged after its plan is edited or deleted (D7)
+- [x] 8.2 `npm test` exits 0
+- [x] 8.3 `npm run build` exits 0
 #### Manual Verification:
-- [ ] 8.4 at 412×915: edit the plan name and one exercise, save, reload: the changes stay (D7)
-- [ ] 8.5 at 412×915: delete a plan → confirm → it is gone after a reload; delete → cancel → it stays (D7)
+- [x] 8.4 at 412×915: edit the plan name and one exercise, save, reload: the changes stay (D7)
+- [x] 8.5 at 412×915: delete a plan → confirm → it is gone after a reload; delete → cancel → it stays (D7)
 
 ## Slice details
 

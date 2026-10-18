@@ -20,6 +20,10 @@ export type SaveResult =
   | { ok: true }
   | { ok: false; reason: 'invalid' | 'backup-failed' | 'write-failed' }
 
+export type DeleteResult =
+  | { ok: true }
+  | { ok: false; reason: 'backup-failed' | 'write-failed' }
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
 }
@@ -113,6 +117,13 @@ function writePlans(plans: Plan[]): boolean {
   return writeRaw(PLANS_KEY, JSON.stringify(document))
 }
 
+/** Copy unreadable stored data aside before a write over it. False means: do not write. */
+function backupIfUnreadable(stored: ReadResult, now: number): boolean {
+  if (!stored.unreadable) return true
+  const raw = readRaw(PLANS_KEY)
+  return raw === null || backupUnreadable(PLANS_CORRUPT_PREFIX, raw, now)
+}
+
 /**
  * Insert a plan, or replace the plan with the same id. Unreadable stored data
  * is copied to `trening.plans.corrupt.<timestamp>` first. If that copy fails,
@@ -122,12 +133,7 @@ export function savePlan(plan: Plan, now: number = Date.now()): SaveResult {
   if (validatePlan(plan).length > 0) return { ok: false, reason: 'invalid' }
 
   const stored = readStored()
-  if (stored.unreadable) {
-    const raw = readRaw(PLANS_KEY)
-    if (raw !== null && !backupUnreadable(PLANS_CORRUPT_PREFIX, raw, now)) {
-      return { ok: false, reason: 'backup-failed' }
-    }
-  }
+  if (!backupIfUnreadable(stored, now)) return { ok: false, reason: 'backup-failed' }
 
   const clean: Plan = {
     id: plan.id,
@@ -145,4 +151,18 @@ export function savePlan(plan: Plan, now: number = Date.now()): SaveResult {
   if (!writePlans(plans)) return { ok: false, reason: 'write-failed' }
   requestPersistOnce()
   return { ok: true }
+}
+
+/**
+ * Remove the plan with this id. An unknown id is a no-op that writes nothing. The other plans are
+ * written back as they were read; unreadable stored data is copied aside first, like in
+ * `savePlan`, and a failed copy means no write. Never touches the running workout.
+ */
+export function deletePlan(id: string, now: number = Date.now()): DeleteResult {
+  const stored = readStored()
+  if (!stored.plans.some((plan) => plan.id === id)) return { ok: true }
+  if (!backupIfUnreadable(stored, now)) return { ok: false, reason: 'backup-failed' }
+
+  const plans = stored.plans.filter((plan) => plan.id !== id)
+  return writePlans(plans) ? { ok: true } : { ok: false, reason: 'write-failed' }
 }

@@ -299,3 +299,94 @@ describe('storage persistence request', () => {
     expect(persist).toHaveBeenCalledTimes(1)
   })
 })
+
+describe('deletePlan', () => {
+  function seed(store: Store): Plan[] {
+    const plans = [makePlan('a', 'Pierwszy'), makePlan('b', 'Drugi'), makePlan('c', 'Trzeci')]
+    plans.forEach((plan) => store.savePlan(plan))
+    return plans
+  }
+
+  it('deleting one of three plans keeps the other two byte for byte', async () => {
+    const store = await loadStore()
+    const [a, , c] = seed(store)
+    expect(store.deletePlan('b')).toEqual({ ok: true })
+    expect(localStorage.getItem('trening.plans.v1')).toBe(JSON.stringify({ version: 1, plans: [a, c] }))
+    expect((await loadStore()).listPlans()).toEqual([a, c])
+  })
+
+  it('deleting the last plan leaves an empty readable list', async () => {
+    const store = await loadStore()
+    store.savePlan(makePlan('a'))
+    expect(store.deletePlan('a')).toEqual({ ok: true })
+    expect(store.listPlans()).toEqual([])
+    expect(corruptKeys()).toEqual([])
+  })
+
+  it('an unknown id is a no-op that writes nothing', async () => {
+    const store = await loadStore()
+    seed(store)
+    const before = localStorage.getItem('trening.plans.v1')
+    const setItem = vi.spyOn(Storage.prototype, 'setItem')
+    expect(store.deletePlan('missing')).toEqual({ ok: true })
+    expect(setItem).not.toHaveBeenCalled()
+    expect(localStorage.getItem('trening.plans.v1')).toBe(before)
+  })
+
+  it('reports a failed write, never throws, and keeps the stored plans', async () => {
+    const store = await loadStore()
+    seed(store)
+    const before = localStorage.getItem('trening.plans.v1')
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(() => {
+      throw new Error('quota')
+    })
+    expect(store.deletePlan('b')).toEqual({ ok: false, reason: 'write-failed' })
+    expect(localStorage.getItem('trening.plans.v1')).toBe(before)
+  })
+
+  it('keeps a plan that could not be read in the corrupt copy before it writes', async () => {
+    const raw = JSON.stringify({
+      version: 1,
+      plans: [makePlan('good'), { id: 'bad', name: 'Zepsuty' }, makePlan('other')],
+    })
+    localStorage.setItem('trening.plans.v1', raw)
+    const store = await loadStore()
+    expect(store.deletePlan('other', 11)).toEqual({ ok: true })
+    expect(localStorage.getItem('trening.plans.corrupt.11')).toBe(raw)
+    expect(store.listPlans().map((plan) => plan.id)).toEqual(['good'])
+  })
+
+  it('does not write when the copy of unreadable data fails', async () => {
+    const raw = JSON.stringify({ version: 1, plans: [makePlan('good'), { id: 'bad' }] })
+    localStorage.setItem('trening.plans.v1', raw)
+    const store = await loadStore()
+    const realSetItem = Storage.prototype.setItem
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(function (
+      this: Storage,
+      key: string,
+      value: string,
+    ) {
+      if (key.startsWith('trening.plans.corrupt.')) throw new Error('quota')
+      realSetItem.call(this, key, value)
+    })
+    expect(store.deletePlan('good')).toEqual({ ok: false, reason: 'backup-failed' })
+    expect(localStorage.getItem('trening.plans.v1')).toBe(raw)
+  })
+
+  it('does not throw when localStorage itself throws', async () => {
+    const store = await loadStore()
+    vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('blocked')
+    })
+    expect(store.deletePlan('a')).toEqual({ ok: true })
+  })
+
+  it('does not touch the stored running workout', async () => {
+    const store = await loadStore()
+    const plans = seed(store)
+    localStorage.setItem('trening.workout.v1', 'workout-bytes')
+    store.deletePlan('a')
+    store.savePlan({ ...plans[1]!, name: 'Zmieniony' })
+    expect(localStorage.getItem('trening.workout.v1')).toBe('workout-bytes')
+  })
+})

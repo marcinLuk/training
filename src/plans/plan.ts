@@ -51,6 +51,15 @@ export function createPlan(): Plan {
   return { id: newPlanId(), name: '', exercises: [] }
 }
 
+/** A deep copy, so an editor can change values without touching the stored list. */
+export function clonePlan(plan: Plan): Plan {
+  return {
+    id: plan.id,
+    name: plan.name,
+    exercises: plan.exercises.map((exercise) => ({ ...exercise })),
+  }
+}
+
 function isIntegerInRange(value: unknown, min: number, max: number): boolean {
   return typeof value === 'number' && Number.isInteger(value) && value >= min && value <= max
 }

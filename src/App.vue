@@ -6,16 +6,26 @@ import PlanList from './components/PlanList.vue'
 import WorkoutEnd from './components/WorkoutEnd.vue'
 import WorkoutRest from './components/WorkoutRest.vue'
 import WorkoutSet from './components/WorkoutSet.vue'
-import { listPlans } from './plans/planStore'
+import type { Plan } from './plans/plan'
+import { deletePlan, listPlans } from './plans/planStore'
 import { useWorkout } from './workout/useWorkout'
 
-type View = { kind: 'plan-list' } | { kind: 'plan-editor' }
+type View = { kind: 'plan-list' } | { kind: 'plan-editor'; plan?: Plan }
 
 const view = ref<View>({ kind: 'plan-list' })
 const plans = ref(listPlans())
 const workout = useWorkout()
+const deleteError = ref<string | null>(null)
+
+const deleteFailureText = {
+  'backup-failed':
+    'Nie udało się zabezpieczyć starych danych, więc plan nie został usunięty. Zwolnij miejsce w pamięci telefonu i spróbuj jeszcze raz.',
+  'write-failed':
+    'Nie udało się usunąć planu. Sprawdź wolne miejsce w pamięci telefonu i spróbuj jeszcze raz.',
+} as const
 
 function showList(): void {
+  deleteError.value = null
   plans.value = listPlans()
   view.value = { kind: 'plan-list' }
 }
@@ -25,9 +35,20 @@ function startPlan(planId: string): void {
   if (plan !== undefined) workout.start(plan)
 }
 
-function openEditor(): void {
+function openEditor(planId?: string): void {
   workout.dismissExpired()
-  view.value = { kind: 'plan-editor' }
+  deleteError.value = null
+  const plan = planId === undefined ? undefined : plans.value.find((candidate) => candidate.id === planId)
+  view.value = plan === undefined ? { kind: 'plan-editor' } : { kind: 'plan-editor', plan }
+}
+
+function removePlan(planId: string): void {
+  const result = deletePlan(planId)
+  if (result.ok) {
+    showList()
+  } else {
+    deleteError.value = deleteFailureText[result.reason]
+  }
 }
 
 function endWorkout(): void {
@@ -58,8 +79,11 @@ function leaveWorkout(): void {
     v-else-if="view.kind === 'plan-list'"
     :plans="plans"
     :expired-notice="workout.expired.value"
-    @new-plan="openEditor"
+    :error-text="deleteError ?? undefined"
+    @new-plan="openEditor()"
     @start="startPlan"
+    @edit="openEditor"
+    @delete="removePlan"
   />
-  <PlanEditor v-else @saved="showList" @cancel="view = { kind: 'plan-list' }" />
+  <PlanEditor v-else :plan="view.plan" @saved="showList" @cancel="showList" />
 </template>

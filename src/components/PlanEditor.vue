@@ -3,6 +3,7 @@ import { computed, reactive, ref } from 'vue'
 import {
   LIMITS,
   createExercise,
+  clonePlan,
   createPlan,
   validatePlan,
   type Plan,
@@ -13,10 +14,14 @@ import { savePlan, type SaveResult } from '../plans/planStore'
 import FieldError from './FieldError.vue'
 import NumberStepper from './NumberStepper.vue'
 
+const props = defineProps<{ plan?: Plan }>()
 const emit = defineEmits<{ saved: []; cancel: [] }>()
 
+// An existing plan is edited as a deep copy and saved under its own id.
 // A new plan starts with one exercise row: every plan needs at least one.
-const plan = reactive<Plan>({ ...createPlan(), exercises: [createExercise()] })
+const plan = reactive<Plan>(
+  props.plan !== undefined ? clonePlan(props.plan) : { ...createPlan(), exercises: [createExercise()] },
+)
 const errors = ref<ValidationError[]>([])
 const saveFailure = ref<string | null>(null)
 
@@ -60,7 +65,7 @@ function save(): void {
 
 <template>
   <main class="screen">
-    <h1>Nowy plan</h1>
+    <h1>{{ props.plan !== undefined ? 'Edytuj plan' : 'Nowy plan' }}</h1>
 
     <form class="stack" novalidate @submit.prevent="save">
       <div class="field">
