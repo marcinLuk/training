@@ -17,11 +17,11 @@ pre-run dirty paths: context/foundation/auto-loop.md, context/foundation/design-
 ## Ledger
 
 - [x] Phase 1 — Move exercises up and down
-- [ ] Phase 2 — Collapse and open an exercise card
-- [ ] goal review
-- [ ] e2e walkthrough
-- [ ] retrospective
-- [ ] final report
+- [x] Phase 2 — Collapse and open an exercise card
+- [x] goal review
+- [x] e2e walkthrough
+- [x] retrospective
+- [x] final report
 
 ## Routing (Step 1)
 
@@ -35,23 +35,23 @@ pre-run dirty paths: context/foundation/auto-loop.md, context/foundation/design-
 | Phase | Builder | Rounds | State | Category | Wall / subagent | Tokens |
 |---|---|---|---|---|---|---|
 | 1 — Move exercises up and down | sonnet | 1 | CONCERNS (2 minor) → `ec76af5` | feature | 11m / 2m + critic unknown | 121k + critic unknown |
-| 2 — Collapse and open an exercise card | sonnet | 0 | waiting | feature | — | — |
+| 2 — Collapse and open an exercise card | sonnet | 1 | CONCERNS (1 minor, 1 nit) → `9cd91f2` | feature | 12m / 3m + critic unknown | 126k + critic unknown |
 
 ## Run totals
 
-phases measured: 1 of 2 executed (critic usage unknown — the Skill call returns none)   ·   tokens are subagents only, 10x-critic workers excluded
+phases measured: 2 of 2 executed (critic usage unknown — the Skill call returns none)   ·   tokens are subagents only, 10x-critic workers excluded
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 1 | 121k + critic unknown | 100% | 11m | 100% | 2m + critic unknown |
+| feature | 2 | 247k + critics unknown | 100% | 23m | 100% | 5m + critics unknown |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
-| end-of-run review | — | — | — | — | — | — |
-| **total** | 1 | 121k + critic unknown | 100% | 11m | 100% | 2m + critic unknown |
+| goal review (brief §7) | — | 146k | — | 6m (in wall below) | — | 6m |
+| **total** | 2 | 393k + 10x-critic coordinators unknown | 100% | 23m slices + 6m goal review | 100% | 11m + critics unknown |
 
-Closed findings: none yet
-Open (Minor/Nit, never fixed by design): `focus-test-first-down-not-exercising-restore` — p1; `disabled-click-test-relies-on-test-utils` — p1
-Manual steps left to the user: none yet
+Closed findings: none (no Blocker or Major in any round)
+Open (Minor/Nit, never fixed by design): `focus-test-first-down-not-exercising-restore` — p1; `disabled-click-test-relies-on-test-utils` — p1; `toggle-chevron-next-to-move-down` — p2 (owner's design call); `design-rule-placement` — p2 (nit)
+Manual steps left to the user: walkthrough step 11 — one-thumb use on a real phone (no agent can hold a phone)
 
 ---
 
@@ -81,7 +81,8 @@ totals:    wall 11m  ·  subagent time 2m + critic unknown  ·  tokens 121k + cr
 
 ## Phase 2 — Collapse and open an exercise card
 
-phase:     feature  ·  start 2026-10-24T11:38:33+0200  ·  end —  ·  user wait 0m  ·  paused 0m
+phase:     feature  ·  start 2026-10-24T11:38:33+0200  ·  end 2026-10-24T11:50:17+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 12m  ·  subagent time 3m + critic unknown  ·  tokens 126k + critic unknown (subagents only, 10x-critic workers excluded)  ·  rounds 1
 
 ### round 1          builder sonnet → critic 10x-critic
   cost:      builder 126k tok / 16 calls / 2m48s  ·  critic unknown (Skill call returned no usage)
@@ -101,3 +102,18 @@ phase:     feature  ·  start 2026-10-24T11:38:33+0200  ·  end —  ·  user wa
   COMMANDS_RUN: matches brief.md for 2.1–2.5
   inconclusive: none
   builder:   h2 toggle (aria-expanded/controls, SVG chevron), Set of collapsed ids, collapsed name + summary, defaults, failed save opens error cards; existing edit tests open the card first
+
+## Goal review — brief §7
+
+### round 1          critic opus + ultrathink (general-purpose)
+  cost:      critic 146k tok / 33 calls / 6m13s
+  done when: D1–D8 met (D7 walked at 412×915: moved 5→1, reload, Start opens „Ćwiczenie łydek”, „Dalej: Wiosłowanie”)
+  verdict:   CONCERNS
+  blockers:  none
+  majors:    none
+  minors:    `toggle-chevron-beside-move-chevrons` (medium confidence; same point as p2 `toggle-chevron-next-to-move-down`) · `failed-save-error-offscreen` (low, older than this change)
+  nits:      `collapsed-card-hides-error-without-mark` · `move-design-rule-written-twice` · `six-plan-fixture-has-four-exercises` · `move-position-not-announced`
+  cross-slice: none (focus restore with collapsed cards, failed save after a move, tab order toggle → up → down → body, stored JSON keys unchanged — all checked)
+  report:    reviews/goal-review.md
+  spot-check: opened reviews/screenshots/goal-workout-first.png → confirmed
+  port 4199: free after the walk

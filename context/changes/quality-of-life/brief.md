@@ -46,14 +46,14 @@ See `research.md` (entry points: `src/components/PlanEditor.vue:22-63` state and
 
 ### Phase 2: Collapse and open an exercise card
 #### Automated Verification:
-- [x] 2.1 `npx vitest run src/components/PlanEditor.test.ts` passes, with tests for: the card header toggle with `aria-expanded`; a collapsed card showing „Ćwiczenie N”, the exercise name when it is not blank, the summary „3 × 10, przerwa 1:30” (and the summary after a stepper change), and both move buttons, and not showing the name field, the steppers and „Usuń ćwiczenie”; the open/collapsed state following the exercise after a move; the move buttons working on collapsed cards (D4)
-- [x] 2.2 `npx vitest run src/components` passes, with tests for: a new plan with its first exercise expanded; „Dodaj ćwiczenie” adding an expanded exercise; „Edytuj plan” opening every exercise collapsed; a failed „Zapisz plan” opening every card that holds an error, with each error text visible; the stored plan JSON having the same keys as before (no open/collapsed field) (D4, D5)
-- [x] 2.3 `grep -n "zwinięt" DESIGN.md` prints the new collapsed-card rule under „Edytor planu” (D6)
-- [x] 2.4 `npm test` exits 0 (D8)
-- [x] 2.5 `npm run build` exits 0 (D8)
+- [x] 2.1 `npx vitest run src/components/PlanEditor.test.ts` passes, with tests for: the card header toggle with `aria-expanded`; a collapsed card showing „Ćwiczenie N”, the exercise name when it is not blank, the summary „3 × 10, przerwa 1:30” (and the summary after a stepper change), and both move buttons, and not showing the name field, the steppers and „Usuń ćwiczenie”; the open/collapsed state following the exercise after a move; the move buttons working on collapsed cards (D4) — 9cd91f2
+- [x] 2.2 `npx vitest run src/components` passes, with tests for: a new plan with its first exercise expanded; „Dodaj ćwiczenie” adding an expanded exercise; „Edytuj plan” opening every exercise collapsed; a failed „Zapisz plan” opening every card that holds an error, with each error text visible; the stored plan JSON having the same keys as before (no open/collapsed field) (D4, D5) — 9cd91f2
+- [x] 2.3 `grep -n "zwinięt" DESIGN.md` prints the new collapsed-card rule under „Edytor planu” (D6) — 9cd91f2
+- [x] 2.4 `npm test` exits 0 (D8) — 9cd91f2
+- [x] 2.5 `npm run build` exits 0 (D8) — 9cd91f2
 #### Manual Verification:
-- [x] 2.6 at 412×915: a plan with 6 exercises with Polish names: collapse every card, move the exercise at position 5 to position 1 with the move buttons on collapsed cards, save, reload, open „Edytuj”: every card is collapsed and the order is kept; back to the list, „Start”: the moved exercise comes first (D7)
-- [x] 2.7 at 412×915: a collapsed card is one compact block (header, name, summary, move buttons); the toggle and move buttons are at least 44 px and show the focus outline when reached with the keyboard; the chevron icon is an SVG stroke; all text is Polish; only „Zapisz plan” is chalk (D4, D6)
+- [x] 2.6 at 412×915: a plan with 6 exercises with Polish names: collapse every card, move the exercise at position 5 to position 1 with the move buttons on collapsed cards, save, reload, open „Edytuj”: every card is collapsed and the order is kept; back to the list, „Start”: the moved exercise comes first (D7) — 9cd91f2
+- [x] 2.7 at 412×915: a collapsed card is one compact block (header, name, summary, move buttons); the toggle and move buttons are at least 44 px and show the focus outline when reached with the keyboard; the chevron icon is an SVG stroke; all text is Polish; only „Zapisz plan” is chalk (D4, D6) — 9cd91f2
 
 ## Slice details
 
