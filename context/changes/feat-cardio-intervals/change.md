@@ -1,7 +1,7 @@
 ---
 change_id: feat-cardio-intervals
 title: Cardio module — interval sessions with sounds and lock mode
-status: implementing
+status: impl_reviewed
 created: 2026-10-24
 updated: 2026-10-24
 archived_at: null

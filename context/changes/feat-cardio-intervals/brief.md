@@ -104,9 +104,9 @@ See `research.md` (entry points: `src/plans/plan.ts:9`, `src/plans/planStore.ts:
 
 ### Phase 7: Goal-review fixes
 #### Automated Verification:
-- [x] 7.1 `npx vitest run src/components` passes, including new App-level tests: the second tap of a double tap 150 ms after a cardio session ends (Zakończ confirm, and „Wróć do planów” on the end screen) does not start a strength workout, and the same from strength to cardio; a tap after 500 ms still starts (goal review `cross-kind-tap-guard-gap`) (D8)
-- [x] 7.2 `npm test` shows 0 failing tests (baseline 0) (D8)
-- [x] 7.3 `npm run build` exits 0 (D8)
+- [x] 7.1 `npx vitest run src/components` passes, including new App-level tests: the second tap of a double tap 150 ms after a cardio session ends (Zakończ confirm, and „Wróć do planów” on the end screen) does not start a strength workout, and the same from strength to cardio; a tap after 500 ms still starts (goal review `cross-kind-tap-guard-gap`) (D8) — 1599551
+- [x] 7.2 `npm test` shows 0 failing tests (baseline 0) (D8) — 1599551
+- [x] 7.3 `npm run build` exits 0 (D8) — 1599551
 
 ## Slice details
 

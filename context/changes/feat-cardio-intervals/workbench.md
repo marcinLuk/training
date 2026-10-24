@@ -20,10 +20,11 @@ Ledger:
 - [x] Phase 4
 - [x] Phase 5
 - [x] Phase 6
-- [ ] goal review
-- [ ] e2e walkthrough
-- [ ] retrospective
-- [ ] final report
+- [x] Phase 7 (appended from goal review 1)
+- [x] goal review
+- [x] e2e walkthrough
+- [x] retrospective
+- [x] final report
 
 Routing (Step 1): every slice → sonnet — every slice writes production code and tests under `src/**` (auto-loop.md §8 always-sonnet). Critic: /10x-critic every round.
 
@@ -37,20 +38,25 @@ Routing (Step 1): every slice → sonnet — every slice writes production code 
 | 4 — Plan list tags, plan type choice and cardio editor | sonnet | 2 | CONCERNS (1 minor) → `799275f` | feature — new UI for cardio plans | unknown / 9m+ | 275k+ |
 | 5 — Cardio session screen | sonnet | 2 | CONCERNS (1 minor, 3 nits) → `3f0d32f` | feature — new session screen | 40m / 7m+ | 240k+ |
 | 6 — Lock mode | sonnet | 2 | CONCERNS (1 minor) → `f554013` | feature — new lock mode | 30m / 11m+ | 272k+ |
+| 7 — Goal-review fixes | sonnet | 2 | CONCERNS (2 nits) → `1599551` | feature — finishes the new cardio start by sharing the tap guard (appended from the goal review) | 11m / 4m+ | 193k+ |
 
 ## Run totals
 
-phases measured: 6 of 6 executed (1 wall unknown — phase 4)   ·   tokens are subagents only, 10x-critic usage not returned (+)
+phases measured: 7 of 7 executed (1 wall unknown — phase 4)   ·   tokens are subagents only, 10x-critic usage not returned (+)
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 6 | 1,419k+ | 100% | 124m | 100% | 50m+ |
+| feature | 7 | 1,612k+ | 81% | 135m | 100% | 54m+ |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 6 | 1,419k+ | 100% | 124m | 100% | 50m+ |
+| goal review (brief §7) | — | 370k (247k + 123k) | 19% | 9m before p7 + 5m after (outside slice wall) | — | 14m |
+| **total** | 7 | 1,982k+ | 100% | 135m slices + ~6m goal review 2 | 100% | 68m+ |
 
-Closed findings: `cardio-start-guard-unpinned`, `unknown-plan-type-test-vacuous`, `cardio-interval-missing-field-unpinned`, `cardio-releases-shared-wake-lock`, `restored-expiry-timer-unpinned`, `remove-block-clears-errors-unpinned`, `add-interval-alternation-unpinned`, `meta-row-type-role`, `cross-kind-expiry-dismiss-unpinned`, `unlock-lift-hits-revealed-buttons`, `touch-leave-does-not-reset`
+Closed findings: `cardio-start-guard-unpinned`, `unknown-plan-type-test-vacuous`, `cardio-interval-missing-field-unpinned`, `cardio-releases-shared-wake-lock`, `restored-expiry-timer-unpinned`, `remove-block-clears-errors-unpinned`, `add-interval-alternation-unpinned`, `meta-row-type-role`, `cross-kind-expiry-dismiss-unpinned`, `unlock-lift-hits-revealed-buttons`, `touch-leave-does-not-reset`, `cross-kind-tap-guard-gap`, `cross-kind-guard-misses-expiry`
+Open from phase 7 (Nit): `guard-docblock-says-end-time`, `pass-through-show-list-after-end`
+Open from goal review 2 (Minor/Nit): `start-guard-clock-step-back`, `noop-show-list-after-end`
+Open from goal review 1 (Minor/Nit): `wake-lock-order-coupling`, `duplicated-session-controller`, `unused-exports-after-slices`, `design-value-drift`, `corrupt-copy-failed-then-overwrite`, `end-screen-not-locked`, `naming-type-vs-kind`, `stale-interim-test`, `editor-save-date-now`, `confirm-over-end-screen`
 Open from phase 6 (Minor): `unlock-guard-can-outlive-its-press`
 Open from phase 4 (Minor): `ambiguous-remove-button-names`
 Open from phase 5 (Minor/Nit): `dense-timeline-boundary-loose`, `stale-describe-name`, `clock-line-height`, `title-role-case` (DESIGN.md question for the owner)
@@ -68,7 +74,8 @@ resume point: phase 4 round 1 — the builder's work is on disk and no critic en
 
 ## Phase 7 — Goal-review fixes
 
-phase:     feature  ·  start 2026-10-24T19:59:36+0200
+phase:     feature  ·  start 2026-10-24T19:59:36+0200  ·  end 2026-10-24T20:10:26+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 11m  ·  subagent time 4m + critics unknown  ·  tokens 193k + critics unknown (subagents only, 10x-critic workers excluded)  ·  rounds 2  ·  commit `1599551`
 appended:  2026-10-24 from goal review 1 (`cross-kind-tap-guard-gap`, Major); rows 7.1–7.3 added at the end of ## Progress and a Slice details entry; frozen hash unchanged (integrity clean)
 
 ### round 2          builder sonnet → critic 10x-critic
@@ -119,6 +126,17 @@ appended:  2026-10-24 from goal review 1 (`cross-kind-tap-guard-gap`, Major); ro
   report:    reviews/goal-review.md
   spot-check: opened src/workout/useWorkout.ts:137 / useCardio.ts:157 (separate `guardUntil` per controller) and src/App.vue:56-62 (startPlan checks no shared guard) → confirmed
   next:      appended Phase 7, then the goal critic runs once more on the new diff
+
+### goal review 2          critic opus + ultrathink (general-purpose)
+  cost:      123k tok / 30 calls / 5m20s
+  done when: D1–D8 met (npm test 788 passed, build exit 0, targeted runs; earlier walk still valid — only App.vue `<script>` changed) · D9 owner-run
+  closures:  `cross-kind-tap-guard-gap` → closed (scratch mutant without the App.vue:76 guard: 14/23 red, incl. 4 routes the shipped tests do not cover — expiry on return to the page for both kinds, cardio timer expiry, end screen found at load; no legitimate start blocked: L1–L5)
+  blockers:  none
+  majors:    none
+  minors:    `start-guard-clock-step-back` (Minor) · `noop-show-list-after-end` (Nit) · every goal-review-1 Minor/Nit still present
+  report:    reviews/goal-review-2.md
+  spot-check: opened src/App.vue:66-80 — the `workoutOpen` watcher arms the window and `startPlan` returns inside it → confirmed
+  result:    no `not met`, no Blocker, no Major → goal review ends
 
 ## Phase 6 — Lock mode
 
