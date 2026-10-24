@@ -555,12 +555,15 @@ curl -I -u <basic-user> https://trening.marcinlukaszek.pl/sw.js
 
 Expected: status `200`, a JavaScript `content-type`, `cache-control: no-cache`.
 
-**A hashed asset.** The first command finds a file name. Replace `<file>` in the second command with that name:
+**A hashed asset.** The first command finds the path of one JavaScript file and keeps it in `ASSET`. The path already starts with `/assets/`. The second command adds it to the address:
 
 ```bash
-curl -s -u <basic-user> https://trening.marcinlukaszek.pl/ | grep -o '/assets/[^"]*\.js' | head -n 1
-curl -I -u <basic-user> https://trening.marcinlukaszek.pl/assets/<file>
+ASSET=$(curl -s -u <basic-user> https://trening.marcinlukaszek.pl/ | grep -o '/assets/[^"]*\.js' | head -n 1)
+echo "$ASSET"
+curl -I -u <basic-user> "https://trening.marcinlukaszek.pl$ASSET"
 ```
+
+The `echo` line shows a path such as `/assets/index-<hash>.js`. If it shows nothing, the first command did not get the page (check the password).
 
 Expected: status `200`, `cache-control: public, max-age=31536000, immutable`.
 
@@ -595,6 +598,66 @@ Expected: a redirect (301 or 308) to `https://trening.marcinlukaszek.pl/`.
 - If the `test` job fails, no image is pushed and nothing is deployed.
 - To deploy the current `main` again without a new commit, run `gh workflow run deploy.yml --repo marcinLuk/training --ref main`.
 - To stop automatic deploys, delete the variable: `gh variable delete DEPLOY_ENABLED --repo marcinLuk/training`. The `test` and `image` jobs still run.
+
+### When the server files change
+
+The workflow sends only a new image to the server. It does not copy files. The server keeps its own copies of three files from the repository:
+
+| Repository file | Copy on the server |
+|---|---|
+| `deploy/compose.yaml` | `/opt/trening/compose.yaml` |
+| `deploy/server/deploy.sh` | `/opt/trening/deploy.sh` |
+| `deploy/traefik/compose.yaml` | `/opt/traefik/compose.yaml` |
+
+When a commit changes one of these files, copy it to the server again. Do this **before** you push that commit. Then the deploy of that commit uses the new files.
+
+1. On your computer, see which of the files changed since the last push:
+
+```bash
+git fetch origin
+git diff --stat origin/main..main -- deploy/compose.yaml deploy/server/deploy.sh deploy/traefik/compose.yaml
+```
+
+If the command shows nothing, stop here. The server files are up to date.
+
+2. On your computer, copy only the files that changed:
+
+```bash
+scp deploy/compose.yaml <admin-user>@<SERVER_IP>:app-compose.yaml
+scp deploy/server/deploy.sh <admin-user>@<SERVER_IP>:deploy.sh
+scp deploy/traefik/compose.yaml <admin-user>@<SERVER_IP>:traefik-compose.yaml
+```
+
+3. On the server, install them with the same owner and mode as in step 6 and step 8. Run only the lines for the files that you copied:
+
+```bash
+sudo install -m 644 -o root -g root ~/app-compose.yaml /opt/trening/compose.yaml
+sudo install -m 755 -o root -g root ~/deploy.sh /opt/trening/deploy.sh
+sudo install -m 644 -o root -g root ~/traefik-compose.yaml /opt/traefik/compose.yaml
+rm -f ~/app-compose.yaml ~/deploy.sh ~/traefik-compose.yaml
+ls -l /opt/trening /opt/traefik
+```
+
+You should see the files owned by `root root`. `deploy.sh` must have mode `rwxr-xr-x`, and the deploy user must not be able to write it.
+
+4. If the Traefik file changed, apply it now:
+
+```bash
+cd /opt/traefik
+sudo docker compose up -d
+sudo docker compose ps
+```
+
+You should see the service `traefik` with the state `running`.
+
+5. Push the commit. The next deploy runs the new `deploy.sh`, and it starts the app with the new `compose.yaml`.
+
+If you already pushed and the deploy ran with the old files, do steps 2 and 3, then apply the app file with the tag that runs now:
+
+```bash
+sudo cat /opt/trening/.env
+sudo /opt/trening/deploy.sh <the-40-character-sha-from-.env>
+```
 
 ### Rollback to an older version
 
