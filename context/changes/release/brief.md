@@ -71,13 +71,13 @@ See `research.md` (PWA findings §2–§4, deploy §5, Basic auth §6, library v
 
 ### Phase 5: Deploy guide and project docs
 #### Automated Verification:
-- [x] 5.1 `for n in $(grep -oE "(secrets|vars)\.[A-Z_]+" .github/workflows/deploy.yml | cut -d. -f2 | sort -u | grep -v GITHUB_TOKEN); do grep -q "$n" docs/deploy.md || { echo "missing $n"; exit 1; }; done` exits 0 (D7)
-- [x] 5.2 `for f in Dockerfile deploy/nginx/default.conf deploy/compose.yaml deploy/traefik/compose.yaml deploy/server/deploy.sh scripts/smoke-image.sh scripts/verify-dist.mjs .github/workflows/deploy.yml; do grep -qF "$f" docs/deploy.md || { echo "missing $f"; exit 1; }; done` exits 0 (D7)
-- [x] 5.3 `! grep -nE "@gmail|\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" docs/deploy.md | grep -vE "127\.0\.0\.1|0\.0\.0\.0"` exits 0 (Guardrails)
-- [x] 5.4 `grep -q "docs/deploy.md" CLAUDE.md && grep -q "docs/deploy.md" README.md && ! grep -q "No PWA manifest, service worker, Dockerfile or CI workflow exists yet" CLAUDE.md` exits 0 (D7)
-- [x] 5.5 `npm test` exits 0 (D8)
+- [x] 5.1 `for n in $(grep -oE "(secrets|vars)\.[A-Z_]+" .github/workflows/deploy.yml | cut -d. -f2 | sort -u | grep -v GITHUB_TOKEN); do grep -q "$n" docs/deploy.md || { echo "missing $n"; exit 1; }; done` exits 0 (D7) — fdc7d93
+- [x] 5.2 `for f in Dockerfile deploy/nginx/default.conf deploy/compose.yaml deploy/traefik/compose.yaml deploy/server/deploy.sh scripts/smoke-image.sh scripts/verify-dist.mjs .github/workflows/deploy.yml; do grep -qF "$f" docs/deploy.md || { echo "missing $f"; exit 1; }; done` exits 0 (D7) — fdc7d93
+- [x] 5.3 `! grep -nE "@gmail|\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" docs/deploy.md | grep -vE "127\.0\.0\.1|0\.0\.0\.0"` exits 0 (Guardrails) — fdc7d93
+- [x] 5.4 `grep -q "docs/deploy.md" CLAUDE.md && grep -q "docs/deploy.md" README.md && ! grep -q "No PWA manifest, service worker, Dockerfile or CI workflow exists yet" CLAUDE.md` exits 0 (D7) — fdc7d93
+- [x] 5.5 `npm test` exits 0 (D8) — fdc7d93
 #### Manual Verification:
-- [x] 5.6 the critic follows `docs/deploy.md` against the repo files: every path, port, network name, env name, secret name, image name and command matches `Dockerfile`, `deploy/`, `scripts/` and the workflow; the one-time setup order works on a fresh Ubuntu 24.04 server with key-only SSH, `ufw` and an `AllowUsers` list; the text follows ASD-STE100 (D7)
+- [x] 5.6 the critic follows `docs/deploy.md` against the repo files: every path, port, network name, env name, secret name, image name and command matches `Dockerfile`, `deploy/`, `scripts/` and the workflow; the one-time setup order works on a fresh Ubuntu 24.04 server with key-only SSH, `ufw` and an `AllowUsers` list; the text follows ASD-STE100 (D7) — fdc7d93
 
 ## Slice details
 

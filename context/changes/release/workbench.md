@@ -23,11 +23,11 @@ config note: `auto-loop.md` is modified in the tree but not committed (HEAD hold
 - [x] Phase 2
 - [x] Phase 3
 - [x] Phase 4
-- [ ] Phase 5
-- [ ] goal review
-- [ ] e2e walkthrough
-- [ ] retrospective
-- [ ] final report
+- [x] Phase 5
+- [x] goal review
+- [x] e2e walkthrough
+- [x] retrospective
+- [x] final report
 
 ## Status
 
@@ -37,7 +37,7 @@ config note: `auto-loop.md` is modified in the tree but not committed (HEAD hold
 | 2 — Register the service worker and apply updates safely | sonnet | 1 | CONCERNS (3 minor) → `6c5b55d` | feature | 9m / 3m+ | 109k+ |
 | 3 — Docker image with nginx | sonnet | 1 | CONCERNS (2 nit) → `b46ed30` | feature | 11m / 5m+ | 106k+ |
 | 4 — Server files and CI workflow | sonnet | 1 | CONCERNS (3 minor) → `48f4160` | feature | 8m / 3m+ | 112k+ |
-| 5 — Deploy guide and project docs | sonnet | 0 | waiting | feature | — | — |
+| 5 — Deploy guide and project docs | sonnet | 1 | CONCERNS (4 minor) → `fdc7d93` | feature | 20m / 8m+ | 193k+ |
 
 Routing and category (Step 1):
 - Phase 1 → sonnet: touches `package.json`, `vite.config.ts`, `public/**` (always-sonnet in §8) and writes a verification script. feature — the build gains an installable manifest and a precaching service worker.
@@ -48,21 +48,41 @@ Routing and category (Step 1):
 
 ## Run totals
 
-phases measured: 4 of 5 executed   ·   tokens are subagents only, 10x-critic workers excluded
+phases measured: 5 of 5 executed (0 wall unknown)   ·   tokens are subagents only, 10x-critic usage unknown (+), workers excluded
+
+Closed findings: none (no Blocker or Major in any round)
+Open (Minor/Nit, never fixed by design): 21 — listed in e2e-walkthrough.md "Watch out for"
+Manual steps left to the user: the whole owner-run block (real deploy, GitHub, phone)
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 4 | 435k+ | 100% | 37m | 100% | 13m+ |
+| feature | 5 | 628k+ | 77% | 57m | 100% | 21m+ |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 4 | 435k+ | 100% | 37m | 100% | 13m+ |
+| goal review (brief mode) | — | 188k | — | — | — | 7m |
+| **total** | 5 | 816k+ | 100% | 57m | 100% | 28m+ |
+
+---
+
+## Goal review
+
+### round 1          critic opus + ultrathink (general-purpose)
+  cost:      critic 188k tok / 40 calls / 6m48s
+  done-when: D1–D8 met (npm test 439/439; verify-dist 15/15; smoke 67/0; deploy.test 22/0; compose config ok; workflow parsed; offline reload in playwright-cli)
+  verdict:   CONCERNS
+  blockers:  none
+  majors:    none
+  minors:    `update-reload-drops-expired-notice` (Minor); Nits: `ci-verify-dist-not-on-image`, `hardening-flags-duplicated`, `acme-first-request-wording`, `claude-md-code-layout-stale`, `actions-not-sha-pinned`, `default-50x-html-in-image`, `traefik-docker-api-compat-unverified`
+  report:    reviews/goal-review.md
+  spot-check: the critic's verify-dist and deploy.test results match the slice critics' runs; no appended slice needed
 
 ---
 
 ## Phase 5 — Deploy guide and project docs
 
-phase:     feature  ·  start 2026-10-24T13:23:24+0200  ·  end (pending)  ·  user wait 0m  ·  paused 0m
+phase:     feature  ·  start 2026-10-24T13:23:24+0200  ·  end 2026-10-24T13:43:12+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 20m  ·  subagent time 8m+ (critic unknown)  ·  tokens 193k (subagents only, critic unknown)  ·  rounds 1
 
 ### round 1          builder sonnet → critic 10x-critic
   cost:      builder 193k tok / 30 calls / 8m28s  ·  critic unknown (Skill call returns no usage)
