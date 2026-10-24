@@ -222,6 +222,7 @@ Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla c
 - **Primary:** kreda z tekstem `on-chalk`, tekst Body 700. Tylko jedna główna akcja na ekran.
 - **Secondary:** przezroczysty z linią 2 px, tekst w kolorze tekstu.
 - **Danger:** przezroczysty z obramowaniem i tekstem w kolorze błędu (np. „Zakończ trening", „Usuń plan"). Leży daleko od akcji głównej.
+- **Przesuń ćwiczenie:** w nagłówku karty ćwiczenia w edytorze planu są dwa przyciski ikonowe, drugorzędne (nigdy kredowe), 44 px na 44 px. Nazwy dostępne to „Przesuń ćwiczenie N w górę" i „Przesuń ćwiczenie N w dół", gdzie N to bieżąca pozycja. Ikony to szewrony rysowane kreską 2 px z zaokrąglonymi zakończeniami (SVG), nigdy znaki Unicode. Na brzegu listy przycisk jest nieaktywny (40% krycia).
 - **Hover / Focus:** wciśnięcie przesuwa o 1 px; fokus to obrys 3 px w kolorze fokusu z odsunięciem 2 px. Nieaktywny: 40% krycia.
 
 ### Cards / Containers
@@ -238,6 +239,7 @@ Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla c
 - **Krok liczby:** pole serii, powtórzeń i przerwy z przyciskami −/+ (56 px), bez konieczności klawiatury. Przerwa zmienia się co 15 s.
 - **Focus:** obramowanie w kolorze fokusu.
 - **Error:** komunikat z kolorem błędu i ikoną ostrzeżenia, treść nazywa problem i sposób naprawy.
+- **Przesuwanie ćwiczeń w edytorze planu:** nagłówek karty ćwiczenia ma po lewej tytuł „Ćwiczenie N", a po prawej przyciski „Przesuń ćwiczenie N w górę" i „Przesuń ćwiczenie N w dół" (44 px, drugorzędne, ikony szewronów SVG). Dotknięcie zamienia ćwiczenie z sąsiadem, a numery w tytułach liczą się od nowa. „W górę" przy pierwszym i „w dół" przy ostatnim ćwiczeniu są nieaktywne. Po przesunięciu fokus zostaje na tym samym przycisku przesuniętego ćwiczenia, a gdy ten przycisk stał się nieaktywny, przechodzi na drugi przycisk tego ćwiczenia. Przesunięcie czyści komunikaty błędów walidacji. Zapisany plan trzyma nową kolejność.
 - **Edytor planu:** napisy „Nazwa planu", „Nazwa ćwiczenia", „Serie", „Powtórzenia", „Przerwa", przyciski „Dodaj ćwiczenie", „Usuń ćwiczenie", „Zapisz plan" (główna), „Anuluj"; nowy plan startuje z jednym ćwiczeniem. Edycja istniejącego planu używa tego samego ekranu z tytułem „Edytuj plan" i zapisuje plan pod tym samym identyfikatorem; „Anuluj" nie zmienia zapisanego planu. Nieudany zapis pokazuje komunikat „Nie udało się zapisać planu…" i zostawia wpisane dane na ekranie.
 
 ### Widok serii (ekran treningu)

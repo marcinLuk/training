@@ -166,6 +166,95 @@ function stepperSets(wrapper: VueWrapper): string {
   return region(wrapper.element, 'Ćwiczenie 1').querySelector('output')?.textContent?.trim() ?? ''
 }
 
+describe('moving exercises in a saved plan', () => {
+  const orderedPlan: Plan = {
+    id: 'm',
+    name: 'Plecy i nogi',
+    exercises: [
+      { id: 'm1', name: 'Wiosłowanie', sets: 2, reps: 8, restSeconds: 60 },
+      { id: 'm2', name: 'Przysiady', sets: 3, reps: 12, restSeconds: 90 },
+      { id: 'm3', name: 'Wyciskanie leżąc', sets: 4, reps: 6, restSeconds: 120 },
+      { id: 'm4', name: 'Martwy ciąg', sets: 5, reps: 5, restSeconds: 150 },
+    ],
+  }
+  const movedOrder = ['Wiosłowanie', 'Martwy ciąg', 'Przysiady', 'Wyciskanie leżąc']
+
+  beforeEach(() => {
+    savePlan(orderedPlan)
+  })
+
+  function storedNames(): string[] {
+    return (getPlan('m')?.exercises ?? []).map((exercise) => exercise.name)
+  }
+
+  async function openEditor(wrapper: VueWrapper): Promise<void> {
+    await button(wrapper.element, 'Edytuj: Plecy i nogi').trigger('click')
+  }
+
+  it('saves the new order, keeps it in the list and after a fresh mount, and the editor shows it again', async () => {
+    const wrapper = mountApp()
+    await openEditor(wrapper)
+    await button(wrapper.element, 'Przesuń ćwiczenie 4 w górę').trigger('click')
+    await button(wrapper.element, 'Przesuń ćwiczenie 3 w górę').trigger('click')
+    await button(wrapper.element, 'Zapisz plan').trigger('click')
+
+    expect(wrapper.get('h1').text()).toBe('Plany')
+    expect(names(wrapper)).toEqual(['Plecy i nogi'])
+    expect(storedNames()).toEqual(movedOrder)
+    expect(listPlans().map((plan) => plan.id)).toEqual(['m'])
+
+    wrapper.unmount()
+    apps = []
+    const fresh = mountApp()
+    expect(storedNames()).toEqual(movedOrder)
+    await openEditor(fresh)
+    const shown = [1, 2, 3, 4].map(
+      (position) => field(region(fresh.element, `Ćwiczenie ${position}`), 'Nazwa ćwiczenia').element.value,
+    )
+    expect(shown).toEqual(movedOrder)
+  })
+
+  it('a workout started after a move runs the exercises in the new order', async () => {
+    const wrapper = mountApp()
+    await openEditor(wrapper)
+    await button(wrapper.element, 'Przesuń ćwiczenie 4 w górę').trigger('click')
+    await button(wrapper.element, 'Przesuń ćwiczenie 3 w górę').trigger('click')
+    await button(wrapper.element, 'Przesuń ćwiczenie 2 w górę').trigger('click')
+    await button(wrapper.element, 'Zapisz plan').trigger('click')
+
+    vi.setSystemTime(Date.now() + ACTION_GUARD_MS)
+    await button(wrapper.element, 'Start: Plecy i nogi').trigger('click')
+    expect(wrapper.get('h1').text()).toBe('Martwy ciąg')
+    expect(wrapper.text()).toContain('Dalej: Wiosłowanie')
+  })
+
+  it('moving the first exercise down starts the workout with the former second exercise', async () => {
+    const wrapper = mountApp()
+    await openEditor(wrapper)
+    await button(wrapper.element, 'Przesuń ćwiczenie 1 w dół').trigger('click')
+    await button(wrapper.element, 'Zapisz plan').trigger('click')
+
+    vi.setSystemTime(Date.now() + ACTION_GUARD_MS)
+    await button(wrapper.element, 'Start: Plecy i nogi').trigger('click')
+    expect(wrapper.get('h1').text()).toBe('Przysiady')
+  })
+
+  it('"Anuluj" after a move leaves the stored order and the stored text unchanged', async () => {
+    const wrapper = mountApp()
+    const before = localStorage.getItem(PLANS_KEY)
+    await openEditor(wrapper)
+    await button(wrapper.element, 'Przesuń ćwiczenie 2 w dół').trigger('click')
+    await button(wrapper.element, 'Przesuń ćwiczenie 1 w dół').trigger('click')
+    await button(wrapper.element, 'Anuluj').trigger('click')
+
+    expect(wrapper.get('h1').text()).toBe('Plany')
+    expect(localStorage.getItem(PLANS_KEY)).toBe(before)
+    expect(storedNames()).toEqual(['Wiosłowanie', 'Przysiady', 'Wyciskanie leżąc', 'Martwy ciąg'])
+    await openEditor(wrapper)
+    expect(field(region(wrapper.element, 'Ćwiczenie 1'), 'Nazwa ćwiczenia').element.value).toBe('Wiosłowanie')
+  })
+})
+
 describe('deleting a plan', () => {
   beforeEach(() => {
     savePlan(makePlan('a', 'Pierwszy'))

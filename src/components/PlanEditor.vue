@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, nextTick, reactive, ref } from 'vue'
 import {
   LIMITS,
   createExercise,
@@ -49,6 +49,30 @@ function removeExercise(index: number): void {
   errors.value = []
 }
 
+function moveButtonId(exerciseId: string, direction: 'up' | 'down'): string {
+  return `exercise-move-${direction}-${exerciseId}`
+}
+
+// Swap the exercise with its neighbour. Errors are cleared because their paths
+// hold positions that no longer match. Focus goes back to the same move button
+// of the moved exercise, or to its other one when the tapped button is now disabled.
+async function moveExercise(index: number, delta: -1 | 1): Promise<void> {
+  const target = index + delta
+  const moved = plan.exercises[index]
+  const neighbour = plan.exercises[target]
+  if (moved === undefined || neighbour === undefined) return
+
+  plan.exercises[index] = neighbour
+  plan.exercises[target] = moved
+  errors.value = []
+
+  const tapped = delta === -1 ? 'up' : 'down'
+  const other = delta === -1 ? 'down' : 'up'
+  const tappedStillEnabled = delta === -1 ? target > 0 : target < plan.exercises.length - 1
+  await nextTick()
+  document.getElementById(moveButtonId(moved.id, tappedStillEnabled ? tapped : other))?.focus()
+}
+
 function save(): void {
   saveFailure.value = null
   errors.value = validatePlan(plan)
@@ -90,7 +114,33 @@ function save(): void {
         class="card exercise"
         :aria-labelledby="`exercise-title-${exercise.id}`"
       >
-        <h2 :id="`exercise-title-${exercise.id}`">Ćwiczenie {{ index + 1 }}</h2>
+        <div class="exercise-header">
+          <h2 :id="`exercise-title-${exercise.id}`">Ćwiczenie {{ index + 1 }}</h2>
+          <button
+            :id="moveButtonId(exercise.id, 'up')"
+            type="button"
+            class="btn btn-move"
+            :aria-label="`Przesuń ćwiczenie ${index + 1} w górę`"
+            :disabled="index === 0"
+            @click="moveExercise(index, -1)"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m6 15 6-6 6 6" />
+            </svg>
+          </button>
+          <button
+            :id="moveButtonId(exercise.id, 'down')"
+            type="button"
+            class="btn btn-move"
+            :aria-label="`Przesuń ćwiczenie ${index + 1} w dół`"
+            :disabled="index === plan.exercises.length - 1"
+            @click="moveExercise(index, 1)"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m6 9 6 6 6-6" />
+            </svg>
+          </button>
+        </div>
 
         <div class="field">
           <label class="field-label" :for="`exercise-name-${exercise.id}`">Nazwa ćwiczenia</label>
@@ -173,6 +223,29 @@ function save(): void {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
+}
+
+.exercise-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.exercise-header h2 {
+  flex: 1;
+  min-width: 0;
+}
+
+.btn-move {
+  flex: none;
+  width: var(--target-min);
+  min-height: var(--target-min);
+  padding: 0;
+}
+
+.btn-move svg {
+  width: 24px;
+  height: 24px;
 }
 
 .actions {
