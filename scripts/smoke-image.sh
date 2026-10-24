@@ -174,6 +174,9 @@ SEC=(
   "X-Robots-Tag=noindex, nofollow"
   "X-Content-Type-Options=nosniff"
   "Referrer-Policy=no-referrer"
+  "Content-Security-Policy=default-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+  "Permissions-Policy=screen-wake-lock=(self), camera=(), microphone=(), geolocation=(), payment=(), usb=(), accelerometer=(), gyroscope=(), magnetometer=()"
+  "Strict-Transport-Security=max-age=31536000"
 )
 # nginx 1.31 maps .js to application/javascript. Browsers accept both JavaScript types.
 JS_TYPES="application/javascript|text/javascript"

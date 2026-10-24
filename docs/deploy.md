@@ -537,7 +537,12 @@ Expected headers (from `deploy/nginx/default.conf` and `deploy/nginx/security-he
 - `x-robots-tag: noindex, nofollow`
 - `x-content-type-options: nosniff`
 - `referrer-policy: no-referrer`
+- `content-security-policy: default-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'`
+- `permissions-policy: screen-wake-lock=(self), camera=(), ...` (all other listed features are off)
+- `strict-transport-security: max-age=31536000`
 - `server: nginx` (no version number)
+
+The browser now remembers for one year to use only HTTPS for this address (HSTS). If you ever stop serving the app over HTTPS, the browser refuses to open it until this time ends.
 
 **The manifest:**
 
