@@ -1,5 +1,14 @@
 import { backupUnreadable, readRaw, writeRaw } from '../lib/storage'
-import { validatePlan, type Exercise, type Plan } from './plan'
+import {
+  isCardioPlan,
+  validatePlan,
+  type AnyPlan,
+  type CardioBlock,
+  type CardioInterval,
+  type CardioPlan,
+  type Exercise,
+  type Plan,
+} from './plan'
 
 export const PLANS_KEY = 'trening.plans.v1'
 export const PLANS_CORRUPT_PREFIX = 'trening.plans.corrupt'
@@ -7,11 +16,11 @@ const PLANS_VERSION = 1
 
 interface PlansDocument {
   version: typeof PLANS_VERSION
-  plans: Plan[]
+  plans: AnyPlan[]
 }
 
 interface ReadResult {
-  plans: Plan[]
+  plans: AnyPlan[]
   /** True when the stored value held something this version could not read. */
   unreadable: boolean
 }
@@ -43,20 +52,70 @@ function toExercise(value: unknown): Exercise | null {
   return { id, name, sets, reps, restSeconds }
 }
 
-function toPlan(value: unknown): Plan | null {
+function toInterval(value: unknown): CardioInterval | null {
   if (!isRecord(value)) return null
-  const { id, name, exercises } = value
-  if (typeof id !== 'string' || id === '' || typeof name !== 'string' || !Array.isArray(exercises)) {
+  const { id, name, seconds, kind } = value
+  if (
+    typeof id !== 'string' ||
+    typeof name !== 'string' ||
+    typeof seconds !== 'number' ||
+    (kind !== 'work' && kind !== 'rest')
+  ) {
     return null
   }
+  return { id, name, seconds, kind }
+}
+
+function toBlock(value: unknown): CardioBlock | null {
+  if (!isRecord(value)) return null
+  const { id, repeat, intervals } = value
+  if (typeof id !== 'string' || typeof repeat !== 'number' || !Array.isArray(intervals)) return null
+  const parsed: CardioInterval[] = []
+  for (const item of intervals) {
+    const interval = toInterval(item)
+    if (interval === null) return null
+    parsed.push(interval)
+  }
+  return { id, repeat, intervals: parsed }
+}
+
+function toCardioPlan(id: string, name: string, blocks: unknown): CardioPlan | null {
+  if (!Array.isArray(blocks)) return null
+  const parsed: CardioBlock[] = []
+  for (const item of blocks) {
+    const block = toBlock(item)
+    if (block === null) return null
+    parsed.push(block)
+  }
+  return { type: 'cardio', id, name, blocks: parsed }
+}
+
+function toStrengthPlan(id: string, name: string, type: unknown, exercises: unknown): Plan | null {
+  if (!Array.isArray(exercises)) return null
   const parsed: Exercise[] = []
   for (const item of exercises) {
     const exercise = toExercise(item)
     if (exercise === null) return null
     parsed.push(exercise)
   }
-  const plan: Plan = { id, name, exercises: parsed }
-  return validatePlan(plan).length === 0 ? plan : null
+  return type === 'strength' ? { type, id, name, exercises: parsed } : { id, name, exercises: parsed }
+}
+
+/** A stored plan with no `type` is a strength plan: that is the shape saved before the cardio module. */
+function toPlan(value: unknown): AnyPlan | null {
+  if (!isRecord(value)) return null
+  const { id, name, type } = value
+  if (typeof id !== 'string' || id === '' || typeof name !== 'string') return null
+
+  let plan: AnyPlan | null
+  if (type === 'cardio') {
+    plan = toCardioPlan(id, name, value.blocks)
+  } else if (type === undefined || type === 'strength') {
+    plan = toStrengthPlan(id, name, type, value.exercises)
+  } else {
+    return null
+  }
+  return plan !== null && validatePlan(plan).length === 0 ? plan : null
 }
 
 function readStored(): ReadResult {
@@ -73,7 +132,7 @@ function readStored(): ReadResult {
     return { plans: [], unreadable: true }
   }
 
-  const plans: Plan[] = []
+  const plans: AnyPlan[] = []
   let unreadable = false
   for (const item of parsed.plans) {
     const plan = toPlan(item)
@@ -86,13 +145,24 @@ function readStored(): ReadResult {
   return { plans, unreadable }
 }
 
-/** All saved plans. Never throws; missing or unreadable data gives what could be read. */
-export function listPlans(): Plan[] {
+/** All saved plans, strength and cardio. Never throws; missing or unreadable data gives what could be read. */
+export function listAllPlans(): AnyPlan[] {
   return readStored().plans
 }
 
-export function getPlan(id: string): Plan | undefined {
+/** The saved plan with this id, of either type. */
+export function getAnyPlan(id: string): AnyPlan | undefined {
   return readStored().plans.find((plan) => plan.id === id)
+}
+
+/** The saved strength plans only; a cardio plan is not in this list. For the strength editor and workout. */
+export function listPlans(): Plan[] {
+  return listAllPlans().filter((plan) => !isCardioPlan(plan))
+}
+
+/** The saved strength plan with this id. A cardio plan id gives undefined. */
+export function getPlan(id: string): Plan | undefined {
+  return listPlans().find((plan) => plan.id === id)
 }
 
 let persistRequested = false
@@ -112,7 +182,7 @@ function requestPersistOnce(): void {
   }
 }
 
-function writePlans(plans: Plan[]): boolean {
+function writePlans(plans: AnyPlan[]): boolean {
   const document: PlansDocument = { version: PLANS_VERSION, plans }
   return writeRaw(PLANS_KEY, JSON.stringify(document))
 }
@@ -124,22 +194,40 @@ function backupIfUnreadable(stored: ReadResult, now: number): boolean {
   return raw === null || backupUnreadable(PLANS_CORRUPT_PREFIX, raw, now)
 }
 
+/** The plan as it is written: names trimmed, only the fields of its type. */
+function cleanPlan(plan: AnyPlan): AnyPlan {
+  if (isCardioPlan(plan)) {
+    return {
+      type: 'cardio',
+      id: plan.id,
+      name: plan.name.trim(),
+      blocks: plan.blocks.map((block) => ({
+        id: block.id,
+        repeat: block.repeat,
+        intervals: block.intervals.map((interval) => ({ ...interval, name: interval.name.trim() })),
+      })),
+    }
+  }
+  return {
+    ...(plan.type === undefined ? {} : { type: plan.type }),
+    id: plan.id,
+    name: plan.name.trim(),
+    exercises: plan.exercises.map((exercise) => ({ ...exercise, name: exercise.name.trim() })),
+  }
+}
+
 /**
  * Insert a plan, or replace the plan with the same id. Unreadable stored data
  * is copied to `trening.plans.corrupt.<timestamp>` first. If that copy fails,
  * nothing is written.
  */
-export function savePlan(plan: Plan, now: number = Date.now()): SaveResult {
+export function savePlan(plan: AnyPlan, now: number = Date.now()): SaveResult {
   if (validatePlan(plan).length > 0) return { ok: false, reason: 'invalid' }
 
   const stored = readStored()
   if (!backupIfUnreadable(stored, now)) return { ok: false, reason: 'backup-failed' }
 
-  const clean: Plan = {
-    id: plan.id,
-    name: plan.name.trim(),
-    exercises: plan.exercises.map((exercise) => ({ ...exercise, name: exercise.name.trim() })),
-  }
+  const clean = cleanPlan(plan)
   const index = stored.plans.findIndex((item) => item.id === clean.id)
   const plans = [...stored.plans]
   if (index === -1) {

@@ -31,12 +31,12 @@ Android, aktualny Chrome, instalowalna PWA. Telefon w jednej ręce lub oparty ob
 - Vite 8, Vue 3.5 (`<script setup>`), TypeScript strict. Brak backendu.
 - Dane planów i bieżącego treningu tylko na urządzeniu. Brak kont, API i synchronizacji.
 - Interfejs i komunikaty po polsku.
-- Poza zakresem MVP: historia i statystyki, kalendarz, biblioteka ćwiczeń, cardio, liczenie powtórzeń, głos, wibracje, Google Play, niezawodny sygnał przy zablokowanym ekranie.
+- Poza zakresem: historia i statystyki, kalendarz, biblioteka ćwiczeń, liczenie powtórzeń, głos, wibracje, Google Play, niezawodny sygnał przy zablokowanym ekranie. Cardio (sesje interwałowe z trybem blokady) jest w zakresie od `context/foundation/prd-v2.md`; bez GPS, dystansu, tętna i historii.
 - Brak pola ciężaru w ćwiczeniu w MVP. Plan ma tylko serie, powtórzenia i czas przerwy.
 
 ## Brand Commitments
 
-Nazwa: „Trening". Wygląd jest zatwierdzony: system „Talerze" z `DESIGN.md` (ciemna „guma", kreda jako główna akcja, Barlow, płaskie powierzchnie). Zakres systemu zawężono do MVP: bez cardio, kalendarza i wag. Kolory talerzy zostają zarezerwowane na późniejszy ciężar.
+Nazwa: „Trening". Wygląd jest zatwierdzony: system „Talerze" z `DESIGN.md` (ciemna „guma", kreda jako główna akcja, Barlow, płaskie powierzchnie). Zakres systemu zawężono do MVP i cardio: bez kalendarza i wag. Fiolet znaczy tylko cardio. Kolory talerzy zostają zarezerwowane na późniejszy ciężar.
 
 ## Evidence on Hand
 

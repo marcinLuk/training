@@ -9,6 +9,7 @@ import {
   type WorkoutSet,
   type WorkoutState,
 } from './engine'
+import { CARDIO_STATE_VERSION, type CardioState } from './cardioEngine'
 
 export const WORKOUT_KEY = 'trening.workout.v1'
 export const WORKOUT_CORRUPT_PREFIX = 'trening.workout.corrupt'
@@ -136,11 +137,60 @@ export function parseWorkoutState(value: unknown): WorkoutState | null {
   }
 }
 
+/** The one workout the key can hold: a strength state (no `kind`) or a cardio state. */
+export type StoredWorkout = WorkoutState | CardioState
+
+export function isCardioState(state: StoredWorkout): state is CardioState {
+  return 'kind' in state && state.kind === 'cardio'
+}
+
 /**
- * Stores the running workout. Returns false when the write failed; the workout then goes on in
- * memory and the caller does not need to react.
+ * Validates a parsed value against the cardio state shape and returns a fresh state, or null.
+ * The interval list is what the engine indexes into, so it must be non-empty and every interval
+ * must last longer than 0 s; `pausedAt` is null or a time and the paused total is not negative.
  */
-export function saveWorkout(state: WorkoutState): boolean {
+export function parseCardioState(value: unknown): CardioState | null {
+  if (!isRecord(value) || value.version !== CARDIO_STATE_VERSION || value.kind !== 'cardio') return null
+  const { planId, planName, intervals: rawIntervals, startedAt, pausedAt, pausedTotalMs, lastActivityAt } = value
+  if (typeof planId !== 'string' || typeof planName !== 'string' || !Array.isArray(rawIntervals)) return null
+  if (!isFiniteNumber(startedAt) || !isFiniteNumber(lastActivityAt)) return null
+  if (!isFiniteNumber(pausedTotalMs) || pausedTotalMs < 0) return null
+  if (pausedAt !== null && !isFiniteNumber(pausedAt)) return null
+
+  const intervals: CardioState['intervals'] = []
+  for (const item of rawIntervals) {
+    if (!isRecord(item)) return null
+    const { name, seconds, kind } = item
+    if (typeof name !== 'string' || !isFiniteNumber(seconds) || seconds <= 0) return null
+    if (kind !== 'work' && kind !== 'rest') return null
+    intervals.push({ name, seconds, kind })
+  }
+  if (intervals.length === 0) return null
+
+  return {
+    version: CARDIO_STATE_VERSION,
+    kind: 'cardio',
+    planId,
+    planName,
+    intervals,
+    startedAt,
+    pausedAt,
+    pausedTotalMs,
+    lastActivityAt,
+  }
+}
+
+/** Validates a parsed value as either stored shape. Only `kind: 'cardio'` selects the cardio shape. */
+export function parseStoredWorkout(value: unknown): StoredWorkout | null {
+  if (isRecord(value) && value.kind === 'cardio') return parseCardioState(value)
+  return parseWorkoutState(value)
+}
+
+/**
+ * Stores the running workout, strength or cardio, under the one key. Returns false when the
+ * write failed; the workout then goes on in memory and the caller does not need to react.
+ */
+export function saveWorkout(state: StoredWorkout): boolean {
   return writeRaw(WORKOUT_KEY, JSON.stringify(state))
 }
 
@@ -148,23 +198,46 @@ export function clearWorkout(): boolean {
   return removeRaw(WORKOUT_KEY)
 }
 
+function parseJson(raw: string): unknown {
+  try {
+    return JSON.parse(raw)
+  } catch {
+    return undefined
+  }
+}
+
 /**
- * The stored workout, or null when there is none or it cannot be read. Never throws and never
- * touches the plans. Unreadable data is copied once to `trening.workout.corrupt.<timestamp>`
- * and the live key is then removed, so the next load does not copy it again. If the copy
- * fails, the live key stays and nothing is lost.
+ * The stored workout of either kind, or null when there is none or it cannot be read. Never
+ * throws and never touches the plans. Unreadable data is copied once to
+ * `trening.workout.corrupt.<timestamp>` and the live key is then removed, so the next load does
+ * not copy it again. If the copy fails, the live key stays and nothing is lost.
  */
-export function loadWorkout(now: number): WorkoutState | null {
+export function loadStoredWorkout(now: number): StoredWorkout | null {
   const raw = readRaw(WORKOUT_KEY)
   if (raw === null) return null
-  let parsed: unknown
-  try {
-    parsed = JSON.parse(raw)
-  } catch {
-    parsed = undefined
-  }
-  const state = parseWorkoutState(parsed)
+  const state = parseStoredWorkout(parseJson(raw))
   if (state !== null) return state
   if (backupUnreadable(WORKOUT_CORRUPT_PREFIX, raw, now)) removeRaw(WORKOUT_KEY)
   return null
+}
+
+/**
+ * The stored strength workout, or null when there is none, it cannot be read, or the key holds a
+ * cardio session. A valid cardio session is left untouched: it is not unreadable data.
+ */
+export function loadWorkout(now: number): WorkoutState | null {
+  const state = loadStoredWorkout(now)
+  return state !== null && !isCardioState(state) ? state : null
+}
+
+/**
+ * Which kind of workout the key holds right now, without copying or removing anything. Used to
+ * keep one workout at a time: a new workout does not start over the other kind.
+ */
+export function storedWorkoutKind(): 'strength' | 'cardio' | null {
+  const raw = readRaw(WORKOUT_KEY)
+  if (raw === null) return null
+  const state = parseStoredWorkout(parseJson(raw))
+  if (state === null) return null
+  return isCardioState(state) ? 'cardio' : 'strength'
 }

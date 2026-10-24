@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { summarizePlan, type Plan } from '../plans/plan'
+import { isCardioPlan, summarizePlan, type AnyPlan } from '../plans/plan'
 import FieldError from './FieldError.vue'
 import PlanDeleteConfirm from './PlanDeleteConfirm.vue'
 
-defineProps<{ plans: Plan[]; expiredNotice?: boolean; errorText?: string }>()
+defineProps<{ plans: AnyPlan[]; expiredNotice?: boolean; errorText?: string }>()
 const emit = defineEmits<{
   'new-plan': []
   start: [planId: string]
@@ -12,7 +12,7 @@ const emit = defineEmits<{
   delete: [planId: string]
 }>()
 
-const pendingDelete = ref<Plan | null>(null)
+const pendingDelete = ref<AnyPlan | null>(null)
 
 function confirmDelete(): void {
   if (pendingDelete.value === null) return
@@ -31,7 +31,11 @@ function confirmDelete(): void {
 
     <ul v-if="plans.length > 0" class="stack" aria-label="Zapisane plany">
       <li v-for="plan in plans" :key="plan.id" class="card plan-card">
-        <h2>{{ plan.name }}</h2>
+        <div class="plan-head">
+          <h2>{{ plan.name }}</h2>
+          <span v-if="isCardioPlan(plan)" class="plan-tag plan-tag-cardio">Cardio</span>
+          <span v-else class="plan-tag plan-tag-strength">Siła</span>
+        </div>
         <p class="muted">{{ summarizePlan(plan) }}</p>
         <button
           type="button"
@@ -78,6 +82,42 @@ function confirmDelete(): void {
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+}
+
+.plan-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+}
+
+.plan-head h2 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* Type tag (DESIGN.md "Znacznik typu"): always a word, never colour alone. */
+.plan-tag {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 0 var(--space-md);
+  border-radius: var(--radius-pill);
+  font-size: var(--text-label);
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.plan-tag-strength {
+  background: var(--surface-2);
+  color: var(--ink);
+}
+
+/* Violet means cardio only (DESIGN.md Violet Rule): this is its one use on the list. */
+.plan-tag-cardio {
+  background: var(--cardio);
+  color: var(--on-cardio);
 }
 
 /* Edit and delete sit far from Start and far from each other (DESIGN.md Do's). */

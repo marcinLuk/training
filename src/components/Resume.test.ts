@@ -202,6 +202,7 @@ describe('expiry notice', () => {
   it('goes away when the user opens the editor', async () => {
     const wrapper = await expiredApp()
     await button(wrapper.element, 'Nowy plan').trigger('click')
+    await button(wrapper.element, 'Siła').trigger('click')
     await button(wrapper.element, 'Anuluj').trigger('click')
     expect(wrapper.get('h1').text()).toBe('Plany')
     expect(wrapper.text()).not.toContain(EXPIRY_NOTICE)
