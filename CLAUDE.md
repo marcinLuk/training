@@ -45,7 +45,7 @@ Every AI agent MUST read `DESIGN.md` (and `PRODUCT.md`) before it creates or cha
 
 - Use only the tokens, type scale, spacing and component rules from `DESIGN.md`. Do not invent new colors, fonts or sizes.
 - The design is approved. Do not redesign it. If a task needs something `DESIGN.md` does not cover, ask the user, then update `DESIGN.md` in the same change.
-- Cardio is in scope from PRD v2, but `DESIGN.md` does not cover it yet (interval screen, lock mode, plan type mark). Ask the user and update `DESIGN.md` before you build cardio UI. The app has no calendar, history or weight field. Plate colors and the plate stack are reserved for later ("po MVP"). Do not use them now.
+- Cardio is in scope from PRD v2. `DESIGN.md` covers it: the violet field (`cardio` / `on-cardio`), the session screen, the cardio editor, lock mode and the plan type tag. Violet means cardio only. The app has no calendar, history or weight field. Plate colors and the plate stack are reserved for later ("po MVP"). Do not use them now.
 - Keep the key rules: one chalk primary action per screen, the biggest number is sets left (rest time during rest), touch targets 56 px (64 px for the main action), no emoji as icons, no gradients, no left color stripe on cards.
 - The MVP is dark theme only ("guma"). Do not build the light theme or a theme switch.
 - Fonts are served locally from `public/`, not from a CDN.

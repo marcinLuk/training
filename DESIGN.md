@@ -1,6 +1,6 @@
 ---
 name: Trening
-description: Ciemna „guma" lub jasny „magnez", kreda jako jedyna główna akcja, ogromne wąskie cyfry. Kolory talerzy sztangi zarezerwowane na przyszły ciężar.
+description: Ciemna „guma" lub jasny „magnez", kreda jako jedyna główna akcja, ogromne wąskie cyfry. Fiolet znaczy tylko cardio. Kolory talerzy sztangi zarezerwowane na przyszły ciężar.
 colors:
   ground: "#121314"
   surface: "#1b1c1e"
@@ -21,6 +21,8 @@ colors:
   on-plate-10: "#07210f"
   plate-5-white: "#f2f2ef"
   on-plate-5: "#121314"
+  cardio: "#a98bf5"
+  on-cardio: "#140d2b"
   danger: "#ff6b6b"
   focus: "#8ab4ff"
   ground-light: "#eceeef"
@@ -40,6 +42,26 @@ typography:
     fontSize: "11rem"
     fontWeight: 800
     lineHeight: 0.82
+    letterSpacing: "0"
+    fontFeature: "tnum"
+  clock:
+    fontFamily: "Barlow Condensed, Arial Narrow, sans-serif"
+    fontSize: "9rem"
+    fontWeight: 800
+    lineHeight: 0.85
+    letterSpacing: "0"
+    fontFeature: "tnum"
+  phase:
+    fontFamily: "Barlow Condensed, Arial Narrow, sans-serif"
+    fontSize: "3rem"
+    fontWeight: 800
+    lineHeight: 1
+    letterSpacing: "0"
+  meta:
+    fontFamily: "Barlow Condensed, Arial Narrow, sans-serif"
+    fontSize: "1.125rem"
+    fontWeight: 700
+    lineHeight: 1.2
     letterSpacing: "0"
     fontFeature: "tnum"
   figure:
@@ -111,6 +133,25 @@ components:
     rounded: "{rounded.md}"
     height: "56px"
     padding: "0 24px"
+  button-cardio-main:
+    backgroundColor: "{colors.on-cardio}"
+    textColor: "{colors.cardio}"
+    rounded: "{rounded.md}"
+    height: "64px"
+  button-cardio-outline:
+    backgroundColor: "transparent"
+    textColor: "{colors.on-cardio}"
+    rounded: "{rounded.md}"
+    height: "56px"
+    padding: "0 24px"
+  tag-cardio:
+    backgroundColor: "{colors.cardio}"
+    textColor: "{colors.on-cardio}"
+    rounded: "{rounded.pill}"
+  tag-strength:
+    backgroundColor: "{colors.surface-2}"
+    textColor: "{colors.ink}"
+    rounded: "{rounded.pill}"
   input-field:
     backgroundColor: "{colors.surface-2}"
     textColor: "{colors.ink}"
@@ -124,7 +165,7 @@ components:
     padding: "16px"
 ---
 
-<!-- Zakres: MVP z context/foundation/prd.md. System zawężono do planów i runnera: bez cardio, kalendarza, dziennika, wag i dolnego paska zakładek. Elementy zarezerwowane są oznaczone „po MVP". Po wdrożeniu uruchom /impeccable document ponownie, żeby uzupełnić tokeny z kodu i sidecar .impeccable/design.json. -->
+<!-- Zakres: MVP z context/foundation/prd.md oraz moduł cardio z context/foundation/prd-v2.md. System zawężono do planów, runnera siły i sesji cardio: bez kalendarza, dziennika, wag i dolnego paska zakładek. Elementy zarezerwowane są oznaczone „po MVP". Ekran sesji cardio, kolor cardio i znaczniki pochodzą z podglądu documentation/system-design.html (sekcja „Ekrany", rysunek „Cardio"). Edytor cardio, tryb blokady, odliczanie startu, pauza i wybór typu planu nie mają rysunku w podglądzie; opis poniżej to decyzje autora z 2026-10-24. Po wdrożeniu uruchom /impeccable document ponownie, żeby uzupełnić tokeny z kodu i sidecar .impeccable/design.json. -->
 
 # Design System: Trening
 
@@ -138,8 +179,10 @@ Scena użycia wyznacza resztę: telefon w jednej ręce lub oparty obok, spocone 
 
 MVP ma jeden motyw: ciemną „gumę" (decyzja autora). Jasny „magnez" zostaje w systemie jako zarezerwowany wariant na później. Nie buduj go ani nie przełączaj motywu według `prefers-color-scheme`.
 
+Cardio to drugi tryb treningu: interwały zamiast serii. Telefon często leży w kieszeni, więc sesja cardio mówi dźwiękiem, a ekran jest tylko potwierdzeniem: całe pole w fiolecie, ogromny zegar, słowo „PRACA" albo „ODPOCZYNEK" i oś czasu.
+
 **Key Characteristics:**
-- Stan treningu czyta się bez dotykania telefonu: liczba serii do końca jest największym elementem ekranu serii.
+- Stan treningu czyta się bez dotykania telefonu: liczba serii do końca jest największym elementem ekranu serii, a w cardio czas do końca interwału.
 - Główna akcja jest „kredowa", jedna na ekran.
 - Koniec przerwy to zmiana całego ekranu i dźwięk, nigdy sam dźwięk.
 - Kolor niesie znaczenie, nigdy nie jest samotnym nośnikiem informacji.
@@ -147,7 +190,11 @@ MVP ma jeden motyw: ciemną „gumę" (decyzja autora). Jasny „magnez" zostaje
 
 ## Colors
 
-Paleta w MVP ma cztery zadania: neutralna skala trzech poziomów tła, kreda dla akcji, kolor błędu i kolor fokusu. Kolory talerzy są zarezerwowane.
+Paleta ma pięć zadań: neutralna skala trzech poziomów tła, kreda dla akcji, fiolet dla cardio, kolor błędu i kolor fokusu. Kolory talerzy są zarezerwowane.
+
+### Cardio
+- **Fiolet** (#a98bf5) z tekstem **on-cardio** (#140d2b): pole całego ekranu sesji cardio i znacznik „Cardio" na liście planów. Talerze nie mają fioletu, więc kod siła/cardio jest jednoznaczny. Nigdzie indziej fiolet nie występuje.
+- Na polu fioletu: tor paska i nieaktywne segmenty osi czasu to `rgba(0,0,0,.18)`–`rgba(0,0,0,.2)` (przyciemnienie fioletu, nie nowy kolor), wypełnienie i segmenty pracy to on-cardio.
 
 ### Primary
 - **Kreda** (#f2f2ef na gumie, #14171a na magnezie): główna akcja (Start, Gotowe), aktywne elementy, pierścień przerwy. Tekst na kredzie to `on-chalk`.
@@ -167,7 +214,9 @@ Plan w MVP nie ma pola ciężaru, więc te kolory nie występują w interfejsie.
 - Magnez (jasny): tło #eceeef, powierzchnia #ffffff, linia #c2c7cb, tekst #14171a, drugorzędny #50565c.
 
 ### Named Rules
-**The Chalk Rule.** Główna akcja jest w kolorze kredy i jest jedna na ekran. Nigdy w kolorze talerza ani w kolorze błędu.
+**The Chalk Rule.** Główna akcja jest w kolorze kredy i jest jedna na ekran. Nigdy w kolorze talerza ani w kolorze błędu. Jedyny wyjątek to ekran sesji cardio (pole fioletu): tam główna akcja „Pauza"/„Wznów" jest w kolorze on-cardio z tekstem w fiolecie, i też jest jedna.
+
+**The Violet Rule.** Fiolet znaczy wyłącznie cardio: pole sesji cardio i znacznik „Cardio". Nigdy nie jest kolorem przycisku na liście, akcentem ani ozdobą.
 
 **The Weight-Only Rule.** Gdy ciężar wejdzie do aplikacji, kolory talerzy znaczą wyłącznie wagę. Interfejs nigdy ich nie używa do niczego innego.
 
@@ -182,22 +231,25 @@ Plan w MVP nie ma pola ciężaru, więc te kolory nie występują w interfejsie.
 
 ### Hierarchy
 - **Counter** (800, 11rem, 0,82): liczba pozostałych serii w widoku serii, największy element aplikacji.
+- **Clock** (800, 9rem, 0,85): czas do końca interwału w sesji cardio, największy element ekranu cardio. Mniejszy od Counter, bo „12:30" musi się zmieścić w szerokości telefonu.
+- **Phase** (800, 3rem, 1, wersaliki): słowo fazy w sesji cardio („PRACA", „ODPOCZYNEK", „PRZYGOTUJ SIĘ", „PAUZA").
+- **Meta** (Barlow Condensed 700, 1,125rem, wersaliki, cyfry tabelaryczne): wiersze informacji na polu cardio („Interwał 3 z 8", „Razem 3:10", „Zostało 4:50").
 - **Figure** (800, 3,5rem, 1): powtórzenia w widoku serii, czas przerwy.
 - **Headline** (800, 2,25rem, 1, wersaliki): tytuł ekranu, nazwa ćwiczenia w treningu.
 - **Title** (700, 1,375rem, 1,2, wersaliki, 0,02em): nagłówki kart i sekcji.
 - **Body** (500, 1,0625rem, 1,5): treść i etykiety kontrolek. Linie nie dłuższe niż 65–75 znaków.
 - **Label** (600, 0,8125rem): podpisy zakładek, drobne opisy, legenda.
 
-Skala rośnie co najmniej 1,33 razy między poziomami: 0,8125 · 0,9375 · 1,0625 · 1,375 · 2,25 · 3,5 · 7 · 11 rem.
+Skala rośnie co najmniej 1,33 razy między poziomami: 0,8125 · 0,9375 · 1,0625 · 1,375 · 2,25 · 3,5 · 7 · 11 rem. Trzy rozmiary ekranu cardio (Meta 1,125, Phase 3, Clock 9 rem) pochodzą z podglądu i są używane tylko na polu cardio.
 
 ### Named Rules
-**The Biggest Number Rule.** W widoku serii liczba pozostałych serii jest największym elementem ekranu, zawsze. W przerwie jest nim czas.
+**The Biggest Number Rule.** W widoku serii liczba pozostałych serii jest największym elementem ekranu, zawsze. W przerwie jest nim czas. W sesji cardio jest nim czas do końca interwału (Clock).
 
 **The Tabular Rule.** Każda liczba zmieniająca się w czasie używa cyfr tabelarycznych.
 
 ## Layout
 
-Układ jest mobile-first i jednokolumnowy. Nie ma dolnego paska zakładek: aplikacja ma dwa tryby. Poza treningiem to lista planów (Start przy każdym planie, „Nowy plan") i edytor planu. W treningu ekran należy w całości do treningu, bez nawigacji, która kusiłaby do wyjścia.
+Układ jest mobile-first i jednokolumnowy. Nie ma dolnego paska zakładek: aplikacja ma dwa tryby. Poza treningiem to lista planów (Start przy każdym planie, „Nowy plan") i edytor planu (siłowy albo cardio). W treningu ekran należy w całości do treningu, bez nawigacji, która kusiłaby do wyjścia. Sesja cardio wypełnia cały ekran polem fioletu, od krawędzi do krawędzi, bez karty i bez zaokrągleń pola.
 
 Skala odstępów co 4 px: 4, 8, 12, 16, 24, 32, 48, 64. Cele dotykowe: 44 px poza treningiem (pola listy, ikony), 56 px w treningu (cofnij, pomiń, ±15 s), 64 px dla głównej akcji (Start, Gotowe). Główna akcja treningu leży w dolnej części ekranu, w zasięgu kciuka. Na szerszych ekranach treść zostaje w wyśrodkowanej kolumnie, bez rozciągania. Edytor ćwiczenia ma sensowne wartości domyślne, by cztery pola nie tworzyły długiego formularza.
 
@@ -233,6 +285,9 @@ Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla c
 - Karta planu: nazwa, podsumowanie („5 ćwiczeń, 18 serii"), Start jako główna akcja, edycja i usuwanie rozdzielone szerokim odstępem.
 - Karta planu ma przyciski „Edytuj" (drugorzędny) i „Usuń plan" (Danger), z nazwą planu w nazwie dostępnej. „Usuń plan" otwiera w aplikacji pytanie „Usunąć plan „nazwa"?" z przyciskami „Anuluj" (drugorzędny) i „Usuń plan" (Danger), bez przycisku kredowego. Pierwsze 0,5 s po otwarciu pytania „Usuń plan" nie działa, by przypadkowe podwójne dotknięcie nie usunęło planu. Nieudane usunięcie pokazuje komunikat błędu na liście i nic nie zmienia.
 - Lista planów bez planów: „Nie masz jeszcze planów. Dodaj pierwszy plan, a potem uruchom trening." Bez planów „Nowy plan" jest główną akcją listy. Gdy są plany, główną akcją są przyciski Start na kartach, a „Nowy plan" jest akcją drugorzędną.
+- **Znacznik typu:** każda karta planu ma obok nazwy znacznik w kształcie pigułki (Label 600, min. wysokość 24 px): „Siła" (powierzchnia 2, tekst w kolorze tekstu) albo „Cardio" (fiolet, tekst on-cardio). Znacznik zawsze ma słowo, nigdy sam kolor. Start na karcie cardio jest kredowy, jak każdy Start na liście.
+- Podsumowanie karty cardio: liczba interwałów po powtórzeniach i łączny czas, np. „16 interwałów, 8:00".
+- **Wybór typu nowego planu:** „Nowy plan" otwiera w aplikacji pytanie „Jaki plan?" z przyciskami „Siła" i „Cardio" (oba drugorzędne, 56 px) oraz „Anuluj". Wybór otwiera odpowiedni edytor.
 
 ### Inputs / Fields
 - **Style:** tło powierzchnia 2, obramowanie 2 px w kolorze linii, promień 10 px, wysokość 56 px, cyfry Barlow Condensed 700.
@@ -242,6 +297,14 @@ Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla c
 - **Przesuwanie ćwiczeń w edytorze planu:** nagłówek karty ćwiczenia ma po lewej tytuł „Ćwiczenie N", a po prawej przyciski „Przesuń ćwiczenie N w górę" i „Przesuń ćwiczenie N w dół" (44 px, drugorzędne, ikony szewronów SVG). Dotknięcie zamienia ćwiczenie z sąsiadem, a numery w tytułach liczą się od nowa. „W górę" przy pierwszym i „w dół" przy ostatnim ćwiczeniu są nieaktywne. Po przesunięciu fokus zostaje na tym samym przycisku przesuniętego ćwiczenia, a gdy ten przycisk stał się nieaktywny, przechodzi na drugi przycisk tego ćwiczenia. Przesunięcie czyści komunikaty błędów walidacji. Zapisany plan trzyma nową kolejność.
 - **Zwinięta karta ćwiczenia:** tytuł „Ćwiczenie N” jest przyciskiem w nagłówku karty (min. 44 px wysokości, wypełnia miejsce po lewej od przycisków przesuwania) z ikoną szewronu rysowaną kreską 2 px (SVG, kolor drugorzędny) i atrybutem `aria-expanded`. Dotknięcie zwija lub otwiera kartę, bez animacji. Karta zwinięta to jeden zwarty blok: nagłówek z przyciskami przesuwania, nazwa ćwiczenia (tylko gdy nie jest pusta) i podsumowanie w kolorze drugorzędnym, np. „3 × 10, przerwa 1:30”. Pole nazwy, kroki liczb i „Usuń ćwiczenie” są wtedy ukryte. Przyciski przesuwania działają w obu stanach. Stan zwinięcia idzie za ćwiczeniem po przesunięciu i nie jest zapisywany z planem. Domyślnie: nowy plan ma pierwsze ćwiczenie otwarte, „Dodaj ćwiczenie” dodaje ćwiczenie otwarte, „Edytuj plan” otwiera wszystkie karty zwinięte. Nieudany zapis otwiera każdą kartę z błędem, by tekst błędu był widoczny.
 - **Edytor planu:** napisy „Nazwa planu", „Nazwa ćwiczenia", „Serie", „Powtórzenia", „Przerwa", przyciski „Dodaj ćwiczenie", „Usuń ćwiczenie", „Zapisz plan" (główna), „Anuluj"; nowy plan startuje z jednym ćwiczeniem. Edycja istniejącego planu używa tego samego ekranu z tytułem „Edytuj plan" i zapisuje plan pod tym samym identyfikatorem; „Anuluj" nie zmienia zapisanego planu. Nieudany zapis pokazuje komunikat „Nie udało się zapisać planu…" i zostawia wpisane dane na ekranie.
+
+### Edytor planu cardio
+- Ten sam ekran i te same karty co edytor siły (powierzchnia, promień 10 px, kroki liczb 56 px). Tytuł „Nowy plan cardio" albo „Edytuj plan cardio". Pole „Nazwa planu" na górze.
+- Plan to lista bloków. Karta bloku ma tytuł „Blok N", krok liczby „Powtórz" (× 1 do × 20; × 1 znaczy raz) i listę interwałów. Przyciski: „Dodaj interwał" (w bloku), „Usuń blok" (Danger, daleko od „Dodaj interwał"), pod blokami „Dodaj blok".
+- Interwał w bloku ma tytuł „Interwał N", przełącznik typu z dwoma przyciskami „Praca" i „Odpoczynek" (56 px, oba drugorzędne; wybrany ma tło powierzchni 2, obrys 2 px w kolorze tekstu, tekst 700 i `aria-pressed="true"`, nigdy tło kredy, bo kreda należy do „Zapisz plan"), pole „Nazwa interwału" i krok „Czas" (co 5 s, od 0:05 do 60:00, pokazany jako m:ss). Przycisk „Usuń interwał" jest drugorzędny i leży daleko od kroku czasu.
+- Nazwa interwału startuje jako słowo typu („Praca" albo „Odpoczynek"), więc nie trzeba jej pisać. Zmiana typu zmienia też nazwę, jeśli nazwa wciąż jest słowem poprzedniego typu.
+- Nowy plan cardio startuje z jednym blokiem „Powtórz × 8" z interwałami „Praca 0:30" i „Odpoczynek 0:30".
+- „Zapisz plan" (kreda) i „Anuluj" jak w edytorze siły; te same zasady błędów: komunikat nazywa problem i sposób naprawy, nieudany zapis zostawia dane na ekranie.
 
 ### Widok serii (ekran treningu)
 - Od góry: nazwa ćwiczenia (Headline), powtórzenia (Figure), pod nimi Counter z liczbą pozostałych serii i podpisem „serii zostało". Niżej wiersz „Dalej:" z nazwą następnego ćwiczenia (Title, kolor drugorzędny). Na dole „Gotowe" (64 px, kreda), a nad nim „Cofnij" i „Pomiń serię" (56 px).
@@ -260,6 +323,25 @@ Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla c
 ### Wznowienie treningu
 - Po powrocie z blokady, innej aplikacji lub przeładowania ekran od razu pokazuje to samo miejsce i ten sam stan przerwy, w mniej niż 3 s. Wygasły trening (po czasie bezczynności) pokazuje krótką informację i wraca do listy planów. Treść informacji: „Trening wygasł po 2 godzinach bez dotknięcia." Znika, gdy użytkownik uruchomi trening lub otworzy edytor planu.
 - „Zakończ trening" (Danger, 56 px) leży u góry widoku serii i przerwy, daleko od akcji głównej. Dotknięcie otwiera w aplikacji pytanie „Zakończyć trening?" z przyciskami „Wróć do treningu" (drugorzędny) i „Zakończ trening" (Danger), bez przycisku kredowego. Potwierdzenie usuwa trening i otwiera listę planów; „Wróć do treningu" zostawia trening bez zmian.
+
+### Sesja cardio
+- Całe pole w fiolecie (tło `cardio`, tekst `on-cardio`), odstęp wewnętrzny 20 px u góry i 16 px po bokach i na dole, elementy co 14 px. Od góry:
+  1. Wiersz Meta: po lewej nazwa planu, po prawej „Interwał X z Y" (Y liczy interwały po powtórzeniach).
+  2. Phase: „PRACA" albo „ODPOCZYNEK" (typ bieżącego interwału). Pod nim nazwa interwału (Title), tylko gdy różni się od słowa typu.
+  3. Clock: czas do końca interwału, m:ss, wyśrodkowany. Czas wynika z zapisanego znacznika startu, nigdy z tyknięć.
+  4. Pasek bieżącego interwału: wysokość 14 px, promień 7 px, tor przyciemniony, wypełnienie on-cardio rośnie z upływem interwału. Bez animacji przejścia przy `prefers-reduced-motion`.
+  5. Oś czasu: jeden segment na każdy interwał po powtórzeniach, wysokość 36 px, odstęp 4 px (2 px, gdy segmentów jest ponad 24), promień 4 px. Praca: wypełniony on-cardio. Odpoczynek: przyciemniony. Bieżący: obrys 3 px on-cardio z odsunięciem 2 px. Oś ma nazwę dostępną „Przebieg".
+  6. „Dalej: <nazwa> · <m:ss>" (Title) z następnym interwałem; przy ostatnim interwale „To ostatni interwał".
+  7. Wiersz Meta: „Razem m:ss" (czas sesji bez odliczania startu i bez pauz) po lewej, „Zostało m:ss" (do końca sesji) po prawej.
+  8. Na dole, w zasięgu kciuka: „Pauza" (64 px, pełna szerokość, tło on-cardio, tekst fiolet), pod nim rząd dwóch przycisków 56 px z obrysem on-cardio: „Zablokuj" i „Zakończ".
+- **Odliczanie startu:** po Start sesja zaczyna się od 3 s odliczania na tym samym polu: Phase „PRZYGOTUJ SIĘ", Clock liczy 0:03 → 0:00, „Dalej:" pokazuje pierwszy interwał, oś czasu nie ma bieżącego segmentu.
+- **Pauza:** Phase „PAUZA", Clock i pasek stoją, „Pauza" zmienia się w „Wznów" (to samo miejsce, ten sam wygląd). Wznowienie liczy dalej od zatrzymanego miejsca.
+- **Dźwięk:** trzy krótkie piknięcia na 3, 2 i 1 s przed końcem każdego interwału (interwał krótszy niż 4 s nie ma odliczania), potem na 0 dźwięk startu pracy albo startu odpoczynku; te dwa dźwięki muszą się wyraźnie różnić. Koniec ostatniego interwału ma dźwięk startu odpoczynku. Zmiana interwału zawsze zmienia też ekran (Phase, Clock, oś); dźwięk nigdy nie jest jedynym sygnałem. Dźwięk gra tylko, gdy strona jest widoczna i najwyżej 2 s po czasie, tak jak koniec przerwy w sile.
+- **Tryb blokady:** „Zablokuj" zamienia „Pauza", „Zablokuj" i „Zakończ" na jeden pasek „Przytrzymaj, aby odblokować" (64 px, pełna szerokość, obrys 2 px on-cardio, ikona kłódki rysowana kreską 2 px). Wiersz Meta u góry pokazuje wtedy po lewej „Ekran zablokowany" zamiast nazwy planu. Odblokowanie wymaga przytrzymania paska przez 2 s: wypełnienie on-cardio rośnie od lewej; puszczenie wcześniej cofa je do zera. Przy `prefers-reduced-motion` zamiast wypełnienia pasek pokazuje tekst „Trzymaj… 1", „Trzymaj… 2". Przy zablokowanym ekranie zwykłe dotknięcia nic nie robią. Sesja w blokadzie biegnie dalej. Przeładowanie strony zdejmuje blokadę.
+- **Zakończ:** otwiera to samo pytanie co w sile: „Zakończyć trening?" z „Wróć do treningu" (drugorzędny) i „Zakończ trening" (Danger). Sesja biegnie w tle pytania.
+- **Koniec sesji:** po ostatnim interwale ekran końca z nazwą planu i „Wróć do planów", tak jak w sile.
+- **Wznowienie:** po blokadzie telefonu albo zmianie aplikacji sesja biegnie dalej i od razu pokazuje właściwy interwał i czas. Po przeładowaniu sesja wraca w stanie pauzy na bieżącym interwale. Sesja w pauzie dłużej niż 2 godziny wygasa z tą samą informacją co trening siłowy. Sesja, która w czasie nieobecności doszła do końca, pokazuje ekran końca.
+- Bez konfetti, bez gradientów, bez animacji świętowania, bez wibracji.
 
 ### Ikona aplikacji
 - Jedna ikona: sztanga z `public/favicon.svg` (kreda `#f2f2ef` na gumie `#121314`). Bez tekstu, bez gradientu, bez talerzy w kolorach wag i bez innego stylu ikony.
@@ -285,6 +367,7 @@ Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla c
 
 ### Don't:
 - **Don't** używać kolorów talerzy w MVP. Czekają na ciężar.
+- **Don't** używać fioletu poza polem sesji cardio i znacznikiem „Cardio".
 - **Don't** dodawać gradientów, neonowych poświat, cieni jako ozdoby ani zaokrąglonych „kart z ikoną" jako struktury strony. Aplikacja nie ma wyglądać jak typowy tracker fitness.
 - **Don't** stosować kolorowego paska po lewej stronie karty (`border-left` powyżej 1 px).
 - **Don't** używać emoji ani znaków Unicode jako ikon, ani maskotek i konfetti.

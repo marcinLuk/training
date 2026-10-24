@@ -163,10 +163,10 @@ No access control changes — current model preserved. Single user. No login and
 
 ## Open Questions
 
-1. **What is the fixed get-ready time before the first interval (FR-019)?** — Owner: author. Block: no (needed before FR-019 is built).
-2. **What unlock action is hard to do by accident in a pocket (FR-024)?** — Owner: author, with a `DESIGN.md` update. Block: no (needed before FR-024 is built).
-3. **How long is the countdown before an interval end, and how many beeps (FR-022)?** — Owner: author. Block: no.
-4. **Does a running (not paused) cardio session follow the idle expiry?** Today a strength workout expires after 2 hours with no user action. A cardio session runs with no taps, so the idle rule may need to count only paused time (FR-023, FR-009). — Owner: author. Block: no.
+1. **What is the fixed get-ready time before the first interval (FR-019)?** — Resolved 2026-10-24: 3 s.
+2. **What unlock action is hard to do by accident in a pocket (FR-024)?** — Resolved 2026-10-24: press and hold for 2 s (`DESIGN.md`, "Sesja cardio").
+3. **How long is the countdown before an interval end, and how many beeps (FR-022)?** — Resolved 2026-10-24: 3 short beeps at 3, 2 and 1 s before the end; an interval shorter than 4 s has no countdown.
+4. **Does a running (not paused) cardio session follow the idle expiry?** — Resolved 2026-10-24: no. Only paused time counts: a session paused for 2 hours expires. A running session ends by itself; a session found after its planned end shows the end screen.
 5. **Is the 3-week estimate still right after the Socrates round?** The round added interval types, repeated groups, a countdown, pause and a get-ready time. The user confirmed 3 weeks at the shape cross-check; this stays as a reminder. — Owner: author. Block: no.
 6. **What is the trigger for "why now"?** The shape notes give the motivation (one app for all training) but no trigger event. — Owner: author. Block: no.
 7. **How are plans protected against loss (inherited from PRD v1 Open Question 2)?** This update itself accepts a one-time loss of saved plans. — Owner: author. Block: no.
