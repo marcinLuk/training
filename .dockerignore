@@ -1,0 +1,31 @@
+# Keep the build context small and free of local or private files.
+node_modules
+dist
+dist-ssr
+.git
+.github
+.idea
+.vscode
+.impeccable
+.claude
+.playwright-cli
+.playwright-mcp
+context
+documentation
+docs
+
+# Local env files
+.env
+.env.*
+*.local
+
+# Screenshots and logs
+/*.png
+/*.jpg
+/*.jpeg
+/*.webp
+*.log
+
+# Not needed inside the build
+Dockerfile
+.dockerignore

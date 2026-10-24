@@ -49,17 +49,17 @@ See `research.md` (PWA findings §2–§4, deploy §5, Basic auth §6, library v
 
 ### Phase 2: Register the service worker and apply updates safely
 #### Automated Verification:
-- [x] 2.1 `npx vitest run src/pwa` passes, with tests for: no reload when no update waits; a waiting update applied once on the plan list with no workout; an update that arrives during a workout, in the plan editor, or on the end screen waits and is applied when the plan list shows again with no workout; the apply call made at most once; an update check when the document becomes visible again (D3)
-- [x] 2.2 `npx vitest run src/components/App.test.ts` passes, with a test that mounts the real `App` with a mocked registration: a waiting update during a running workout does not reload; after the workout ends and the plan list shows, the update is applied (D3)
-- [x] 2.3 `npm run build && node scripts/verify-dist.mjs dist` exits 0 (D1, D2)
-- [x] 2.4 `npm test` exits 0 (D8)
+- [x] 2.1 `npx vitest run src/pwa` passes, with tests for: no reload when no update waits; a waiting update applied once on the plan list with no workout; an update that arrives during a workout, in the plan editor, or on the end screen waits and is applied when the plan list shows again with no workout; the apply call made at most once; an update check when the document becomes visible again (D3) — 6c5b55d
+- [x] 2.2 `npx vitest run src/components/App.test.ts` passes, with a test that mounts the real `App` with a mocked registration: a waiting update during a running workout does not reload; after the workout ends and the plan list shows, the update is applied (D3) — 6c5b55d
+- [x] 2.3 `npm run build && node scripts/verify-dist.mjs dist` exits 0 (D1, D2) — 6c5b55d
+- [x] 2.4 `npm test` exits 0 (D8) — 6c5b55d
 #### Manual Verification:
-- [x] 2.5 at 412×915 on `vite preview` (port 4199): after the first load and one reload, a service worker controls the page; with the browser context offline, a reload shows the plan list in the Barlow fonts, a new plan with a Polish name („Wiosłowanie”) can be saved, and a workout can be started from it (D2)
+- [x] 2.5 at 412×915 on `vite preview` (port 4199): after the first load and one reload, a service worker controls the page; with the browser context offline, a reload shows the plan list in the Barlow fonts, a new plan with a Polish name („Wiosłowanie”) can be saved, and a workout can be started from it (D2) — 6c5b55d
 
 ### Phase 3: Docker image with nginx
 #### Automated Verification:
-- [ ] 3.1 `bash scripts/smoke-image.sh` exits 0; the script builds the image from `Dockerfile`, runs it on `127.0.0.1:${SMOKE_PORT:-4197}` with the same hardening flags as `deploy/compose.yaml` (read-only root file system, a tmpfs for `/tmp`, all capabilities dropped, `no-new-privileges`), checks every header, MIME type and status of D4 with `curl`, checks that the nginx process does not run as root, and always removes its container, also when a check fails (D4)
-- [ ] 3.2 `npm test` exits 0 (D8)
+- [x] 3.1 `bash scripts/smoke-image.sh` exits 0; the script builds the image from `Dockerfile`, runs it on `127.0.0.1:${SMOKE_PORT:-4197}` with the same hardening flags as `deploy/compose.yaml` (read-only root file system, a tmpfs for `/tmp`, all capabilities dropped, `no-new-privileges`), checks every header, MIME type and status of D4 with `curl`, checks that the nginx process does not run as root, and always removes its container, also when a check fails (D4)
+- [x] 3.2 `npm test` exits 0 (D8)
 
 ### Phase 4: Server files and CI workflow
 #### Automated Verification:

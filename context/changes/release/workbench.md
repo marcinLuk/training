@@ -19,7 +19,7 @@ config note: `auto-loop.md` is modified in the tree but not committed (HEAD hold
 ## Ledger
 
 - [x] Phase 1
-- [ ] Phase 2
+- [x] Phase 2
 - [ ] Phase 3
 - [ ] Phase 4
 - [ ] Phase 5
@@ -33,7 +33,7 @@ config note: `auto-loop.md` is modified in the tree but not committed (HEAD hold
 | Phase | Builder | Rounds | State | Category | Wall / subagent | Tokens |
 |---|---|---|---|---|---|---|
 | 1 — Manifest, icons and service worker build | sonnet | 1 | CONCERNS (1 minor, 1 nit) → `bd9cd5d` | feature | 9m / 2m+ | 108k+ |
-| 2 — Register the service worker and apply updates safely | sonnet | 0 | waiting | feature | — | — |
+| 2 — Register the service worker and apply updates safely | sonnet | 1 | CONCERNS (3 minor) → `6c5b55d` | feature | 9m / 3m+ | 109k+ |
 | 3 — Docker image with nginx | sonnet | 0 | waiting | feature | — | — |
 | 4 — Server files and CI workflow | sonnet | 0 | waiting | feature | — | — |
 | 5 — Deploy guide and project docs | sonnet | 0 | waiting | feature | — | — |
@@ -47,21 +47,44 @@ Routing and category (Step 1):
 
 ## Run totals
 
-phases measured: 1 of 5 executed   ·   tokens are subagents only, 10x-critic workers excluded
+phases measured: 2 of 5 executed   ·   tokens are subagents only, 10x-critic workers excluded
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 1 | 108k+ | 100% | 9m | 100% | 2m+ |
+| feature | 2 | 217k+ | 100% | 18m | 100% | 5m+ |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 1 | 108k+ | 100% | 9m | 100% | 2m+ |
+| **total** | 2 | 217k+ | 100% | 18m | 100% | 5m+ |
 
 ---
 
+## Phase 3 — Docker image with nginx
+
+phase:     feature  ·  start 2026-10-24T13:03:20+0200  ·  end (pending)  ·  user wait 0m  ·  paused 0m
+
+### round 1          builder sonnet → critic 10x-critic
+  cost:      builder 106k tok / 15 calls / 5m11s  ·  critic unknown (Skill call returns no usage)
+  workers:   prover-1 sonnet 13:11:53→13:12:55 · criteria script 7s · walker not spawned
+  spot-checks: prover-1 E3 (include removed from the workbox location) re-run by the coordinator → confirmed
+  automated: 2/2   manual: n/a (no manual items)
+  verdict:   CONCERNS
+  blockers:  none
+  majors:    none
+  minors:    `base-image-50x-page-served` (Nit), `smoke-first-header-only` (Nit)
+  report:    reviews/phase-3-round-1.md
+  spot-check: opened Dockerfile:17 (the cited COPY into the base web root) → confirmed
+  diff:      6 new files, +400/-0
+  clauses:   12/12 mapped (port 8080, hardening flags and gzip without a mutant run)
+  scripted:  none (brief.md checkboxes by sed)
+  inconclusive: none
+  builder:   Dockerfile (node 22.23.4-alpine → nginx-unprivileged 1.31.7-alpine, uid 101, :8080), nginx default.conf + security-headers.conf, .dockerignore, .gitattributes, scripts/smoke-image.sh (67 checks, hardened run, trap cleanup)
+  note:      a stopped container `trening` (image trening-trening, 2026-10-17) belongs to the owner; it was not touched
+
 ## Phase 2 — Register the service worker and apply updates safely
 
-phase:     feature  ·  start 2026-10-24T12:53:30+0200  ·  end (pending)  ·  user wait 0m  ·  paused 0m
+phase:     feature  ·  start 2026-10-24T12:53:30+0200  ·  end 2026-10-24T13:02:59+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 9m  ·  subagent time 3m+ (critic unknown)  ·  tokens 109k (subagents only, critic unknown)  ·  rounds 1
 
 ### round 1          builder sonnet → critic 10x-critic
   cost:      builder 109k tok / 17 calls / 2m37s  ·  critic unknown (Skill call returns no usage)
