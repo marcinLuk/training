@@ -67,15 +67,15 @@ See `research.md` (entry points: `src/plans/plan.ts:9`, `src/plans/planStore.ts:
 
 ### Phase 2: Cardio session engine
 #### Automated Verification:
-- [x] 2.1 `npx vitest run src/workout/cardioEngine.test.ts` passes (D3, D4)
-- [x] 2.2 `npm test` shows 0 failing tests (baseline 0) (D3, D8)
-- [x] 2.3 `npm run build` exits 0 (D3)
+- [x] 2.1 `npx vitest run src/workout/cardioEngine.test.ts` passes (D3, D4) — 40c4517
+- [x] 2.2 `npm test` shows 0 failing tests (baseline 0) (D3, D8) — 40c4517
+- [x] 2.3 `npm run build` exits 0 (D3) — 40c4517
 
 ### Phase 3: Cardio sounds, persistence and session controller
 #### Automated Verification:
-- [ ] 3.1 `npx vitest run src/workout` passes, including new tests for the cardio sounds, the stored cardio shape, restore after reload, expiry and the sound rule (D4, D5)
-- [ ] 3.2 `npm test` shows 0 failing tests (baseline 0) (D5, D8)
-- [ ] 3.3 `npm run build` exits 0 (D4)
+- [x] 3.1 `npx vitest run src/workout` passes, including new tests for the cardio sounds, the stored cardio shape, restore after reload, expiry and the sound rule (D4, D5)
+- [x] 3.2 `npm test` shows 0 failing tests (baseline 0) (D5, D8)
+- [x] 3.3 `npm run build` exits 0 (D4)
 
 ### Phase 4: Plan list tags, plan type choice and cardio editor
 #### Automated Verification:
@@ -170,9 +170,16 @@ Changes required:
   replayed. Wake lock held while a cardio session is running or paused; released at the end.
   The 500 ms tap guard applies to Pauza/Wznów/Zakończ. Only one workout (strength or cardio) can
   exist at a time.
+- Two facts of the phase 2 engine the controller must respect (added 2026-10-24 from the phase 2
+  review, before this slice started): `cardioCues(state, from, to)` uses the window `(from, to]`
+  and the first get-ready beep is planned exactly at `startedAt`, so the first sound window must
+  start below `startedAt` (e.g. `startedAt - 1`) or the user hears 2 beeps, not 3; and the engine
+  stores only the total pause length, so on resume the controller must set its "last checked"
+  time to the resume time, or cues that already played come back at shifted times.
 Slice guardrails: fresh-mount restore tests for running, paused and finished states and for an old
 strength workout; sound tests with a fake `AudioContext`; the visible/late rule tested for a
-countdown cue and an interval-start cue.
+countdown cue and an interval-start cue; tests for the first get-ready beep (3 beeps, not 2) and
+for no replayed cue after a pause and resume.
 
 ### Phase 4: Plan list tags, plan type choice and cardio editor
 Changes required:

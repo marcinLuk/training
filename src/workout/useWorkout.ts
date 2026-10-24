@@ -17,7 +17,7 @@ import {
 } from './engine'
 import { playRestEnd, unlockAudio } from './sound'
 import { holdWakeLock, releaseWakeLock } from './wakeLock'
-import { clearWorkout, loadWorkout, saveWorkout } from './workoutStore'
+import { clearWorkout, loadWorkout, saveWorkout, storedWorkoutKind } from './workoutStore'
 
 /** How often the display re-renders during a rest. It only triggers a render, it counts nothing. */
 export const DISPLAY_TICK_MS = 250
@@ -170,10 +170,14 @@ export function useWorkout() {
     return state.value === null ? null : resolveRest(state.value, at)
   }
 
-  /** Starts a workout. Returns false when the tap came too soon after a screen change. */
+  /**
+   * Starts a workout. Returns false when the tap came too soon after a screen change, or when a
+   * cardio session is stored: only one workout exists at a time, and a strength start must not
+   * write over a running cardio session.
+   */
   function start(plan: Plan): boolean {
     const at = now()
-    if (guarded(at)) return false
+    if (guarded(at) || storedWorkoutKind() === 'cardio') return false
     unlockAudio()
     clockMs.value = at
     expired.value = false
