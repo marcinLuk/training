@@ -8,6 +8,7 @@ import WorkoutRest from './components/WorkoutRest.vue'
 import WorkoutSet from './components/WorkoutSet.vue'
 import type { Plan } from './plans/plan'
 import { deletePlan, listPlans } from './plans/planStore'
+import { useServiceWorkerUpdates } from './pwa/useServiceWorkerUpdates'
 import { useWorkout } from './workout/useWorkout'
 
 type View = { kind: 'plan-list' } | { kind: 'plan-editor'; plan?: Plan }
@@ -16,6 +17,11 @@ const view = ref<View>({ kind: 'plan-list' })
 const plans = ref(listPlans())
 const workout = useWorkout()
 const deleteError = ref<string | null>(null)
+
+useServiceWorkerUpdates({
+  planListShown: () => view.value.kind === 'plan-list',
+  workoutRunning: () => workout.view.value !== null,
+})
 
 const deleteFailureText = {
   'backup-failed':

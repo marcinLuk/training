@@ -13,11 +13,12 @@ frozen hash: 4297fccafbc6672c1d9829d0ef042b51ccffe0743c9eeaf645584cb5383cddba
 db backup: none — no §13 in auto-loop.md (no database; plans live in browser localStorage)
 owner-run: none as a slice — the real deploy (DNS, server setup, GitHub secrets, first push) is the owner's and goes to e2e-walkthrough.md
 open config proposals: 6 — §2 add `npm test` / `npx vitest run <path>` (from quality-of-life, still open since feat-mvp-plans-workout-loop) · §4 `: any` scan matches CSS `anywhere` (quality-of-life) · §5 editor accessible names (quality-of-life) · §13 `database: none` (quality-of-life) · §3 Vitest fake-timer and mutant-copy forms (feat-mvp-plans-workout-loop) · §8/§9/§10 hotspot file names, storage keys, test-adequacy traps (feat-mvp-plans-workout-loop)
+re-cuts: 2026-10-24 slice 3 (not started) gains `.gitattributes` (LF for *.sh, Dockerfile, *.conf, *.yaml, *.yml, *.mjs) — core.autocrlf=true would write CRLF shell scripts back on checkout
 config note: `auto-loop.md` is modified in the tree but not committed (HEAD holds the deleted prototype's version); this run uses the working copy, plus `npm test` from CLAUDE.md
 
 ## Ledger
 
-- [ ] Phase 1
+- [x] Phase 1
 - [ ] Phase 2
 - [ ] Phase 3
 - [ ] Phase 4
@@ -31,7 +32,7 @@ config note: `auto-loop.md` is modified in the tree but not committed (HEAD hold
 
 | Phase | Builder | Rounds | State | Category | Wall / subagent | Tokens |
 |---|---|---|---|---|---|---|
-| 1 — Manifest, icons and service worker build | sonnet | 0 | waiting | feature | — | — |
+| 1 — Manifest, icons and service worker build | sonnet | 1 | CONCERNS (1 minor, 1 nit) → `bd9cd5d` | feature | 9m / 2m+ | 108k+ |
 | 2 — Register the service worker and apply updates safely | sonnet | 0 | waiting | feature | — | — |
 | 3 — Docker image with nginx | sonnet | 0 | waiting | feature | — | — |
 | 4 — Server files and CI workflow | sonnet | 0 | waiting | feature | — | — |
@@ -46,21 +47,43 @@ Routing and category (Step 1):
 
 ## Run totals
 
-phases measured: 0 of 5 executed   ·   tokens are subagents only, 10x-critic workers excluded
+phases measured: 1 of 5 executed   ·   tokens are subagents only, 10x-critic workers excluded
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 0 | 0 | 0% | 0m | 0% | 0m |
+| feature | 1 | 108k+ | 100% | 9m | 100% | 2m+ |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 0 | 0 | 100% | 0m | 100% | 0m |
+| **total** | 1 | 108k+ | 100% | 9m | 100% | 2m+ |
 
 ---
 
+## Phase 2 — Register the service worker and apply updates safely
+
+phase:     feature  ·  start 2026-10-24T12:53:30+0200  ·  end (pending)  ·  user wait 0m  ·  paused 0m
+
+### round 1          builder sonnet → critic 10x-critic
+  cost:      builder 109k tok / 17 calls / 2m37s  ·  critic unknown (Skill call returns no usage)
+  workers:   walker sonnet 12:57:10→12:58:54 · criteria script 10s · prover not spawned
+  spot-checks: walker 2.5 screenshots opened by the coordinator → confirmed
+  automated: 4/4   manual: 1/1 (0 unreachable)
+  verdict:   CONCERNS
+  blockers:  none
+  majors:    none
+  minors:    `update-reload-drops-expired-notice`, `vacuous-no-registration-assertion`, `hook-test-unproduced-screen-state`
+  report:    reviews/phase-2-round-1.md
+  spot-check: re-ran 2.1 `npx vitest run src/pwa` → 19 passed → confirmed
+  diff:      3 tracked files changed, +117/-2 (App.vue +6, App.test.ts +111, tsconfig.app.json 1 line) + 4 new files in src/pwa/
+  clauses:   14/14 mapped (register-at-start mapped but not mutation-tested)
+  scripted:  src/App.vue, tsconfig.app.json (python replace) — vue-tsc and npm test re-run green
+  inconclusive: none
+  builder:   src/pwa/updatePolicy.ts + useServiceWorkerUpdates.ts wired in App.vue; apply only on the plan list with no workout, update() on visible; 24 new tests
+
 ## Phase 1 — Manifest, icons and service worker build
 
-phase:     feature  ·  start 2026-10-24T12:44:12+0200  ·  end (pending)  ·  user wait 0m  ·  paused 0m
+phase:     feature  ·  start 2026-10-24T12:44:12+0200  ·  end 2026-10-24T12:52:54+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 9m  ·  subagent time 2m+ (critic unknown)  ·  tokens 108k (subagents only, critic unknown)  ·  rounds 1
 
 ### round 1          builder sonnet → critic 10x-critic
   cost:      builder 108k tok / 17 calls / 2m20s  ·  critic unknown (Skill call returns no usage)

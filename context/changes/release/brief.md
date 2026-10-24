@@ -40,21 +40,21 @@ See `research.md` (PWA findings §2–§4, deploy §5, Basic auth §6, library v
 
 ### Phase 1: Manifest, icons and service worker build
 #### Automated Verification:
-- [x] 1.1 `npm run build && node scripts/verify-dist.mjs dist` exits 0; the script checks every field and icon of D1 (PNG signature and IHDR size of each icon file), the manifest link with `crossorigin="use-credentials"` in `dist/index.html`, and that `dist/sw.js` exists and its precache list names `index.html`, every file in `dist/assets/`, `favicon.svg`, every `dist/fonts/*.woff2` and every manifest icon, with a navigation fallback to `index.html`; it exits non-zero with one message per failed check (D1, D2)
-- [x] 1.2 `node -e "const p=require('./package.json');process.exit(p.devDependencies['vite-plugin-pwa']==='2.0.0'&&!(p.dependencies||{})['vite-plugin-pwa']?0:1)"` exits 0 (Guardrails)
-- [x] 1.3 `grep -n "Ikona aplikacji" DESIGN.md` prints the new section (D7)
-- [x] 1.4 `npm test` exits 0 (D8)
+- [x] 1.1 `npm run build && node scripts/verify-dist.mjs dist` exits 0; the script checks every field and icon of D1 (PNG signature and IHDR size of each icon file), the manifest link with `crossorigin="use-credentials"` in `dist/index.html`, and that `dist/sw.js` exists and its precache list names `index.html`, every file in `dist/assets/`, `favicon.svg`, every `dist/fonts/*.woff2` and every manifest icon, with a navigation fallback to `index.html`; it exits non-zero with one message per failed check (D1, D2) — bd9cd5d
+- [x] 1.2 `node -e "const p=require('./package.json');process.exit(p.devDependencies['vite-plugin-pwa']==='2.0.0'&&!(p.dependencies||{})['vite-plugin-pwa']?0:1)"` exits 0 (Guardrails) — bd9cd5d
+- [x] 1.3 `grep -n "Ikona aplikacji" DESIGN.md` prints the new section (D7) — bd9cd5d
+- [x] 1.4 `npm test` exits 0 (D8) — bd9cd5d
 #### Manual Verification:
-- [x] 1.5 the three PNG files in `public/icons/` show the light barbell from `public/favicon.svg` on `#121314`; the maskable icon fills the whole square (no rounded corners, no transparent edge) and keeps the barbell inside the central circle of 80 % of the width (D1)
+- [x] 1.5 the three PNG files in `public/icons/` show the light barbell from `public/favicon.svg` on `#121314`; the maskable icon fills the whole square (no rounded corners, no transparent edge) and keeps the barbell inside the central circle of 80 % of the width (D1) — bd9cd5d
 
 ### Phase 2: Register the service worker and apply updates safely
 #### Automated Verification:
-- [ ] 2.1 `npx vitest run src/pwa` passes, with tests for: no reload when no update waits; a waiting update applied once on the plan list with no workout; an update that arrives during a workout, in the plan editor, or on the end screen waits and is applied when the plan list shows again with no workout; the apply call made at most once; an update check when the document becomes visible again (D3)
-- [ ] 2.2 `npx vitest run src/components/App.test.ts` passes, with a test that mounts the real `App` with a mocked registration: a waiting update during a running workout does not reload; after the workout ends and the plan list shows, the update is applied (D3)
-- [ ] 2.3 `npm run build && node scripts/verify-dist.mjs dist` exits 0 (D1, D2)
-- [ ] 2.4 `npm test` exits 0 (D8)
+- [x] 2.1 `npx vitest run src/pwa` passes, with tests for: no reload when no update waits; a waiting update applied once on the plan list with no workout; an update that arrives during a workout, in the plan editor, or on the end screen waits and is applied when the plan list shows again with no workout; the apply call made at most once; an update check when the document becomes visible again (D3)
+- [x] 2.2 `npx vitest run src/components/App.test.ts` passes, with a test that mounts the real `App` with a mocked registration: a waiting update during a running workout does not reload; after the workout ends and the plan list shows, the update is applied (D3)
+- [x] 2.3 `npm run build && node scripts/verify-dist.mjs dist` exits 0 (D1, D2)
+- [x] 2.4 `npm test` exits 0 (D8)
 #### Manual Verification:
-- [ ] 2.5 at 412×915 on `vite preview` (port 4199): after the first load and one reload, a service worker controls the page; with the browser context offline, a reload shows the plan list in the Barlow fonts, a new plan with a Polish name („Wiosłowanie”) can be saved, and a workout can be started from it (D2)
+- [x] 2.5 at 412×915 on `vite preview` (port 4199): after the first load and one reload, a service worker controls the page; with the browser context offline, a reload shows the plan list in the Barlow fonts, a new plan with a Polish name („Wiosłowanie”) can be saved, and a workout can be started from it (D2)
 
 ### Phase 3: Docker image with nginx
 #### Automated Verification:
@@ -102,6 +102,7 @@ Slice guardrails: do not change `src/workout/` or `src/plans/`; read the workout
 Changes required:
 - `Dockerfile`: multi-stage. Build stage on a pinned `node:22-alpine` tag: `npm ci`, `npm run build`. Final stage on a pinned `nginxinc/nginx-unprivileged` alpine tag: copy `dist/` and `deploy/nginx/default.conf`, listen on 8080, run as the image's non-root user. Add the label `org.opencontainers.image.source=https://github.com/marcinLuk/training` so GHCR links the package to the repo. Check that the tags exist (`docker pull` works) before you pin them.
 - `.dockerignore`: keep `node_modules`, `dist`, `.git`, `context`, local env files and screenshots out of the build context.
+- `.gitattributes`: force LF line endings for `*.sh`, `Dockerfile`, `*.conf`, `*.yaml`, `*.yml` and `*.mjs`. This checkout has `core.autocrlf=true`, so without it git writes these files back with CRLF, and bash and nginx fail on a CRLF file. After you add it, confirm with `git check-attr eol -- scripts/smoke-image.sh Dockerfile deploy/nginx/default.conf`.
 - `deploy/nginx/default.conf`: the rules of D4; `server_tokens off`; `try_files $uri $uri/ =404` (no SPA rewrite: the app has no router); gzip for text types; the same security headers in every `location` (an `add_header` in a `location` cancels the server-level ones), with `always`: `X-Content-Type-Options: nosniff`, `Referrer-Policy: no-referrer`, `X-Robots-Tag: noindex, nofollow`. Fonts, icons and `favicon.svg` have no hash in their names: give them `no-cache`.
 - `scripts/smoke-image.sh`: as row 3.1. Image tag `trening:smoke` by default (an optional first argument may set another tag, so CI can reuse the built image). Use `set -euo pipefail` and a `trap` that removes the container.
 Slice guardrails: no Basic auth in the image (Traefik does it on the server); no change in `src/`.
