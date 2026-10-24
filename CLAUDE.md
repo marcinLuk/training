@@ -69,6 +69,9 @@ npm run build        # vue-tsc -b (type check), then vite build into dist/
 npm run preview      # serve the built dist/ locally
 npm test             # Vitest, one run (vitest run)
 npm run test:watch   # Vitest watch mode
+node scripts/verify-dist.mjs dist       # check dist/ (manifest, icons, service worker precache); run after a build
+bash scripts/smoke-image.sh             # build the Docker image and test it (needs Docker)
+bash deploy/server/deploy.test.sh       # test deploy/server/deploy.sh against a stub docker
 ```
 
 `npm run build` type-checks `src/` and the test files, and fails on type errors and on unused locals/parameters (`noUnusedLocals`, `noUnusedParameters`). `npm test` runs the unit and component tests. There is no linter or formatter yet.
@@ -89,6 +92,13 @@ These are requirements, not preferences. Check `context/foundation/prd.md` befor
 - **Target: Android phone, current Chrome.** Design for a phone first. iOS and desktop are not targets.
 - **Out of scope for the MVP:** workout history, statistics, calendar, exercise library, cardio, rep counting, voice guidance, vibration, Google Play. See `## Non-Goals` in the PRD.
 
-## Deployment (planned, not set up yet)
+## Deployment
 
-Static files from `dist/`, served by Docker on the author's private server, deployed by GitHub Actions on merge to `main`, behind htpasswd Basic auth. With Basic auth in front, the manifest link must use `crossorigin="use-credentials"`, or Chrome cannot install the PWA. No PWA manifest, service worker, Dockerfile or CI workflow exists yet.
+The app ships as an installable, offline PWA (`vite-plugin-pwa`, `generateSW`) and as a Docker image. The image is nginx with `dist/` (`Dockerfile`, `deploy/nginx/`). It runs as a non-root user on port 8080. The address is `https://trening.marcinlukaszek.pl/`.
+
+- `.github/workflows/deploy.yml` runs on a push to `main`: job `test`, then job `image` (smoke test, push to `ghcr.io/marcinluk/training:<sha>` and `:latest`), then job `deploy` (SSH, only when the repository variable `DEPLOY_ENABLED` is `true`).
+- On the server, Traefik in Docker (`deploy/traefik/compose.yaml`) gives TLS from Let's Encrypt and applies htpasswd Basic auth. The app compose file is `deploy/compose.yaml`. The deploy key can run only `deploy/server/deploy.sh`, which takes a commit SHA.
+- The users file, `.env` files, `acme.json` and the deploy key live only on the server or in GitHub secrets. The repository is public: never commit them.
+- With Basic auth in front, the manifest link uses `crossorigin="use-credentials"` (`useCredentials: true` in `vite.config.ts`), or Chrome cannot install the PWA.
+- Updates are silent. The app reloads for a new version only on the plan list with no workout (`src/pwa/`).
+- `docs/deploy.md` is the step-by-step guide for the one-time server setup, the GitHub secrets, the first release, rollback and troubleshooting. No agent may contact the server.

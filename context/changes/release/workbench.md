@@ -22,7 +22,7 @@ config note: `auto-loop.md` is modified in the tree but not committed (HEAD hold
 - [x] Phase 1
 - [x] Phase 2
 - [x] Phase 3
-- [ ] Phase 4
+- [x] Phase 4
 - [ ] Phase 5
 - [ ] goal review
 - [ ] e2e walkthrough
@@ -36,7 +36,7 @@ config note: `auto-loop.md` is modified in the tree but not committed (HEAD hold
 | 1 — Manifest, icons and service worker build | sonnet | 1 | CONCERNS (1 minor, 1 nit) → `bd9cd5d` | feature | 9m / 2m+ | 108k+ |
 | 2 — Register the service worker and apply updates safely | sonnet | 1 | CONCERNS (3 minor) → `6c5b55d` | feature | 9m / 3m+ | 109k+ |
 | 3 — Docker image with nginx | sonnet | 1 | CONCERNS (2 nit) → `b46ed30` | feature | 11m / 5m+ | 106k+ |
-| 4 — Server files and CI workflow | sonnet | 0 | waiting | feature | — | — |
+| 4 — Server files and CI workflow | sonnet | 1 | CONCERNS (3 minor) → `48f4160` | feature | 8m / 3m+ | 112k+ |
 | 5 — Deploy guide and project docs | sonnet | 0 | waiting | feature | — | — |
 
 Routing and category (Step 1):
@@ -48,21 +48,44 @@ Routing and category (Step 1):
 
 ## Run totals
 
-phases measured: 3 of 5 executed   ·   tokens are subagents only, 10x-critic workers excluded
+phases measured: 4 of 5 executed   ·   tokens are subagents only, 10x-critic workers excluded
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 3 | 323k+ | 100% | 29m | 100% | 10m+ |
+| feature | 4 | 435k+ | 100% | 37m | 100% | 13m+ |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 3 | 323k+ | 100% | 29m | 100% | 10m+ |
+| **total** | 4 | 435k+ | 100% | 37m | 100% | 13m+ |
 
 ---
 
+## Phase 5 — Deploy guide and project docs
+
+phase:     feature  ·  start 2026-10-24T13:23:24+0200  ·  end (pending)  ·  user wait 0m  ·  paused 0m
+
+### round 1          builder sonnet → critic 10x-critic
+  cost:      builder 193k tok / 30 calls / 8m28s  ·  critic unknown (Skill call returns no usage)
+  workers:   prover-1 sonnet 13:35→13:40:10 · criteria script 3s · walker not spawned (5.6 is a reading check)
+  spot-checks: prover-1 E3 (ubuntu:24.04 sshd simulation of the guide's authorized_keys and sudoers lines) re-run by the coordinator → confirmed
+  automated: 5/5   manual: 1/1 (0 unreachable)
+  verdict:   CONCERNS
+  blockers:  none
+  majors:    none
+  minors:    `asset-check-path-doubled`, `cert-issue-timing-contradiction`, `server-files-resync-missing`, `docker-socket-ro-misleading`
+  report:    reviews/phase-5-round-1.md
+  spot-check: opened docs/deploy.md:558-562 → the grep prints `/assets/<name>` and the next line appends it after `/assets/` → confirmed
+  diff:      CLAUDE.md +12/-2, README.md +5/-1, docs/deploy.md new (665 lines)
+  clauses:   all guide sections mapped to a repo file:line or a doc URL
+  scripted:  CLAUDE.md, README.md (python replace) — content re-checked by the critic
+  inconclusive: none
+  incident:  the builder's first write of docs/deploy.md used a bash heredoc; the guide's own `EOF` line ended it early and the rest of the guide text ran as shell for a moment (killed). Checked afterwards: no git push (origin/main 9853694), no GitHub secrets, variables or runs (`gh secret list`, `gh variable list`, `gh run list` all empty), no stray file in the repo or in the home folder outside ~/.ssh; two `sudo` lines failed on "password is required". NOT checked (owner's call, ~/.ssh is off limits): whether `~/.ssh/trening_deploy` was created; whether a `curl`/`getent` line reached the domain. The shared rules now forbid heredoc writes.
+  builder:   docs/deploy.md (10 sections, 17 steps, ASD-STE100), CLAUDE.md Deployment + Commands, README.md Deploy section
+
 ## Phase 4 — Server files and CI workflow
 
-phase:     feature  ·  start 2026-10-24T13:14:47+0200  ·  end (pending)  ·  user wait 0m  ·  paused 0m
+phase:     feature  ·  start 2026-10-24T13:14:47+0200  ·  end 2026-10-24T13:23:14+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 8m  ·  subagent time 3m+ (critic unknown)  ·  tokens 112k (subagents only, critic unknown)  ·  rounds 1
 
 ### round 1          builder sonnet → critic 10x-critic
   cost:      builder 112k tok / 17 calls / 2m58s  ·  critic unknown (Skill call returns no usage)

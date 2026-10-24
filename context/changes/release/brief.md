@@ -63,21 +63,21 @@ See `research.md` (PWA findings §2–§4, deploy §5, Basic auth §6, library v
 
 ### Phase 4: Server files and CI workflow
 #### Automated Verification:
-- [x] 4.1 `bash deploy/server/deploy.test.sh` exits 0, with cases (run against a stub `docker` on `PATH` and a scratch app directory) for: a 40-character lowercase hex SHA pulls that tag and then restarts the app, and the stored tag is the new SHA; an empty argument, `latest`, an uppercase SHA, a short SHA, and a SHA followed by `; rm -rf /` are refused with a non-zero exit and no `docker` call; a failed pull exits non-zero and keeps the old stored tag (D5)
-- [x] 4.2 `ACME_EMAIL=owner@example.invalid docker compose -f deploy/traefik/compose.yaml config --quiet && docker compose -f deploy/compose.yaml config --quiet` exits 0 (D5)
-- [x] 4.3 `python3 -c "import yaml;d=yaml.safe_load(open('.github/workflows/deploy.yml'));o=d.get('on',d.get(True));j=d['jobs'];assert o['push']['branches']==['main'];assert set(j)=={'test','image','deploy'};assert j['image']['needs'] in ('test',['test']);assert j['deploy']['needs'] in ('image',['image']);assert 'vars.DEPLOY_ENABLED' in j['deploy']['if'];print('ok')"` prints `ok` (D6)
-- [x] 4.4 `! grep -rnE "BEGIN [A-Z ]*PRIVATE KEY|@gmail|[$]apr1[$]|[$]2y[$]|password *[:=] *[^ <$]" Dockerfile deploy scripts .github` exits 0 (Guardrails)
-- [x] 4.5 `npm test` exits 0 (D8)
+- [x] 4.1 `bash deploy/server/deploy.test.sh` exits 0, with cases (run against a stub `docker` on `PATH` and a scratch app directory) for: a 40-character lowercase hex SHA pulls that tag and then restarts the app, and the stored tag is the new SHA; an empty argument, `latest`, an uppercase SHA, a short SHA, and a SHA followed by `; rm -rf /` are refused with a non-zero exit and no `docker` call; a failed pull exits non-zero and keeps the old stored tag (D5) — 48f4160
+- [x] 4.2 `ACME_EMAIL=owner@example.invalid docker compose -f deploy/traefik/compose.yaml config --quiet && docker compose -f deploy/compose.yaml config --quiet` exits 0 (D5) — 48f4160
+- [x] 4.3 `python3 -c "import yaml;d=yaml.safe_load(open('.github/workflows/deploy.yml'));o=d.get('on',d.get(True));j=d['jobs'];assert o['push']['branches']==['main'];assert set(j)=={'test','image','deploy'};assert j['image']['needs'] in ('test',['test']);assert j['deploy']['needs'] in ('image',['image']);assert 'vars.DEPLOY_ENABLED' in j['deploy']['if'];print('ok')"` prints `ok` (D6) — 48f4160
+- [x] 4.4 `! grep -rnE "BEGIN [A-Z ]*PRIVATE KEY|@gmail|[$]apr1[$]|[$]2y[$]|password *[:=] *[^ <$]" Dockerfile deploy scripts .github` exits 0 (Guardrails) — 48f4160
+- [x] 4.5 `npm test` exits 0 (D8) — 48f4160
 
 ### Phase 5: Deploy guide and project docs
 #### Automated Verification:
-- [ ] 5.1 `for n in $(grep -oE "(secrets|vars)\.[A-Z_]+" .github/workflows/deploy.yml | cut -d. -f2 | sort -u | grep -v GITHUB_TOKEN); do grep -q "$n" docs/deploy.md || { echo "missing $n"; exit 1; }; done` exits 0 (D7)
-- [ ] 5.2 `for f in Dockerfile deploy/nginx/default.conf deploy/compose.yaml deploy/traefik/compose.yaml deploy/server/deploy.sh scripts/smoke-image.sh scripts/verify-dist.mjs .github/workflows/deploy.yml; do grep -qF "$f" docs/deploy.md || { echo "missing $f"; exit 1; }; done` exits 0 (D7)
-- [ ] 5.3 `! grep -nE "@gmail|\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" docs/deploy.md | grep -vE "127\.0\.0\.1|0\.0\.0\.0"` exits 0 (Guardrails)
-- [ ] 5.4 `grep -q "docs/deploy.md" CLAUDE.md && grep -q "docs/deploy.md" README.md && ! grep -q "No PWA manifest, service worker, Dockerfile or CI workflow exists yet" CLAUDE.md` exits 0 (D7)
-- [ ] 5.5 `npm test` exits 0 (D8)
+- [x] 5.1 `for n in $(grep -oE "(secrets|vars)\.[A-Z_]+" .github/workflows/deploy.yml | cut -d. -f2 | sort -u | grep -v GITHUB_TOKEN); do grep -q "$n" docs/deploy.md || { echo "missing $n"; exit 1; }; done` exits 0 (D7)
+- [x] 5.2 `for f in Dockerfile deploy/nginx/default.conf deploy/compose.yaml deploy/traefik/compose.yaml deploy/server/deploy.sh scripts/smoke-image.sh scripts/verify-dist.mjs .github/workflows/deploy.yml; do grep -qF "$f" docs/deploy.md || { echo "missing $f"; exit 1; }; done` exits 0 (D7)
+- [x] 5.3 `! grep -nE "@gmail|\b([0-9]{1,3}\.){3}[0-9]{1,3}\b" docs/deploy.md | grep -vE "127\.0\.0\.1|0\.0\.0\.0"` exits 0 (Guardrails)
+- [x] 5.4 `grep -q "docs/deploy.md" CLAUDE.md && grep -q "docs/deploy.md" README.md && ! grep -q "No PWA manifest, service worker, Dockerfile or CI workflow exists yet" CLAUDE.md` exits 0 (D7)
+- [x] 5.5 `npm test` exits 0 (D8)
 #### Manual Verification:
-- [ ] 5.6 the critic follows `docs/deploy.md` against the repo files: every path, port, network name, env name, secret name, image name and command matches `Dockerfile`, `deploy/`, `scripts/` and the workflow; the one-time setup order works on a fresh Ubuntu 24.04 server with key-only SSH, `ufw` and an `AllowUsers` list; the text follows ASD-STE100 (D7)
+- [x] 5.6 the critic follows `docs/deploy.md` against the repo files: every path, port, network name, env name, secret name, image name and command matches `Dockerfile`, `deploy/`, `scripts/` and the workflow; the one-time setup order works on a fresh Ubuntu 24.04 server with key-only SSH, `ufw` and an `AllowUsers` list; the text follows ASD-STE100 (D7)
 
 ## Slice details
 
