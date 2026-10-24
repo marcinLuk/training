@@ -1,10 +1,10 @@
 <script setup lang="ts">
 import { ref } from 'vue'
-import { summarizePlan, type Plan } from '../plans/plan'
+import { summarizePlan, type AnyPlan } from '../plans/plan'
 import FieldError from './FieldError.vue'
 import PlanDeleteConfirm from './PlanDeleteConfirm.vue'
 
-defineProps<{ plans: Plan[]; expiredNotice?: boolean; errorText?: string }>()
+defineProps<{ plans: AnyPlan[]; expiredNotice?: boolean; errorText?: string }>()
 const emit = defineEmits<{
   'new-plan': []
   start: [planId: string]
@@ -12,7 +12,7 @@ const emit = defineEmits<{
   delete: [planId: string]
 }>()
 
-const pendingDelete = ref<Plan | null>(null)
+const pendingDelete = ref<AnyPlan | null>(null)
 
 function confirmDelete(): void {
   if (pendingDelete.value === null) return

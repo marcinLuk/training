@@ -6,15 +6,15 @@ import PlanList from './components/PlanList.vue'
 import WorkoutEnd from './components/WorkoutEnd.vue'
 import WorkoutRest from './components/WorkoutRest.vue'
 import WorkoutSet from './components/WorkoutSet.vue'
-import type { Plan } from './plans/plan'
-import { deletePlan, listPlans } from './plans/planStore'
+import { isCardioPlan, type Plan } from './plans/plan'
+import { deletePlan, listAllPlans } from './plans/planStore'
 import { useServiceWorkerUpdates } from './pwa/useServiceWorkerUpdates'
 import { useWorkout } from './workout/useWorkout'
 
 type View = { kind: 'plan-list' } | { kind: 'plan-editor'; plan?: Plan }
 
 const view = ref<View>({ kind: 'plan-list' })
-const plans = ref(listPlans())
+const plans = ref(listAllPlans())
 const workout = useWorkout()
 const deleteError = ref<string | null>(null)
 
@@ -32,19 +32,20 @@ const deleteFailureText = {
 
 function showList(): void {
   deleteError.value = null
-  plans.value = listPlans()
+  plans.value = listAllPlans()
   view.value = { kind: 'plan-list' }
 }
 
 function startPlan(planId: string): void {
   const plan = plans.value.find((candidate) => candidate.id === planId)
-  if (plan !== undefined) workout.start(plan)
+  if (plan !== undefined && !isCardioPlan(plan)) workout.start(plan)
 }
 
 function openEditor(planId?: string): void {
   workout.dismissExpired()
   deleteError.value = null
   const plan = planId === undefined ? undefined : plans.value.find((candidate) => candidate.id === planId)
+  if (plan !== undefined && isCardioPlan(plan)) return
   view.value = plan === undefined ? { kind: 'plan-editor' } : { kind: 'plan-editor', plan }
 }
 

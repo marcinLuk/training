@@ -1,3 +1,5 @@
+import { formatRest } from './format'
+
 export interface Exercise {
   id: string
   name: string
@@ -7,9 +9,43 @@ export interface Exercise {
 }
 
 export interface Plan {
+  /** Absent in plans stored before the cardio module; a plan with no `type` is strength. */
+  type?: 'strength'
   id: string
   name: string
   exercises: Exercise[]
+}
+
+export type IntervalKind = 'work' | 'rest'
+
+export interface CardioInterval {
+  id: string
+  name: string
+  seconds: number
+  kind: IntervalKind
+}
+
+export interface CardioBlock {
+  id: string
+  repeat: number
+  intervals: CardioInterval[]
+}
+
+export interface CardioPlan {
+  type: 'cardio'
+  id: string
+  name: string
+  blocks: CardioBlock[]
+}
+
+/** Any plan the app stores: strength (`Plan`) or cardio. */
+export type AnyPlan = Plan | CardioPlan
+
+/** One step of a cardio session after the block repeats are applied. */
+export interface ExpandedInterval {
+  name: string
+  seconds: number
+  kind: IntervalKind
 }
 
 export const DEFAULT_SETS = 3
@@ -22,8 +58,26 @@ export const LIMITS = {
   rest: { min: 0, max: 600, step: 15 },
 } as const
 
+export const CARDIO_LIMITS = {
+  repeat: { min: 1, max: 20 },
+  seconds: { min: 5, max: 3600, step: 5 },
+} as const
+
+export const DEFAULT_REPEAT = 8
+export const DEFAULT_INTERVAL_SECONDS = 30
+
+/** The default interval name is the Polish word for its type. */
+export const INTERVAL_KIND_NAMES: Record<IntervalKind, string> = {
+  work: 'Praca',
+  rest: 'Odpoczynek',
+}
+
 export interface ValidationError {
-  /** Where the error belongs: `name`, `exercises`, `exercises.<index>.name|sets|reps|restSeconds`. */
+  /**
+   * Where the error belongs. Strength: `name`, `exercises`, `exercises.<index>.name|sets|reps|restSeconds`.
+   * Cardio: `name`, `blocks`, `blocks.<b>.repeat`, `blocks.<b>.intervals`,
+   * `blocks.<b>.intervals.<i>.name|seconds`.
+   */
   path: string
   /** Polish text that names the fix. */
   message: string
@@ -51,9 +105,50 @@ export function createPlan(): Plan {
   return { id: newPlanId(), name: '', exercises: [] }
 }
 
-/** A deep copy, so an editor can change values without touching the stored list. */
-export function clonePlan(plan: Plan): Plan {
+export function isCardioPlan(plan: AnyPlan): plan is CardioPlan {
+  return plan.type === 'cardio'
+}
+
+export function createInterval(kind: IntervalKind): CardioInterval {
   return {
+    id: crypto.randomUUID(),
+    name: INTERVAL_KIND_NAMES[kind],
+    seconds: DEFAULT_INTERVAL_SECONDS,
+    kind,
+  }
+}
+
+/** A block of "Praca" and "Odpoczynek", repeated the default number of times. */
+export function createBlock(): CardioBlock {
+  return {
+    id: crypto.randomUUID(),
+    repeat: DEFAULT_REPEAT,
+    intervals: [createInterval('work'), createInterval('rest')],
+  }
+}
+
+export function createCardioPlan(): CardioPlan {
+  return { type: 'cardio', id: newPlanId(), name: '', blocks: [createBlock()] }
+}
+
+/** A deep copy, so an editor can change values without touching the stored list. */
+export function clonePlan(plan: Plan): Plan
+export function clonePlan(plan: CardioPlan): CardioPlan
+export function clonePlan(plan: AnyPlan): AnyPlan
+export function clonePlan(plan: AnyPlan): AnyPlan {
+  if (isCardioPlan(plan)) {
+    return {
+      type: 'cardio',
+      id: plan.id,
+      name: plan.name,
+      blocks: plan.blocks.map((block) => ({
+        ...block,
+        intervals: block.intervals.map((interval) => ({ ...interval })),
+      })),
+    }
+  }
+  return {
+    ...(plan.type === undefined ? {} : { type: plan.type }),
     id: plan.id,
     name: plan.name,
     exercises: plan.exercises.map((exercise) => ({ ...exercise })),
@@ -71,7 +166,66 @@ function isValidRest(value: unknown): boolean {
   )
 }
 
-export function validatePlan(plan: Plan): ValidationError[] {
+function isValidIntervalSeconds(value: unknown): boolean {
+  return (
+    isIntegerInRange(value, CARDIO_LIMITS.seconds.min, CARDIO_LIMITS.seconds.max) &&
+    (value as number) % CARDIO_LIMITS.seconds.step === 0
+  )
+}
+
+function validateCardioPlan(plan: CardioPlan): ValidationError[] {
+  const errors: ValidationError[] = []
+
+  if (plan.name.trim() === '') {
+    errors.push({ path: 'name', message: 'Wpisz nazwę planu.' })
+  }
+
+  if (plan.blocks.length === 0) {
+    errors.push({ path: 'blocks', message: 'Dodaj co najmniej jeden blok.' })
+  }
+
+  plan.blocks.forEach((block, blockIndex) => {
+    const blockPosition = blockIndex + 1
+    const blockPath = `blocks.${blockIndex}`
+
+    if (!isIntegerInRange(block.repeat, CARDIO_LIMITS.repeat.min, CARDIO_LIMITS.repeat.max)) {
+      errors.push({
+        path: `${blockPath}.repeat`,
+        message: `Blok ${blockPosition}: ustaw powtórzenia od ${CARDIO_LIMITS.repeat.min} do ${CARDIO_LIMITS.repeat.max}.`,
+      })
+    }
+    if (block.intervals.length === 0) {
+      errors.push({
+        path: `${blockPath}.intervals`,
+        message: `Blok ${blockPosition}: dodaj co najmniej jeden interwał.`,
+      })
+    }
+
+    block.intervals.forEach((interval, intervalIndex) => {
+      const intervalPosition = intervalIndex + 1
+      const intervalPath = `${blockPath}.intervals.${intervalIndex}`
+
+      if (interval.name.trim() === '') {
+        errors.push({
+          path: `${intervalPath}.name`,
+          message: `Blok ${blockPosition}: wpisz nazwę interwału ${intervalPosition}.`,
+        })
+      }
+      if (!isValidIntervalSeconds(interval.seconds)) {
+        errors.push({
+          path: `${intervalPath}.seconds`,
+          message: `Blok ${blockPosition}, interwał ${intervalPosition}: ustaw czas od ${CARDIO_LIMITS.seconds.min} do ${CARDIO_LIMITS.seconds.max} s, co ${CARDIO_LIMITS.seconds.step} s.`,
+        })
+      }
+    })
+  })
+
+  return errors
+}
+
+export function validatePlan(plan: AnyPlan): ValidationError[] {
+  if (isCardioPlan(plan)) return validateCardioPlan(plan)
+
   const errors: ValidationError[] = []
 
   if (plan.name.trim() === '') {
@@ -126,8 +280,25 @@ export function pluralPl(count: number, one: string, few: string, many: string):
   return many
 }
 
-/** Plan card summary, for example "2 ćwiczenia, 6 serii". */
-export function summarizePlan(plan: Plan): string {
+/** The intervals of a cardio plan in running order, with every block repeated. */
+export function expandCardioPlan(plan: CardioPlan): ExpandedInterval[] {
+  return plan.blocks.flatMap((block) =>
+    Array.from({ length: block.repeat }, () =>
+      block.intervals.map(({ name, seconds, kind }) => ({ name, seconds, kind })),
+    ).flat(),
+  )
+}
+
+function summarizeCardioPlan(plan: CardioPlan): string {
+  const intervals = expandCardioPlan(plan)
+  const totalSeconds = intervals.reduce((total, interval) => total + interval.seconds, 0)
+  const word = pluralPl(intervals.length, 'interwał', 'interwały', 'interwałów')
+  return `${intervals.length} ${word}, ${formatRest(totalSeconds)}`
+}
+
+/** Plan card summary, for example "2 ćwiczenia, 6 serii" or "16 interwałów, 8:00". */
+export function summarizePlan(plan: AnyPlan): string {
+  if (isCardioPlan(plan)) return summarizeCardioPlan(plan)
   const exerciseCount = plan.exercises.length
   const setCount = plan.exercises.reduce((total, exercise) => total + exercise.sets, 0)
   const exercises = pluralPl(exerciseCount, 'ćwiczenie', 'ćwiczenia', 'ćwiczeń')
