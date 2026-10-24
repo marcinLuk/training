@@ -14,7 +14,7 @@ owner-run: D9 — sound in a pocket, screen on, real phone lock (needs the owner
 open config proposals: none found — the 2026-10-24 init applied every open proposal from feat-mvp-plans-workout-loop, quality-of-life and release (§5 exact `run-code` quoting not copied; marked "check there")
 
 Ledger:
-- [ ] Phase 1
+- [x] Phase 1
 - [ ] Phase 2
 - [ ] Phase 3
 - [ ] Phase 4
@@ -31,7 +31,7 @@ Routing (Step 1): every slice → sonnet — every slice writes production code 
 
 | Phase | Builder | Rounds | State | Category | Wall / subagent | Tokens |
 |---|---|---|---|---|---|---|
-| 1 — Cardio plan model and storage | sonnet | 0 | waiting | feature — new cardio plan type and its storage | — | — |
+| 1 — Cardio plan model and storage | sonnet | 2 | CONCERNS (1 minor) → `4ac1247` | feature — new cardio plan type and its storage | 17m / 6m+ | 231k+ |
 | 2 — Cardio session engine | sonnet | 0 | waiting | feature — new interval timeline, pause and sound cues | — | — |
 | 3 — Cardio sounds, persistence and session controller | sonnet | 0 | waiting | feature — new sounds, stored cardio session, resume rules | — | — |
 | 4 — Plan list tags, plan type choice and cardio editor | sonnet | 0 | waiting | feature — new UI for cardio plans | — | — |
@@ -40,23 +40,48 @@ Routing (Step 1): every slice → sonnet — every slice writes production code 
 
 ## Run totals
 
-phases measured: 0 of 6 executed   ·   tokens are subagents only, 10x-critic workers excluded
+phases measured: 1 of 6 executed (0 wall unknown)   ·   tokens are subagents only, 10x-critic usage not returned (+)
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 0 | 0 | 0% | 0m | 0% | 0m |
+| feature | 1 | 231k+ | 100% | 17m | 100% | 6m+ |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 0 | 0 | — | 0m | — | 0m |
+| **total** | 1 | 231k+ | 100% | 17m | 100% | 6m+ |
+
+Closed findings: `cardio-start-guard-unpinned`, `unknown-plan-type-test-vacuous`, `cardio-interval-missing-field-unpinned`
+Open (Minor/Nit, never fixed by design): `plan-union-shape-deviates` — Plan stays the strength type, AnyPlan is the union; strength plans are never written with type 'strength'
 
 owner-run (not measured): D9
 
 ---
 
+## Phase 2 — Cardio session engine
+
+phase:     feature  ·  start 2026-10-24T17:32:06+0200
+
+### round 1          builder sonnet → critic 10x-critic
+  cost:      builder 120k tok / 46 calls / 4m45s  ·  critic unknown (no usage returned)
+  workers:   criteria script 7s · walker none · prover none (coordinator ran 36 mutants + a probe test)
+  spot-checks: criteria log (34 passed = 34 it blocks, no skips) → confirmed; mutant M01 re-run → confirmed
+  automated: 3/3   manual: n/a
+  verdict:   CONCERNS (Minor only)
+  blockers:  none
+  majors:    none
+  minors:    `getready-first-beep-at-start-instant`, `cues-window-before-resume-misplaces-cues` (never sent to a builder; carried into phase 3 slice details as controller requirements — re-cut logged below)
+  report:    reviews/phase-2-round-1.md
+  spot-check: re-ran 2.1 → 34 passed → confirmed
+  diff:      new: src/workout/cardioEngine.ts 237, src/workout/cardioEngine.test.ts 490 (34 tests); no tracked production file changed
+  clauses:   34/34 mapped to a test (0 unmapped); builder's own 8 mutants all red
+  scripted:  none
+  integrity: plan-freeze clean; never-weaken scan clean
+  builder:   pure engine; only total pause length stored → phase 3 must restart the sound window at the resume time (docblock of cardioCues)
+
 ## Phase 1 — Cardio plan model and storage
 
-phase:     feature  ·  start 2026-10-24T17:15:07+0200
+phase:     feature  ·  start 2026-10-24T17:15:07+0200  ·  end 2026-10-24T17:31:57+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 17m  ·  subagent time 6m + critic unknown  ·  tokens 231k + critic unknown (subagents only, 10x-critic workers excluded)  ·  rounds 2  ·  commit `4ac1247`
 
 ### round 2          builder sonnet → critic 10x-critic
   cost:      builder 96k tok / 31 calls / 2m08s  ·  critic unknown (no usage returned)

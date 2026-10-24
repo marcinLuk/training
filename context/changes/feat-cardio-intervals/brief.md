@@ -61,15 +61,15 @@ See `research.md` (entry points: `src/plans/plan.ts:9`, `src/plans/planStore.ts:
 
 ### Phase 1: Cardio plan model and storage
 #### Automated Verification:
-- [x] 1.1 `npx vitest run src/plans` passes, including new tests for cardio validation, storage round trip, old-shape load and the summary (D1)
-- [x] 1.2 `npm test` shows 0 failing tests (baseline 0) (D1, D8)
-- [x] 1.3 `npm run build` exits 0 (D1)
+- [x] 1.1 `npx vitest run src/plans` passes, including new tests for cardio validation, storage round trip, old-shape load and the summary (D1) — 4ac1247
+- [x] 1.2 `npm test` shows 0 failing tests (baseline 0) (D1, D8) — 4ac1247
+- [x] 1.3 `npm run build` exits 0 (D1) — 4ac1247
 
 ### Phase 2: Cardio session engine
 #### Automated Verification:
-- [ ] 2.1 `npx vitest run src/workout/cardioEngine.test.ts` passes (D3, D4)
-- [ ] 2.2 `npm test` shows 0 failing tests (baseline 0) (D3, D8)
-- [ ] 2.3 `npm run build` exits 0 (D3)
+- [x] 2.1 `npx vitest run src/workout/cardioEngine.test.ts` passes (D3, D4)
+- [x] 2.2 `npm test` shows 0 failing tests (baseline 0) (D3, D8)
+- [x] 2.3 `npm run build` exits 0 (D3)
 
 ### Phase 3: Cardio sounds, persistence and session controller
 #### Automated Verification:
