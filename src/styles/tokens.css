@@ -11,11 +11,16 @@
   --on-chalk: #121314;
   --danger: #ff6b6b;
   --focus: #8ab4ff;
+  --cardio: #a98bf5;
+  --on-cardio: #140d2b;
 
   --font-display: 'Barlow Condensed', 'Arial Narrow', sans-serif;
   --font-body: 'Barlow Semi Condensed', 'Arial Narrow', system-ui, sans-serif;
 
   --text-counter: 11rem;
+  --text-clock: 9rem;
+  --text-phase: 3rem;
+  --text-meta: 1.125rem;
   --text-figure: 3.5rem;
   --text-headline: 2.25rem;
   --text-title: 1.375rem;

@@ -36,6 +36,7 @@ describe('App', () => {
     const wrapper = mount(App, { attachTo: document.body })
     expect(headingText(wrapper.element)).toBe('Plany')
     await button(wrapper.element, 'Nowy plan').trigger('click')
+    await button(wrapper.element, 'Siła').trigger('click')
     expect(headingText(wrapper.element)).toBe('Nowy plan')
     await button(wrapper.element, 'Anuluj').trigger('click')
     expect(headingText(wrapper.element)).toBe('Plany')
@@ -44,6 +45,7 @@ describe('App', () => {
   it('shows a saved plan with its summary in the list, also after a fresh mount (reload)', async () => {
     const wrapper = mount(App, { attachTo: document.body })
     await button(wrapper.element, 'Nowy plan').trigger('click')
+    await button(wrapper.element, 'Siła').trigger('click')
     await field(wrapper.element, 'Nazwa planu').setValue('Wiosłowanie i przysiady')
     await field(region(wrapper.element, 'Ćwiczenie 1'), 'Nazwa ćwiczenia').setValue('Wiosłowanie')
     await button(wrapper.element, 'Dodaj ćwiczenie').trigger('click')
@@ -65,6 +67,7 @@ describe('App', () => {
   it('stays in the editor when the plan is invalid', async () => {
     const wrapper = mount(App, { attachTo: document.body })
     await button(wrapper.element, 'Nowy plan').trigger('click')
+    await button(wrapper.element, 'Siła').trigger('click')
     await button(wrapper.element, 'Zapisz plan').trigger('click')
     expect(headingText(wrapper.element)).toBe('Nowy plan')
   })
@@ -142,6 +145,7 @@ describe('service worker update', () => {
   it('waits in the plan editor and applies after the user leaves it', async () => {
     const wrapper = mount(App, { attachTo: document.body })
     await button(wrapper.element, 'Nowy plan').trigger('click')
+    await button(wrapper.element, 'Siła').trigger('click')
     await signalUpdate()
     expect(sw.updateServiceWorker).not.toHaveBeenCalled()
     await button(wrapper.element, 'Anuluj').trigger('click')

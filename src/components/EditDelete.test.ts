@@ -408,6 +408,7 @@ describe('collapsed cards in a saved plan', () => {
   it('a new plan from the list opens with the first exercise expanded', async () => {
     const wrapper = mountApp()
     await button(wrapper.element, 'Nowy plan').trigger('click')
+    await button(wrapper.element, 'Siła').trigger('click')
     expect(expanded(wrapper)).toEqual(['true'])
   })
 

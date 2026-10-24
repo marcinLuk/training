@@ -1,19 +1,26 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import CardioPlanEditor from './components/CardioPlanEditor.vue'
 import EndWorkoutConfirm from './components/EndWorkoutConfirm.vue'
 import PlanEditor from './components/PlanEditor.vue'
 import PlanList from './components/PlanList.vue'
+import PlanTypeChoice from './components/PlanTypeChoice.vue'
 import WorkoutEnd from './components/WorkoutEnd.vue'
 import WorkoutRest from './components/WorkoutRest.vue'
 import WorkoutSet from './components/WorkoutSet.vue'
-import { isCardioPlan, type Plan } from './plans/plan'
+import { isCardioPlan, type CardioPlan, type Plan } from './plans/plan'
 import { deletePlan, listAllPlans } from './plans/planStore'
 import { useServiceWorkerUpdates } from './pwa/useServiceWorkerUpdates'
 import { useWorkout } from './workout/useWorkout'
 
-type View = { kind: 'plan-list' } | { kind: 'plan-editor'; plan?: Plan }
+type View =
+  | { kind: 'plan-list' }
+  | { kind: 'plan-editor'; plan?: Plan }
+  | { kind: 'cardio-editor'; plan?: CardioPlan }
 
 const view = ref<View>({ kind: 'plan-list' })
+// The "Jaki plan?" question, shown over the plan list after "Nowy plan".
+const choosingType = ref(false)
 const plans = ref(listAllPlans())
 const workout = useWorkout()
 const deleteError = ref<string | null>(null)
@@ -32,6 +39,7 @@ const deleteFailureText = {
 
 function showList(): void {
   deleteError.value = null
+  choosingType.value = false
   plans.value = listAllPlans()
   view.value = { kind: 'plan-list' }
 }
@@ -44,9 +52,20 @@ function startPlan(planId: string): void {
 function openEditor(planId?: string): void {
   workout.dismissExpired()
   deleteError.value = null
+  choosingType.value = false
   const plan = planId === undefined ? undefined : plans.value.find((candidate) => candidate.id === planId)
-  if (plan !== undefined && isCardioPlan(plan)) return
-  view.value = plan === undefined ? { kind: 'plan-editor' } : { kind: 'plan-editor', plan }
+  if (plan !== undefined && isCardioPlan(plan)) {
+    view.value = { kind: 'cardio-editor', plan }
+  } else {
+    view.value = plan === undefined ? { kind: 'plan-editor' } : { kind: 'plan-editor', plan }
+  }
+}
+
+function openNewCardioEditor(): void {
+  workout.dismissExpired()
+  deleteError.value = null
+  choosingType.value = false
+  view.value = { kind: 'cardio-editor' }
 }
 
 function removePlan(planId: string): void {
@@ -87,10 +106,17 @@ function leaveWorkout(): void {
     :plans="plans"
     :expired-notice="workout.expired.value"
     :error-text="deleteError ?? undefined"
-    @new-plan="openEditor()"
+    @new-plan="choosingType = true"
     @start="startPlan"
     @edit="openEditor"
     @delete="removePlan"
   />
+  <CardioPlanEditor v-else-if="view.kind === 'cardio-editor'" :plan="view.plan" @saved="showList" @cancel="showList" />
   <PlanEditor v-else :plan="view.plan" @saved="showList" @cancel="showList" />
+  <PlanTypeChoice
+    v-if="choosingType && workout.view.value === null && view.kind === 'plan-list'"
+    @strength="openEditor()"
+    @cardio="openNewCardioEditor"
+    @cancel="choosingType = false"
+  />
 </template>

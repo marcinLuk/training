@@ -16,7 +16,7 @@ open config proposals: none found — the 2026-10-24 init applied every open pro
 Ledger:
 - [x] Phase 1
 - [x] Phase 2
-- [ ] Phase 3
+- [x] Phase 3
 - [ ] Phase 4
 - [ ] Phase 5
 - [ ] Phase 6
@@ -33,33 +33,82 @@ Routing (Step 1): every slice → sonnet — every slice writes production code 
 |---|---|---|---|---|---|---|
 | 1 — Cardio plan model and storage | sonnet | 2 | CONCERNS (1 minor) → `4ac1247` | feature — new cardio plan type and its storage | 17m / 6m+ | 231k+ |
 | 2 — Cardio session engine | sonnet | 1 | CONCERNS (2 minor) → `40c4517` | feature — new interval timeline, pause and sound cues | 13m / 5m+ | 120k+ |
-| 3 — Cardio sounds, persistence and session controller | sonnet | 0 | waiting | feature — new sounds, stored cardio session, resume rules | — | — |
+| 3 — Cardio sounds, persistence and session controller | sonnet | 2 | CONCERNS (3 minor, 1 nit) → `442b607` | feature — new sounds, stored cardio session, resume rules | 24m / 12m+ | 281k+ |
 | 4 — Plan list tags, plan type choice and cardio editor | sonnet | 0 | waiting | feature — new UI for cardio plans | — | — |
 | 5 — Cardio session screen | sonnet | 0 | waiting | feature — new session screen | — | — |
 | 6 — Lock mode | sonnet | 0 | waiting | feature — new lock mode | — | — |
 
 ## Run totals
 
-phases measured: 2 of 6 executed (0 wall unknown)   ·   tokens are subagents only, 10x-critic usage not returned (+)
+phases measured: 3 of 6 executed (0 wall unknown)   ·   tokens are subagents only, 10x-critic usage not returned (+)
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 2 | 351k+ | 100% | 30m | 100% | 11m+ |
+| feature | 3 | 632k+ | 100% | 54m | 100% | 23m+ |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 2 | 351k+ | 100% | 30m | 100% | 11m+ |
+| **total** | 3 | 632k+ | 100% | 54m | 100% | 23m+ |
 
-Closed findings: `cardio-start-guard-unpinned`, `unknown-plan-type-test-vacuous`, `cardio-interval-missing-field-unpinned`
+Closed findings: `cardio-start-guard-unpinned`, `unknown-plan-type-test-vacuous`, `cardio-interval-missing-field-unpinned`, `cardio-releases-shared-wake-lock`, `restored-expiry-timer-unpinned`
+Open from phase 3 (Minor/Nit): `wake-lock-depends-on-mount-order` (→ phase 5 slice details), `leave-without-session-clears-key`, `wake-lock-test-name-overclaims`, `pause-reads-clock-twice`
 Open (Minor/Nit, never fixed by design): `plan-union-shape-deviates` — Plan stays the strength type, AnyPlan is the union; strength plans are never written with type 'strength' · `getready-first-beep-at-start-instant`, `cues-window-before-resume-misplaces-cues` — engine facts, carried into phase 3 slice details
 
 owner-run (not measured): D9
 
+## Resumed 2026-10-24
+
+resume 2026-10-24T18:23:34+0200 in a new session · probes: git: reachable · node 22.23.1 + deps (vue-tsc 6.0.3, vitest 5.0.5): reachable · port 4199: free · playwright-cli 0.1.14: reachable · docker: reachable · frozen hash unchanged (eca54bf…) · integrity on the uncommitted phase-4 work: clean · never-weaken scan: no hit · `.loop-baseline` KEPT
+resume point: phase 4 round 1 — the builder's work is on disk and no critic entry exists, so the round-1 critic runs next (no new builder)
+
 ---
+
+## Phase 4 — Plan list tags, plan type choice and cardio editor
+
+phase:     feature  ·  start 2026-10-24T18:09:38+0200  ·  resume 2026-10-24T18:23:34+0200  ·  paused: unknown (no pause stamp — the earlier session ended without one)
+
+### round 2          builder sonnet → critic 10x-critic
+  cost:      builder 87k tok / 10 calls / 1m12s  ·  critic unknown (no usage returned)
+  workers:   criteria script 10s · walker sonnet 18:34:10→18:37:07 · prover none (coordinator ran M1, M7, M7b)
+  spot-checks: walker 4.4 screenshots (list, editor2) → confirmed
+  automated: 3/3   manual: 1/1 (0 unreachable)
+  verdict:   CONCERNS (1 minor)
+  blockers:  none
+  majors:    none
+  closures:  `remove-block-clears-errors-unpinned` → closed (M1: 2 failed); `add-interval-alternation-unpinned` → closed (M7: 3 failed; M7b first-instead-of-last: red)
+  minors:    `ambiguous-remove-button-names` (carried; never sent to a builder)
+  report:    reviews/phase-4-round-2.md
+  spot-check: re-ran `npx vitest run src/components/CardioPlanEditor.test.ts` → 31 passed → confirmed; `cmp` of the 5 production files against the round-1 copy → identical (round 2 changed tests only)
+  inconclusive: none
+  diff:      tests only — CardioPlanEditor.test.ts 369→439 lines (line-300 test renamed to "…after an interval is removed", assertions kept; +5 tests); no production file changed
+  scripted:  none in the repository (mutants edited with python in the scratchpad only)
+  integrity: plan-freeze clean; never-weaken scan clean
+  builder:   claims mutants M1–M6 red (M6 = kind from count parity, caught after one more test)
+
+### round 1          builder sonnet → critic 10x-critic
+  cost:      builder 188k tok / 78 calls / 7m35s  ·  critic unknown (no usage returned; critic ran in the resumed session)
+  workers:   criteria script 9s · walker sonnet ~18:25→18:27:43 · prover none (coordinator ran mutants M0–M4, M7)
+  spot-checks: walker 4.4 screenshots (list, editor-new) → confirmed
+  automated: 3/3   manual: 1/1 (0 unreachable)
+  verdict:   FAIL
+  blockers:  none
+  majors:    `remove-block-clears-errors-unpinned` — the "block or interval removed" test removes only an interval; M1 (no error reset in removeBlock) keeps every project test green; src/components/CardioPlanEditor.test.ts:255
+             `add-interval-alternation-unpinned` — the alternation test only adds after a rest interval; M7 (addInterval always 'work') keeps every project test green; src/components/CardioPlanEditor.test.ts:131
+  minors:    `ambiguous-remove-button-names` — "Usuń interwał"/"Usuń blok"/"Dodaj interwał" carry no position number
+  report:    reviews/phase-4-round-1.md
+  spot-check: opened src/components/CardioPlanEditor.test.ts:255-261 — clicks only "Usuń interwał" in Interwał 2, never "Usuń blok" → confirmed
+  inconclusive: none
+  diff:      7 files changed, +87/-10 (App.vue, PlanList.vue, tokens.css, 4 test files); new: CardioPlanEditor.vue 270, PlanTypeChoice.vue 15, CardioPlanEditor.test.ts 369, CardioPlansFlow.test.ts 288
+  clauses:   all mapped except 2 browser-only (token values in built CSS, pixel sizes → 4.4)
+  scripted:  `sed -i` once on its own new CardioPlansFlow.test.ts — lane rule broken; integrity clean
+  existing tests: App/EditDelete/Resume tests gained one "Siła" click after "Nowy plan" (required by D2, no assertion changed — read by the orchestrator); CardioStored "Edytuj" test re-pointed to the cardio editor (behaviour changed by design, assertions stricter)
+  builder:   tags, "Jaki plan?" overlay, cardio editor (create/edit), App routing; Start on cardio still starts nothing
 
 ## Phase 3 — Cardio sounds, persistence and session controller
 
-phase:     feature  ·  start 2026-10-24T17:45:25+0200
+phase:     feature  ·  start 2026-10-24T17:45:25+0200  ·  end 2026-10-24T18:09:15+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 24m  ·  subagent time 12m + critic unknown  ·  tokens 281k + critic unknown (subagents only)  ·  rounds 2  ·  commit `442b607`
+re-cut:    2026-10-24 phase 5 slice details (not started) gained the shared wake-lock note from `wake-lock-depends-on-mount-order`: useWorkout before useCardio in App.vue, plus an App-level lock test. Done-when unchanged; frozen hash unchanged.
 
 ### round 2          builder sonnet → critic 10x-critic
   cost:      builder 89k tok / 15 calls / 1m31s  ·  critic unknown (no usage returned)

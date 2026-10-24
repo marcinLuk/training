@@ -73,17 +73,17 @@ See `research.md` (entry points: `src/plans/plan.ts:9`, `src/plans/planStore.ts:
 
 ### Phase 3: Cardio sounds, persistence and session controller
 #### Automated Verification:
-- [x] 3.1 `npx vitest run src/workout` passes, including new tests for the cardio sounds, the stored cardio shape, restore after reload, expiry and the sound rule (D4, D5)
-- [x] 3.2 `npm test` shows 0 failing tests (baseline 0) (D5, D8)
-- [x] 3.3 `npm run build` exits 0 (D4)
+- [x] 3.1 `npx vitest run src/workout` passes, including new tests for the cardio sounds, the stored cardio shape, restore after reload, expiry and the sound rule (D4, D5) — 442b607
+- [x] 3.2 `npm test` shows 0 failing tests (baseline 0) (D5, D8) — 442b607
+- [x] 3.3 `npm run build` exits 0 (D4) — 442b607
 
 ### Phase 4: Plan list tags, plan type choice and cardio editor
 #### Automated Verification:
-- [ ] 4.1 `npx vitest run src/components` passes, including new tests for the tags, the "Jaki plan?" choice and the cardio editor (D2)
-- [ ] 4.2 `npm test` shows 0 failing tests (baseline 0) (D2, D8)
-- [ ] 4.3 `npm run build` exits 0 (D2)
+- [x] 4.1 `npx vitest run src/components` passes, including new tests for the tags, the "Jaki plan?" choice and the cardio editor (D2)
+- [x] 4.2 `npm test` shows 0 failing tests (baseline 0) (D2, D8)
+- [x] 4.3 `npm run build` exits 0 (D2)
 #### Manual Verification:
-- [ ] 4.4 at 412×915 on `vite preview`: "Nowy plan" → "Jaki plan?" → "Cardio" opens "Nowy plan cardio" with one block "Powtórz × 8" (Praca 0:30, Odpoczynek 0:30); save a plan named „Bieg z rozgrzewką” with a second block; the list card shows the violet "Cardio" tag, „16 interwałów”-style summary and a chalk Start; edit it and delete it; a strength plan card shows the "Siła" tag; touch targets measured with `getBoundingClientRect` match DESIGN.md (D2)
+- [x] 4.4 at 412×915 on `vite preview`: "Nowy plan" → "Jaki plan?" → "Cardio" opens "Nowy plan cardio" with one block "Powtórz × 8" (Praca 0:30, Odpoczynek 0:30); save a plan named „Bieg z rozgrzewką” with a second block; the list card shows the violet "Cardio" tag, „16 interwałów”-style summary and a chalk Start; edit it and delete it; a strength plan card shows the "Siła" tag; touch targets measured with `getBoundingClientRect` match DESIGN.md (D2)
 
 ### Phase 5: Cardio session screen
 #### Automated Verification:
@@ -218,6 +218,12 @@ Changes required:
 - `App.vue`: Start on a cardio card starts the session; a stored cardio session restores on load
   (paused); the expiry notice reuses the strength text; `workoutRunning` for the update policy is
   true for a cardio session; one workout at a time.
+- The wake lock is one shared module-level lock (added 2026-10-24 from the phase 3 review, before
+  this slice started): `useCardio` releases only a lock it took, but `useWorkout` still releases the
+  lock without a check when it has no strength workout. In `App.vue`, set up `useWorkout` before
+  `useCardio` (or give `useWorkout` the same ownership rule — that is a change to strength code, so
+  keep its tests green and add a test), and add an App-level test: a running cardio session keeps
+  the screen lock after a `visibilitychange` return and after a reload.
 Slice guardrails: tests drive the real `App` (fresh mount for reload); double tap on Pauza 150 ms
 apart; the clock text checked while the clock moves with no ticks.
 

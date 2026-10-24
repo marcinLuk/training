@@ -67,14 +67,14 @@ describe('a cardio plan in storage, before the cardio screens exist', () => {
     expect(wrapper.findAll('li h2')).toHaveLength(1)
   })
 
-  it('Edytuj on a cardio card opens no strength editor', async () => {
+  it('Edytuj on a cardio card opens the cardio editor, not the strength editor', async () => {
     savePlan(cardio('c1', 'Bieg z rozgrzewką'))
     const wrapper = mountApp()
 
     await button(wrapper.element, 'Edytuj: Bieg z rozgrzewką').trigger('click')
 
-    expect(wrapper.findAll('li h2')).toHaveLength(1)
-    expect(wrapper.text()).not.toContain('Zapisz plan')
+    expect(wrapper.get('h1').text()).toBe('Edytuj plan cardio')
+    expect(wrapper.text()).not.toContain('Dodaj ćwiczenie')
   })
 
   it('Usuń on a cardio card deletes it and leaves the strength plan', async () => {
