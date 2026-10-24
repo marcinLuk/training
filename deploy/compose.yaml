@@ -1,0 +1,36 @@
+# The Trening app (nginx with dist/) behind Traefik.
+# Lives in /opt/trening on the server, with a .env file that only deploy.sh writes:
+#   TRENING_TAG=<40-character commit SHA>
+# The app publishes no port. Traefik reaches it on the external network "traefik"
+# (see deploy/traefik/compose.yaml) and applies TLS and Basic auth.
+# The hardening flags match scripts/smoke-image.sh.
+name: trening
+
+services:
+  app:
+    image: ghcr.io/marcinluk/training:${TRENING_TAG:-latest}
+    restart: unless-stopped
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - traefik
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.trening.rule=Host(`trening.marcinlukaszek.pl`)
+      - traefik.http.routers.trening.entrypoints=websecure
+      - traefik.http.routers.trening.tls.certresolver=letsencrypt
+      - traefik.http.routers.trening.middlewares=trening-auth
+      # The users file is mounted into the Traefik container, not into this one.
+      - traefik.http.middlewares.trening-auth.basicauth.usersfile=/etc/traefik/auth/users
+      - traefik.http.middlewares.trening-auth.basicauth.removeheader=true
+      - traefik.http.services.trening.loadbalancer.server.port=8080
+
+networks:
+  traefik:
+    external: true
+    name: traefik

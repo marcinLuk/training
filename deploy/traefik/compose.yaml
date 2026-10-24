@@ -1,0 +1,49 @@
+# Traefik: the only service on the server that publishes ports (80 and 443).
+# It gets the Let's Encrypt certificate and applies Basic auth to the app.
+#
+# Lives in its own folder on the server (for example /opt/traefik) next to:
+#   .env              ACME_EMAIL=<contact e-mail for Let's Encrypt>  (server only)
+#   letsencrypt/      acme.json, mode 600, made by the owner         (server only)
+#   auth/users        the Basic auth users file, from `htpasswd -nB`  (server only)
+# None of these files are in git. Create the network once: docker network create traefik
+name: traefik
+
+services:
+  traefik:
+    image: traefik:v3.6.7
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    command:
+      - --global.checknewversion=false
+      - --global.sendanonymoususage=false
+      - --log.level=INFO
+      # Read routers from container labels. A container needs traefik.enable=true.
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=traefik
+      # Port 80 only redirects to HTTPS (and answers the ACME HTTP challenge).
+      - --entrypoints.web.address=:80
+      - --entrypoints.web.http.redirections.entrypoint.to=websecure
+      - --entrypoints.web.http.redirections.entrypoint.scheme=https
+      - --entrypoints.websecure.address=:443
+      # Let's Encrypt with the HTTP challenge on the web entry point.
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge=true
+      - --certificatesresolvers.letsencrypt.acme.httpchallenge.entrypoint=web
+      - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL:?Set ACME_EMAIL in the server-side .env file}
+      - --certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json
+      # No API and no dashboard: neither is enabled.
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./letsencrypt:/letsencrypt
+      - ./auth:/etc/traefik/auth:ro
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: true
+    name: traefik

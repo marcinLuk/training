@@ -13,6 +13,7 @@ frozen hash: 4297fccafbc6672c1d9829d0ef042b51ccffe0743c9eeaf645584cb5383cddba
 db backup: none — no §13 in auto-loop.md (no database; plans live in browser localStorage)
 owner-run: none as a slice — the real deploy (DNS, server setup, GitHub secrets, first push) is the owner's and goes to e2e-walkthrough.md
 open config proposals: 6 — §2 add `npm test` / `npx vitest run <path>` (from quality-of-life, still open since feat-mvp-plans-workout-loop) · §4 `: any` scan matches CSS `anywhere` (quality-of-life) · §5 editor accessible names (quality-of-life) · §13 `database: none` (quality-of-life) · §3 Vitest fake-timer and mutant-copy forms (feat-mvp-plans-workout-loop) · §8/§9/§10 hotspot file names, storage keys, test-adequacy traps (feat-mvp-plans-workout-loop)
+re-cuts: 2026-10-24 slice 5 (not started) gains: the sudo rule must keep env_reset and must not allow SETENV, because deploy.sh trusts TRENING_DIR from its environment (from p4 minor `trening-dir-trusted-from-env`); the users file name is `auth/users`
 re-cuts: 2026-10-24 slice 3 (not started) gains `.gitattributes` (LF for *.sh, Dockerfile, *.conf, *.yaml, *.yml, *.mjs) — core.autocrlf=true would write CRLF shell scripts back on checkout
 config note: `auto-loop.md` is modified in the tree but not committed (HEAD holds the deleted prototype's version); this run uses the working copy, plus `npm test` from CLAUDE.md
 
@@ -20,7 +21,7 @@ config note: `auto-loop.md` is modified in the tree but not committed (HEAD hold
 
 - [x] Phase 1
 - [x] Phase 2
-- [ ] Phase 3
+- [x] Phase 3
 - [ ] Phase 4
 - [ ] Phase 5
 - [ ] goal review
@@ -34,7 +35,7 @@ config note: `auto-loop.md` is modified in the tree but not committed (HEAD hold
 |---|---|---|---|---|---|---|
 | 1 — Manifest, icons and service worker build | sonnet | 1 | CONCERNS (1 minor, 1 nit) → `bd9cd5d` | feature | 9m / 2m+ | 108k+ |
 | 2 — Register the service worker and apply updates safely | sonnet | 1 | CONCERNS (3 minor) → `6c5b55d` | feature | 9m / 3m+ | 109k+ |
-| 3 — Docker image with nginx | sonnet | 0 | waiting | feature | — | — |
+| 3 — Docker image with nginx | sonnet | 1 | CONCERNS (2 nit) → `b46ed30` | feature | 11m / 5m+ | 106k+ |
 | 4 — Server files and CI workflow | sonnet | 0 | waiting | feature | — | — |
 | 5 — Deploy guide and project docs | sonnet | 0 | waiting | feature | — | — |
 
@@ -47,21 +48,43 @@ Routing and category (Step 1):
 
 ## Run totals
 
-phases measured: 2 of 5 executed   ·   tokens are subagents only, 10x-critic workers excluded
+phases measured: 3 of 5 executed   ·   tokens are subagents only, 10x-critic workers excluded
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 2 | 217k+ | 100% | 18m | 100% | 5m+ |
+| feature | 3 | 323k+ | 100% | 29m | 100% | 10m+ |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 2 | 217k+ | 100% | 18m | 100% | 5m+ |
+| **total** | 3 | 323k+ | 100% | 29m | 100% | 10m+ |
 
 ---
 
+## Phase 4 — Server files and CI workflow
+
+phase:     feature  ·  start 2026-10-24T13:14:47+0200  ·  end (pending)  ·  user wait 0m  ·  paused 0m
+
+### round 1          builder sonnet → critic 10x-critic
+  cost:      builder 112k tok / 17 calls / 2m58s  ·  critic unknown (Skill call returns no usage)
+  workers:   prover-1 sonnet 13:21:18→13:21:42 · criteria script 4s · walker not spawned
+  spot-checks: prover-1 E5 (direct .env write) re-run by the coordinator → confirmed
+  automated: 5/5   manual: n/a (no manual items)
+  verdict:   CONCERNS
+  blockers:  none
+  majors:    none
+  minors:    `env-write-atomicity-unpinned`, `trening-dir-trusted-from-env`, `concurrency-comment-overstates-order`
+  report:    reviews/phase-4-round-1.md
+  spot-check: re-ran 4.1 `bash deploy/server/deploy.test.sh` → 22 passed → confirmed
+  diff:      5 new files, +451/-0
+  clauses:   13/14 mapped (1 unmapped: temp-file cleanup trap — the critic found the same gap as `env-write-atomicity-unpinned`)
+  scripted:  none (brief.md checkboxes by sed)
+  inconclusive: none
+  builder:   Traefik v3.6.7 compose, app compose with hardening and labels, deploy.sh (SHA-only, pull before .env) + 22-case test, workflow test → image → deploy (secrets through env:, main-only, DEPLOY_ENABLED gate)
+
 ## Phase 3 — Docker image with nginx
 
-phase:     feature  ·  start 2026-10-24T13:03:20+0200  ·  end (pending)  ·  user wait 0m  ·  paused 0m
+phase:     feature  ·  start 2026-10-24T13:03:20+0200  ·  end 2026-10-24T13:14:47+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 11m  ·  subagent time 5m+ (critic unknown)  ·  tokens 106k (subagents only, critic unknown)  ·  rounds 1
 
 ### round 1          builder sonnet → critic 10x-critic
   cost:      builder 106k tok / 15 calls / 5m11s  ·  critic unknown (Skill call returns no usage)
