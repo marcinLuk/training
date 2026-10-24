@@ -16,7 +16,7 @@ pre-run dirty paths: context/foundation/auto-loop.md, context/foundation/design-
 
 ## Ledger
 
-- [ ] Phase 1 — Move exercises up and down
+- [x] Phase 1 — Move exercises up and down
 - [ ] Phase 2 — Collapse and open an exercise card
 - [ ] goal review
 - [ ] e2e walkthrough
@@ -34,30 +34,31 @@ pre-run dirty paths: context/foundation/auto-loop.md, context/foundation/design-
 
 | Phase | Builder | Rounds | State | Category | Wall / subagent | Tokens |
 |---|---|---|---|---|---|---|
-| 1 — Move exercises up and down | sonnet | 0 | waiting | feature | — | — |
+| 1 — Move exercises up and down | sonnet | 1 | CONCERNS (2 minor) → `ec76af5` | feature | 11m / 2m + critic unknown | 121k + critic unknown |
 | 2 — Collapse and open an exercise card | sonnet | 0 | waiting | feature | — | — |
 
 ## Run totals
 
-phases measured: 0 of 2 executed   ·   tokens are subagents only, 10x-critic workers excluded
+phases measured: 1 of 2 executed (critic usage unknown — the Skill call returns none)   ·   tokens are subagents only, 10x-critic workers excluded
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 0 | 0 | 0% | 0m | 0% | 0m |
+| feature | 1 | 121k + critic unknown | 100% | 11m | 100% | 2m + critic unknown |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 0 | 0 | 100% | 0m | 100% | 0m |
+| **total** | 1 | 121k + critic unknown | 100% | 11m | 100% | 2m + critic unknown |
 
 Closed findings: none yet
-Open (Minor/Nit, never fixed by design): none yet
+Open (Minor/Nit, never fixed by design): `focus-test-first-down-not-exercising-restore` — p1; `disabled-click-test-relies-on-test-utils` — p1
 Manual steps left to the user: none yet
 
 ---
 
 ## Phase 1 — Move exercises up and down
 
-phase:     feature  ·  start 2026-10-24T11:27:51+0200  ·  end —  ·  user wait 0m  ·  paused 0m
+phase:     feature  ·  start 2026-10-24T11:27:51+0200  ·  end 2026-10-24T11:38:24+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 11m  ·  subagent time 2m + critic unknown  ·  tokens 121k + critic unknown (subagents only, 10x-critic workers excluded)  ·  rounds 1
 
 ### round 1          builder sonnet → critic 10x-critic
   cost:      builder 121k tok / 23 calls / 2m26s  ·  critic unknown (Skill call returned no usage)
@@ -77,3 +78,26 @@ phase:     feature  ·  start 2026-10-24T11:27:51+0200  ·  end —  ·  user wa
   COMMANDS_RUN: matches brief.md for 1.1–1.5
   inconclusive: none
   builder:   card header with h2 + two 44 px SVG-chevron move buttons; moveExercise swaps, clears errors, restores focus by element id; DESIGN.md rules (Buttons, Edytor planu)
+
+## Phase 2 — Collapse and open an exercise card
+
+phase:     feature  ·  start 2026-10-24T11:38:33+0200  ·  end —  ·  user wait 0m  ·  paused 0m
+
+### round 1          builder sonnet → critic 10x-critic
+  cost:      builder 126k tok / 16 calls / 2m48s  ·  critic unknown (Skill call returned no usage)
+  workers:   criteria script 10s · walker sonnet 11:42:31→11:45:24 · prover-1 sonnet 11:47:29→11:48:20
+  spot-checks: walker 2.6/2.7 screenshots → confirmed · prover-1 E1 state-keyed-by-position mutant → same 1 failure → confirmed
+  automated: 5/5   manual: 2/2 (0 unreachable)
+  verdict:   CONCERNS (1 minor, 1 nit)
+  blockers:  none
+  majors:    none
+  minors:    `toggle-chevron-next-to-move-down` — the toggle's down chevron sits next to the „w dół” move chevron; the two actions look alike (owner's design call, low confidence) · `design-rule-placement` (nit) — the DESIGN.md rule is its own bullet above „Edytor planu”
+  report:    reviews/phase-2-round-1.md
+  spot-check: opened reviews/screenshots/p2-r1-2.6-reopened.png → confirmed (all cards collapsed, moved order, summary „3 × 10, przerwa 1:30”)
+  integrity: plan-freeze clean; never-weaken scan: one false hit (`overflow-wrap: anywhere`); no `expect(` line removed from tests
+  diff:      4 code files, +497/-73 (critic count); builder DIFF_STAT 5 files +508/-84 incl. brief.md checkbox rows
+  clauses:   19/21 mapped to a test (2 unmapped: no-animation (absence of CSS, read in diff), 44 px / focus look — browser, covered by 2.7)
+  scripted:  PlanEditor.vue, PlanEditor.test.ts, EditDelete.test.ts, DESIGN.md, brief.md (python) — linted by `npm run build` (vue-tsc) at 2f; no linter exists
+  COMMANDS_RUN: matches brief.md for 2.1–2.5
+  inconclusive: none
+  builder:   h2 toggle (aria-expanded/controls, SVG chevron), Set of collapsed ids, collapsed name + summary, defaults, failed save opens error cards; existing edit tests open the card first

@@ -22,6 +22,10 @@ const emit = defineEmits<{ saved: []; cancel: [] }>()
 const plan = reactive<Plan>(
   props.plan !== undefined ? clonePlan(props.plan) : { ...createPlan(), exercises: [createExercise()] },
 )
+// Which exercise cards are collapsed, by exercise id so the state follows the
+// exercise when it moves. It is view state only and never part of the saved plan.
+// Editing a saved plan starts with every card collapsed; a new plan has one open card.
+const collapsed = reactive(new Set<string>(props.plan !== undefined ? plan.exercises.map((exercise) => exercise.id) : []))
 const errors = ref<ValidationError[]>([])
 const saveFailure = ref<string | null>(null)
 
@@ -45,8 +49,38 @@ function addExercise(): void {
 }
 
 function removeExercise(index: number): void {
-  plan.exercises.splice(index, 1)
+  const [removed] = plan.exercises.splice(index, 1)
+  if (removed !== undefined) collapsed.delete(removed.id)
   errors.value = []
+}
+
+function isCollapsed(exerciseId: string): boolean {
+  return collapsed.has(exerciseId)
+}
+
+function toggleExercise(exerciseId: string): void {
+  if (collapsed.has(exerciseId)) {
+    collapsed.delete(exerciseId)
+  } else {
+    collapsed.add(exerciseId)
+  }
+}
+
+function cardBodyId(exerciseId: string): string {
+  return `exercise-body-${exerciseId}`
+}
+
+function exerciseSummary(sets: number, reps: number, restSeconds: number): string {
+  return `${sets} × ${reps}, przerwa ${formatRest(restSeconds)}`
+}
+
+// A collapsed card hides its fields, so every card that holds an error is opened.
+function expandCardsWithErrors(): void {
+  for (const error of errors.value) {
+    const match = /^exercises\.(\d+)\./.exec(error.path)
+    const exercise = match?.[1] === undefined ? undefined : plan.exercises[Number(match[1])]
+    if (exercise !== undefined) collapsed.delete(exercise.id)
+  }
 }
 
 function moveButtonId(exerciseId: string, direction: 'up' | 'down'): string {
@@ -76,7 +110,10 @@ async function moveExercise(index: number, delta: -1 | 1): Promise<void> {
 function save(): void {
   saveFailure.value = null
   errors.value = validatePlan(plan)
-  if (errors.value.length > 0) return
+  if (errors.value.length > 0) {
+    expandCardsWithErrors()
+    return
+  }
 
   const result = savePlan(plan)
   if (result.ok) {
@@ -115,7 +152,20 @@ function save(): void {
         :aria-labelledby="`exercise-title-${exercise.id}`"
       >
         <div class="exercise-header">
-          <h2 :id="`exercise-title-${exercise.id}`">Ćwiczenie {{ index + 1 }}</h2>
+          <h2 :id="`exercise-title-${exercise.id}`">
+            <button
+              type="button"
+              class="exercise-toggle"
+              :aria-expanded="!isCollapsed(exercise.id)"
+              :aria-controls="cardBodyId(exercise.id)"
+              @click="toggleExercise(exercise.id)"
+            >
+              Ćwiczenie {{ index + 1 }}
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </button>
+          </h2>
           <button
             :id="moveButtonId(exercise.id, 'up')"
             type="button"
@@ -142,62 +192,70 @@ function save(): void {
           </button>
         </div>
 
-        <div class="field">
-          <label class="field-label" :for="`exercise-name-${exercise.id}`">Nazwa ćwiczenia</label>
-          <input
-            :id="`exercise-name-${exercise.id}`"
-            v-model="exercise.name"
-            class="input"
-            type="text"
-            autocomplete="off"
-            :aria-invalid="errorAt(`exercises.${index}.name`) ? 'true' : undefined"
-            :aria-describedby="errorAt(`exercises.${index}.name`) ? `exercise-name-error-${exercise.id}` : undefined"
-          />
-          <FieldError v-if="errorAt(`exercises.${index}.name`)" :id="`exercise-name-error-${exercise.id}`">
-            {{ errorAt(`exercises.${index}.name`) }}
-          </FieldError>
+        <div :id="cardBodyId(exercise.id)" class="exercise-body">
+          <template v-if="!isCollapsed(exercise.id)">
+            <div class="field">
+              <label class="field-label" :for="`exercise-name-${exercise.id}`">Nazwa ćwiczenia</label>
+              <input
+                :id="`exercise-name-${exercise.id}`"
+                v-model="exercise.name"
+                class="input"
+                type="text"
+                autocomplete="off"
+                :aria-invalid="errorAt(`exercises.${index}.name`) ? 'true' : undefined"
+                :aria-describedby="errorAt(`exercises.${index}.name`) ? `exercise-name-error-${exercise.id}` : undefined"
+              />
+              <FieldError v-if="errorAt(`exercises.${index}.name`)" :id="`exercise-name-error-${exercise.id}`">
+                {{ errorAt(`exercises.${index}.name`) }}
+              </FieldError>
+            </div>
+
+            <NumberStepper
+              v-model="exercise.sets"
+              label="Serie"
+              decrease-label="Zmniejsz serie"
+              increase-label="Zwiększ serie"
+              :min="LIMITS.sets.min"
+              :max="LIMITS.sets.max"
+              :step="1"
+              :error="errorAt(`exercises.${index}.sets`)"
+            />
+            <NumberStepper
+              v-model="exercise.reps"
+              label="Powtórzenia"
+              decrease-label="Zmniejsz powtórzenia"
+              increase-label="Zwiększ powtórzenia"
+              :min="LIMITS.reps.min"
+              :max="LIMITS.reps.max"
+              :step="1"
+              :error="errorAt(`exercises.${index}.reps`)"
+            />
+            <NumberStepper
+              v-model="exercise.restSeconds"
+              label="Przerwa"
+              decrease-label="Skróć przerwę o 15 s"
+              increase-label="Wydłuż przerwę o 15 s"
+              :min="LIMITS.rest.min"
+              :max="LIMITS.rest.max"
+              :step="LIMITS.rest.step"
+              :format="formatRest"
+              :error="errorAt(`exercises.${index}.restSeconds`)"
+            />
+
+            <button
+              type="button"
+              class="btn btn-danger"
+              :aria-label="`Usuń ćwiczenie ${index + 1}`"
+              @click="removeExercise(index)"
+            >
+              Usuń ćwiczenie
+            </button>
+          </template>
+          <template v-else>
+            <p v-if="exercise.name.trim() !== ''" class="exercise-name">{{ exercise.name }}</p>
+            <p class="muted">{{ exerciseSummary(exercise.sets, exercise.reps, exercise.restSeconds) }}</p>
+          </template>
         </div>
-
-        <NumberStepper
-          v-model="exercise.sets"
-          label="Serie"
-          decrease-label="Zmniejsz serie"
-          increase-label="Zwiększ serie"
-          :min="LIMITS.sets.min"
-          :max="LIMITS.sets.max"
-          :step="1"
-          :error="errorAt(`exercises.${index}.sets`)"
-        />
-        <NumberStepper
-          v-model="exercise.reps"
-          label="Powtórzenia"
-          decrease-label="Zmniejsz powtórzenia"
-          increase-label="Zwiększ powtórzenia"
-          :min="LIMITS.reps.min"
-          :max="LIMITS.reps.max"
-          :step="1"
-          :error="errorAt(`exercises.${index}.reps`)"
-        />
-        <NumberStepper
-          v-model="exercise.restSeconds"
-          label="Przerwa"
-          decrease-label="Skróć przerwę o 15 s"
-          increase-label="Wydłuż przerwę o 15 s"
-          :min="LIMITS.rest.min"
-          :max="LIMITS.rest.max"
-          :step="LIMITS.rest.step"
-          :format="formatRest"
-          :error="errorAt(`exercises.${index}.restSeconds`)"
-        />
-
-        <button
-          type="button"
-          class="btn btn-danger"
-          :aria-label="`Usuń ćwiczenie ${index + 1}`"
-          @click="removeExercise(index)"
-        >
-          Usuń ćwiczenie
-        </button>
       </section>
 
       <FieldError v-if="exercisesError" id="exercises-error" role="alert">
@@ -234,6 +292,47 @@ function save(): void {
 .exercise-header h2 {
   flex: 1;
   min-width: 0;
+}
+
+.exercise-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  width: 100%;
+  min-height: var(--target-min);
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-align: left;
+  text-transform: inherit;
+  cursor: pointer;
+}
+
+.exercise-toggle svg {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  color: var(--steel);
+}
+
+.exercise-toggle[aria-expanded='true'] svg {
+  transform: rotate(180deg);
+}
+
+.exercise-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-lg);
+}
+
+.exercise-name {
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
 
 .btn-move {

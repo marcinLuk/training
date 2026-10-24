@@ -36,24 +36,24 @@ See `research.md` (entry points: `src/components/PlanEditor.vue:22-63` state and
 
 ### Phase 1: Move exercises up and down
 #### Automated Verification:
-- [x] 1.1 `npx vitest run src/components/PlanEditor.test.ts` passes, with tests on a plan of at least three exercises with Polish names for: the „Przesuń ćwiczenie N w górę” / „Przesuń ćwiczenie N w dół” buttons on every card; a tap swapping the exercise with its neighbour (name, sets, reps and rest move with it, labels renumber); "up" disabled on the first and "down" disabled on the last exercise; focus on the same move button of the moved exercise after a move, and on its other move button when the tapped one became disabled; a move clearing the shown validation errors (D1, D2)
-- [x] 1.2 `npx vitest run src/components` passes, with tests for: „Zapisz plan” after a move storing the new order (read back with `listPlans()` and after a fresh app mount); the plan list and a workout started from that plan following the new order; „Anuluj” after a move leaving the stored order unchanged (D3)
-- [x] 1.3 `grep -n "Przesuń ćwiczenie" DESIGN.md` prints the new move-button rule under „Edytor planu” (D6)
-- [x] 1.4 `npm test` exits 0 (D8)
-- [x] 1.5 `npm run build` exits 0 (D8)
+- [x] 1.1 `npx vitest run src/components/PlanEditor.test.ts` passes, with tests on a plan of at least three exercises with Polish names for: the „Przesuń ćwiczenie N w górę” / „Przesuń ćwiczenie N w dół” buttons on every card; a tap swapping the exercise with its neighbour (name, sets, reps and rest move with it, labels renumber); "up" disabled on the first and "down" disabled on the last exercise; focus on the same move button of the moved exercise after a move, and on its other move button when the tapped one became disabled; a move clearing the shown validation errors (D1, D2) — ec76af5
+- [x] 1.2 `npx vitest run src/components` passes, with tests for: „Zapisz plan” after a move storing the new order (read back with `listPlans()` and after a fresh app mount); the plan list and a workout started from that plan following the new order; „Anuluj” after a move leaving the stored order unchanged (D3) — ec76af5
+- [x] 1.3 `grep -n "Przesuń ćwiczenie" DESIGN.md` prints the new move-button rule under „Edytor planu” (D6) — ec76af5
+- [x] 1.4 `npm test` exits 0 (D8) — ec76af5
+- [x] 1.5 `npm run build` exits 0 (D8) — ec76af5
 #### Manual Verification:
-- [x] 1.6 at 412×915: a plan with 4 exercises („Wiosłowanie”, „Przysiady”, „Wyciskanie leżąc”, „Martwy ciąg”): move „Martwy ciąg” from position 4 to position 2 with the buttons, save, open „Edytuj” again: the order is kept; the move buttons are at least 44 px, the disabled ones show the 40 % disabled look, icons are SVG strokes (no emoji, no Unicode arrows), no horizontal scroll (D1, D3, D6)
+- [x] 1.6 at 412×915: a plan with 4 exercises („Wiosłowanie”, „Przysiady”, „Wyciskanie leżąc”, „Martwy ciąg”): move „Martwy ciąg” from position 4 to position 2 with the buttons, save, open „Edytuj” again: the order is kept; the move buttons are at least 44 px, the disabled ones show the 40 % disabled look, icons are SVG strokes (no emoji, no Unicode arrows), no horizontal scroll (D1, D3, D6) — ec76af5
 
 ### Phase 2: Collapse and open an exercise card
 #### Automated Verification:
-- [ ] 2.1 `npx vitest run src/components/PlanEditor.test.ts` passes, with tests for: the card header toggle with `aria-expanded`; a collapsed card showing „Ćwiczenie N”, the exercise name when it is not blank, the summary „3 × 10, przerwa 1:30” (and the summary after a stepper change), and both move buttons, and not showing the name field, the steppers and „Usuń ćwiczenie”; the open/collapsed state following the exercise after a move; the move buttons working on collapsed cards (D4)
-- [ ] 2.2 `npx vitest run src/components` passes, with tests for: a new plan with its first exercise expanded; „Dodaj ćwiczenie” adding an expanded exercise; „Edytuj plan” opening every exercise collapsed; a failed „Zapisz plan” opening every card that holds an error, with each error text visible; the stored plan JSON having the same keys as before (no open/collapsed field) (D4, D5)
-- [ ] 2.3 `grep -n "zwinięt" DESIGN.md` prints the new collapsed-card rule under „Edytor planu” (D6)
-- [ ] 2.4 `npm test` exits 0 (D8)
-- [ ] 2.5 `npm run build` exits 0 (D8)
+- [x] 2.1 `npx vitest run src/components/PlanEditor.test.ts` passes, with tests for: the card header toggle with `aria-expanded`; a collapsed card showing „Ćwiczenie N”, the exercise name when it is not blank, the summary „3 × 10, przerwa 1:30” (and the summary after a stepper change), and both move buttons, and not showing the name field, the steppers and „Usuń ćwiczenie”; the open/collapsed state following the exercise after a move; the move buttons working on collapsed cards (D4)
+- [x] 2.2 `npx vitest run src/components` passes, with tests for: a new plan with its first exercise expanded; „Dodaj ćwiczenie” adding an expanded exercise; „Edytuj plan” opening every exercise collapsed; a failed „Zapisz plan” opening every card that holds an error, with each error text visible; the stored plan JSON having the same keys as before (no open/collapsed field) (D4, D5)
+- [x] 2.3 `grep -n "zwinięt" DESIGN.md` prints the new collapsed-card rule under „Edytor planu” (D6)
+- [x] 2.4 `npm test` exits 0 (D8)
+- [x] 2.5 `npm run build` exits 0 (D8)
 #### Manual Verification:
-- [ ] 2.6 at 412×915: a plan with 6 exercises with Polish names: collapse every card, move the exercise at position 5 to position 1 with the move buttons on collapsed cards, save, reload, open „Edytuj”: every card is collapsed and the order is kept; back to the list, „Start”: the moved exercise comes first (D7)
-- [ ] 2.7 at 412×915: a collapsed card is one compact block (header, name, summary, move buttons); the toggle and move buttons are at least 44 px and show the focus outline when reached with the keyboard; the chevron icon is an SVG stroke; all text is Polish; only „Zapisz plan” is chalk (D4, D6)
+- [x] 2.6 at 412×915: a plan with 6 exercises with Polish names: collapse every card, move the exercise at position 5 to position 1 with the move buttons on collapsed cards, save, reload, open „Edytuj”: every card is collapsed and the order is kept; back to the list, „Start”: the moved exercise comes first (D7)
+- [x] 2.7 at 412×915: a collapsed card is one compact block (header, name, summary, move buttons); the toggle and move buttons are at least 44 px and show the focus outline when reached with the keyboard; the chevron icon is an SVG stroke; all text is Polish; only „Zapisz plan” is chalk (D4, D6)
 
 ## Slice details
 
