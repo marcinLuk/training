@@ -56,15 +56,16 @@ describe('a cardio plan in storage, before the cardio screens exist', () => {
     expect(wrapper.text()).toContain('1 ćwiczenie, 3 serie')
   })
 
-  it('Start on a cardio card starts no workout', async () => {
+  it('Start on a cardio card starts a cardio session, not a strength workout (phase 5)', async () => {
     savePlan(cardio('c1', 'Bieg z rozgrzewką'))
     const wrapper = mountApp()
 
     await button(wrapper.element, 'Start: Bieg z rozgrzewką').trigger('click')
 
     expect(errors).toEqual([])
-    expect(localStorage.getItem(WORKOUT_KEY)).toBeNull()
-    expect(wrapper.findAll('li h2')).toHaveLength(1)
+    expect(JSON.parse(localStorage.getItem(WORKOUT_KEY) ?? 'null')).toMatchObject({ kind: 'cardio', planId: 'c1' })
+    expect(wrapper.findAll('li h2')).toHaveLength(0)
+    expect(wrapper.get('[data-testid="phase"]').text()).toBe('PRZYGOTUJ SIĘ')
   })
 
   it('Edytuj on a cardio card opens the cardio editor, not the strength editor', async () => {

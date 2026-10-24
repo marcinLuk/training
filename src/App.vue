@@ -1,6 +1,7 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 import CardioPlanEditor from './components/CardioPlanEditor.vue'
+import CardioSession from './components/CardioSession.vue'
 import EndWorkoutConfirm from './components/EndWorkoutConfirm.vue'
 import PlanEditor from './components/PlanEditor.vue'
 import PlanList from './components/PlanList.vue'
@@ -11,6 +12,7 @@ import WorkoutSet from './components/WorkoutSet.vue'
 import { isCardioPlan, type CardioPlan, type Plan } from './plans/plan'
 import { deletePlan, listAllPlans } from './plans/planStore'
 import { useServiceWorkerUpdates } from './pwa/useServiceWorkerUpdates'
+import { useCardio } from './workout/useCardio'
 import { useWorkout } from './workout/useWorkout'
 
 type View =
@@ -22,12 +24,19 @@ const view = ref<View>({ kind: 'plan-list' })
 // The "Jaki plan?" question, shown over the plan list after "Nowy plan".
 const choosingType = ref(false)
 const plans = ref(listAllPlans())
+// The wake lock is one shared lock. `useWorkout` releases it whenever it holds no strength
+// workout, on setup and on every return to the page. It must be set up BEFORE `useCardio`, so
+// its listeners run first and a running cardio session takes the lock again right after.
 const workout = useWorkout()
+const cardio = useCardio()
 const deleteError = ref<string | null>(null)
+/** True while any workout view (strength or cardio, also the end screen) is on screen. */
+const workoutOpen = computed(() => workout.view.value !== null || cardio.view.value !== null)
+const expiredNotice = computed(() => workout.expired.value || cardio.expired.value)
 
 useServiceWorkerUpdates({
   planListShown: () => view.value.kind === 'plan-list',
-  workoutRunning: () => workout.view.value !== null,
+  workoutRunning: () => workoutOpen.value,
 })
 
 const deleteFailureText = {
@@ -46,11 +55,19 @@ function showList(): void {
 
 function startPlan(planId: string): void {
   const plan = plans.value.find((candidate) => candidate.id === planId)
-  if (plan !== undefined && !isCardioPlan(plan)) workout.start(plan)
+  if (plan === undefined) return
+  const started = isCardioPlan(plan) ? cardio.start(plan) : workout.start(plan)
+  // Either start clears its own notice; clear the other kind's notice too, or it comes back later.
+  if (started) dismissExpired()
+}
+
+function dismissExpired(): void {
+  workout.dismissExpired()
+  cardio.dismissExpired()
 }
 
 function openEditor(planId?: string): void {
-  workout.dismissExpired()
+  dismissExpired()
   deleteError.value = null
   choosingType.value = false
   const plan = planId === undefined ? undefined : plans.value.find((candidate) => candidate.id === planId)
@@ -62,7 +79,7 @@ function openEditor(planId?: string): void {
 }
 
 function openNewCardioEditor(): void {
-  workout.dismissExpired()
+  dismissExpired()
   deleteError.value = null
   choosingType.value = false
   view.value = { kind: 'cardio-editor' }
@@ -84,10 +101,29 @@ function endWorkout(): void {
 function leaveWorkout(): void {
   if (workout.leave()) showList()
 }
+
+function endCardio(): void {
+  if (cardio.confirmEnd()) showList()
+}
+
+function leaveCardio(): void {
+  if (cardio.leave()) showList()
+}
 </script>
 
 <template>
-  <template v-if="workout.view.value !== null">
+  <template v-if="cardio.view.value !== null">
+    <WorkoutEnd v-if="cardio.view.value.phase === 'finished'" :plan-name="cardio.view.value.planName" @back="leaveCardio" />
+    <CardioSession
+      v-else
+      :view="cardio.view.value"
+      @pause="cardio.pause"
+      @resume="cardio.resume"
+      @end="cardio.askEnd"
+    />
+    <EndWorkoutConfirm v-if="cardio.confirmingEnd.value" @confirm="endCardio" @cancel="cardio.cancelEnd" />
+  </template>
+  <template v-else-if="workout.view.value !== null">
     <WorkoutSet v-if="workout.view.value.mode === 'set'" :view="workout.view.value" @done="workout.finishSet" @undo="workout.undoLast" @skip="workout.skip" @end="workout.askEnd" />
     <WorkoutRest
       v-else-if="workout.view.value.mode === 'rest'"
@@ -104,7 +140,7 @@ function leaveWorkout(): void {
   <PlanList
     v-else-if="view.kind === 'plan-list'"
     :plans="plans"
-    :expired-notice="workout.expired.value"
+    :expired-notice="expiredNotice"
     :error-text="deleteError ?? undefined"
     @new-plan="choosingType = true"
     @start="startPlan"
@@ -114,7 +150,7 @@ function leaveWorkout(): void {
   <CardioPlanEditor v-else-if="view.kind === 'cardio-editor'" :plan="view.plan" @saved="showList" @cancel="showList" />
   <PlanEditor v-else :plan="view.plan" @saved="showList" @cancel="showList" />
   <PlanTypeChoice
-    v-if="choosingType && workout.view.value === null && view.kind === 'plan-list'"
+    v-if="choosingType && !workoutOpen && view.kind === 'plan-list'"
     @strength="openEditor()"
     @cardio="openNewCardioEditor"
     @cancel="choosingType = false"

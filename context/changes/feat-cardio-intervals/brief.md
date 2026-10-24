@@ -79,20 +79,20 @@ See `research.md` (entry points: `src/plans/plan.ts:9`, `src/plans/planStore.ts:
 
 ### Phase 4: Plan list tags, plan type choice and cardio editor
 #### Automated Verification:
-- [x] 4.1 `npx vitest run src/components` passes, including new tests for the tags, the "Jaki plan?" choice and the cardio editor (D2)
-- [x] 4.2 `npm test` shows 0 failing tests (baseline 0) (D2, D8)
-- [x] 4.3 `npm run build` exits 0 (D2)
+- [x] 4.1 `npx vitest run src/components` passes, including new tests for the tags, the "Jaki plan?" choice and the cardio editor (D2) — 799275f
+- [x] 4.2 `npm test` shows 0 failing tests (baseline 0) (D2, D8) — 799275f
+- [x] 4.3 `npm run build` exits 0 (D2) — 799275f
 #### Manual Verification:
-- [x] 4.4 at 412×915 on `vite preview`: "Nowy plan" → "Jaki plan?" → "Cardio" opens "Nowy plan cardio" with one block "Powtórz × 8" (Praca 0:30, Odpoczynek 0:30); save a plan named „Bieg z rozgrzewką” with a second block; the list card shows the violet "Cardio" tag, „16 interwałów”-style summary and a chalk Start; edit it and delete it; a strength plan card shows the "Siła" tag; touch targets measured with `getBoundingClientRect` match DESIGN.md (D2)
+- [x] 4.4 at 412×915 on `vite preview`: "Nowy plan" → "Jaki plan?" → "Cardio" opens "Nowy plan cardio" with one block "Powtórz × 8" (Praca 0:30, Odpoczynek 0:30); save a plan named „Bieg z rozgrzewką” with a second block; the list card shows the violet "Cardio" tag, „16 interwałów”-style summary and a chalk Start; edit it and delete it; a strength plan card shows the "Siła" tag; touch targets measured with `getBoundingClientRect` match DESIGN.md (D2) — 799275f
 
 ### Phase 5: Cardio session screen
 #### Automated Verification:
-- [ ] 5.1 `npx vitest run src/components` passes, including new tests for the session screen, get-ready, pause/resume, end confirm, end screen, resume after a fresh mount and the update/wake-lock wiring (D5, D6, D8)
-- [ ] 5.2 `npm test` shows 0 failing tests (baseline 0) (D6, D8)
-- [ ] 5.3 `npm run build` exits 0 (D6)
+- [x] 5.1 `npx vitest run src/components` passes, including new tests for the session screen, get-ready, pause/resume, end confirm, end screen, resume after a fresh mount and the update/wake-lock wiring (D5, D6, D8)
+- [x] 5.2 `npm test` shows 0 failing tests (baseline 0) (D6, D8)
+- [x] 5.3 `npm run build` exits 0 (D6)
 #### Manual Verification:
-- [ ] 5.4 at 412×915 on `vite preview` with Playwright's fake clock: Start a cardio plan → violet field with "PRZYGOTUJ SIĘ" and 0:03 → "PRACA" with the clock counting down → "ODPOCZYNEK"; "Interwał X z Y", "Dalej:", "Razem", "Zostało" and the timeline match the plan; Pauza → "PAUZA" and "Wznów", the clock stands; Wznów continues; Zakończ asks „Zakończyć trening?”; after the last interval the end screen shows (D6)
-- [ ] 5.5 on `vite preview`: reload during a work interval → the session comes back paused at the same interval; sound calls (instrumented `createOscillator`) happen for the countdown and the interval starts while visible (D4, D5)
+- [x] 5.4 at 412×915 on `vite preview` with Playwright's fake clock: Start a cardio plan → violet field with "PRZYGOTUJ SIĘ" and 0:03 → "PRACA" with the clock counting down → "ODPOCZYNEK"; "Interwał X z Y", "Dalej:", "Razem", "Zostało" and the timeline match the plan; Pauza → "PAUZA" and "Wznów", the clock stands; Wznów continues; Zakończ asks „Zakończyć trening?”; after the last interval the end screen shows (D6)
+- [x] 5.5 on `vite preview`: reload during a work interval → the session comes back paused at the same interval; sound calls (instrumented `createOscillator`) happen for the countdown and the interval starts while visible (D4, D5)
 
 ### Phase 6: Lock mode
 #### Automated Verification:

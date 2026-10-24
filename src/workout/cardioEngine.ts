@@ -47,6 +47,8 @@ export interface CardioView {
   planName: string
   /** Number of intervals after repeats ("Y" in "Interwał X z Y"). */
   intervalCount: number
+  /** Every interval after repeats, in running order: one timeline segment each. */
+  timeline: ExpandedInterval[]
   /** 0-based index of the current interval. Null in get-ready and when finished. */
   intervalIndex: number | null
   /** 1-based number of the current interval ("X"). Null in get-ready and when finished. */
@@ -131,7 +133,7 @@ export function getCardioView(state: CardioState, now: number): CardioView {
   const totalMs = totalIntervalsMs(state)
   const position = timelineMs(state, now)
   const intervalCount = intervals.length
-  const base = { planName: state.planName, intervalCount }
+  const base = { planName: state.planName, intervalCount, timeline: intervals }
 
   if (position >= GET_READY_MS + totalMs) {
     return {

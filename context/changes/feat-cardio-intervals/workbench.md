@@ -17,7 +17,7 @@ Ledger:
 - [x] Phase 1
 - [x] Phase 2
 - [x] Phase 3
-- [ ] Phase 4
+- [x] Phase 4
 - [ ] Phase 5
 - [ ] Phase 6
 - [ ] goal review
@@ -34,23 +34,24 @@ Routing (Step 1): every slice → sonnet — every slice writes production code 
 | 1 — Cardio plan model and storage | sonnet | 2 | CONCERNS (1 minor) → `4ac1247` | feature — new cardio plan type and its storage | 17m / 6m+ | 231k+ |
 | 2 — Cardio session engine | sonnet | 1 | CONCERNS (2 minor) → `40c4517` | feature — new interval timeline, pause and sound cues | 13m / 5m+ | 120k+ |
 | 3 — Cardio sounds, persistence and session controller | sonnet | 2 | CONCERNS (3 minor, 1 nit) → `442b607` | feature — new sounds, stored cardio session, resume rules | 24m / 12m+ | 281k+ |
-| 4 — Plan list tags, plan type choice and cardio editor | sonnet | 0 | waiting | feature — new UI for cardio plans | — | — |
+| 4 — Plan list tags, plan type choice and cardio editor | sonnet | 2 | CONCERNS (1 minor) → `799275f` | feature — new UI for cardio plans | unknown / 9m+ | 275k+ |
 | 5 — Cardio session screen | sonnet | 0 | waiting | feature — new session screen | — | — |
 | 6 — Lock mode | sonnet | 0 | waiting | feature — new lock mode | — | — |
 
 ## Run totals
 
-phases measured: 3 of 6 executed (0 wall unknown)   ·   tokens are subagents only, 10x-critic usage not returned (+)
+phases measured: 4 of 6 executed (1 wall unknown — phase 4)   ·   tokens are subagents only, 10x-critic usage not returned (+)
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 3 | 632k+ | 100% | 54m | 100% | 23m+ |
+| feature | 4 | 907k+ | 100% | 54m | 100% | 32m+ |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 3 | 632k+ | 100% | 54m | 100% | 23m+ |
+| **total** | 4 | 907k+ | 100% | 54m | 100% | 32m+ |
 
-Closed findings: `cardio-start-guard-unpinned`, `unknown-plan-type-test-vacuous`, `cardio-interval-missing-field-unpinned`, `cardio-releases-shared-wake-lock`, `restored-expiry-timer-unpinned`
+Closed findings: `cardio-start-guard-unpinned`, `unknown-plan-type-test-vacuous`, `cardio-interval-missing-field-unpinned`, `cardio-releases-shared-wake-lock`, `restored-expiry-timer-unpinned`, `remove-block-clears-errors-unpinned`, `add-interval-alternation-unpinned`
+Open from phase 4 (Minor): `ambiguous-remove-button-names`
 Open from phase 3 (Minor/Nit): `wake-lock-depends-on-mount-order` (→ phase 5 slice details), `leave-without-session-clears-key`, `wake-lock-test-name-overclaims`, `pause-reads-clock-twice`
 Open (Minor/Nit, never fixed by design): `plan-union-shape-deviates` — Plan stays the strength type, AnyPlan is the union; strength plans are never written with type 'strength' · `getready-first-beep-at-start-instant`, `cues-window-before-resume-misplaces-cues` — engine facts, carried into phase 3 slice details
 
@@ -63,9 +64,52 @@ resume point: phase 4 round 1 — the builder's work is on disk and no critic en
 
 ---
 
+## Phase 5 — Cardio session screen
+
+phase:     feature  ·  start 2026-10-24T18:39:47+0200
+
+### round 2          builder sonnet → critic 10x-critic
+  cost:      builder 85k tok / 14 calls / 1m54s  ·  critic unknown (no usage returned)
+  workers:   criteria script 11s · walker sonnet 19:10→19:17:11 · prover none (coordinator ran E1, E2)
+  spot-checks: walker 5.4 work + 5.5 reload screenshots → confirmed
+  automated: 3/3   manual: 2/2 (0 unreachable; speaker → D9 owner-run)
+  verdict:   CONCERNS (1 minor, 3 nits)
+  blockers:  none
+  majors:    none
+  closures:  `meta-row-type-role` → closed (walker measured Barlow Condensed, 700, uppercase, 18 px); `cross-kind-expiry-dismiss-unpinned` → closed (E1: 2 failed; E2: 1 failed)
+  minors:    `dense-timeline-boundary-loose` (Minor) · `stale-describe-name`, `clock-line-height`, `title-role-case` (Nit) — never sent to a builder
+  report:    reviews/phase-5-round-2.md
+  spot-check: re-ran `npx vitest run src/components/CardioSession.test.ts` → 38 passed → confirmed; `cmp` App.vue and cardioEngine.ts against the round-1 copy → identical (round 2 changed CardioSession.vue style + tests only)
+  inconclusive: none
+  diff:      CardioSession.vue 268→270 (.meta-row: --font-display, 700, uppercase); CardioSession.test.ts 648→691 (+1 SFC-source style test, +2 cross-kind expiry tests); no tracked file changed
+  scripted:  none in the repository
+  integrity: plan-freeze clean; never-weaken scan clean
+  builder:   claims 6 mutants red (3 style, 3 dismiss variants); HEAD check not meaningful (HEAD has no cardio start)
+
+### round 1          builder sonnet → critic 10x-critic
+  cost:      builder 155k tok / 50 calls / 5m17s  ·  critic unknown (no usage returned)
+  workers:   criteria script 11s · walker sonnet 18:46:54→19:00:55 (driver hung, session reopened 3×) · prover none (coordinator ran E1–E5)
+  spot-checks: walker 5.4 work + 5.5 reload screenshots → confirmed
+  automated: 3/3   manual: 2/2 (0 unreachable; a real speaker is not observable → D9 owner-run)
+  verdict:   FAIL
+  blockers:  none
+  majors:    `meta-row-type-role` — Meta rows use the body font, 600, no uppercase; DESIGN.md Meta is Barlow Condensed 700, uppercase, tabular; src/components/CardioSession.vue:127
+             `cross-kind-expiry-dismiss-unpinned` — the App line that clears the other kind's expiry notice on start is unpinned (E4: 731 green without it); src/App.vue:61
+  minors:    `dense-timeline-boundary-loose` (Minor) · `stale-describe-name`, `clock-line-height`, `title-role-case` (Nit; title-role-case is a DESIGN.md question for the owner)
+  report:    reviews/phase-5-round-1.md
+  spot-check: opened src/components/CardioSession.vue:127-134 (.meta-row: font-weight 600, no font-family, no text-transform) and DESIGN.md:60-66, 236 (meta: Barlow Condensed 700, wersaliki) → confirmed
+  inconclusive: none
+  diff:      4 files changed, +54/-15 (App.vue, cardioEngine.ts +timeline field, CardioPlansFlow.test.ts, CardioStored.test.ts); new: CardioSession.vue 268, CardioSession.test.ts 648 (35 tests)
+  clauses:   all mapped except 1 browser-only (pixel sizes → 5.4); HEAD check: 32/35 new tests red against HEAD App.vue
+  scripted:  python once on its own new CardioSession.test.ts — lane rule broken again; integrity clean
+  existing tests: the two interim phase-4 tests "Start on a cardio card starts nothing" now assert the session starts (behaviour changed by the brief; assertions stricter, read by the orchestrator); no strength test touched
+  integrity: plan-freeze clean; never-weaken scan clean
+  builder:   CardioSession screen, App wiring (useWorkout before useCardio, workoutRunning covers cardio, end confirm, end screen, restore), CardioView.timeline
+
 ## Phase 4 — Plan list tags, plan type choice and cardio editor
 
-phase:     feature  ·  start 2026-10-24T18:09:38+0200  ·  resume 2026-10-24T18:23:34+0200  ·  paused: unknown (no pause stamp — the earlier session ended without one)
+phase:     feature  ·  start 2026-10-24T18:09:38+0200  ·  resume 2026-10-24T18:23:34+0200  ·  end 2026-10-24T18:39:29+0200  ·  user wait 0m  ·  paused: unknown (no pause stamp — the earlier session ended without one)
+totals:    wall unknown (start→end 30m includes an unmeasured gap between sessions)  ·  subagent time 9m + critics unknown  ·  tokens 275k + critics unknown (subagents only, 10x-critic workers excluded)  ·  rounds 2  ·  commit `799275f`
 
 ### round 2          builder sonnet → critic 10x-critic
   cost:      builder 87k tok / 10 calls / 1m12s  ·  critic unknown (no usage returned)

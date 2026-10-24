@@ -276,11 +276,11 @@ describe('cardio plans through the app', () => {
     expect(wrapper.findAll('li h2').map((heading) => heading.text())).toEqual(['Plecy', 'Wiosłowanie'])
   })
 
-  it('Start on a cardio card still starts nothing (the session comes in a later phase)', async () => {
+  it('Start on a cardio card starts the cardio session (phase 5)', async () => {
     savePlan(cardio('c1', 'Bieg z rozgrzewką'))
     const wrapper = mountApp()
     await button(wrapper.element, 'Start: Bieg z rozgrzewką').trigger('click')
-    expect(localStorage.getItem(WORKOUT_KEY)).toBeNull()
-    expect(wrapper.get('h1').text()).toBe('Plany')
+    expect(JSON.parse(localStorage.getItem(WORKOUT_KEY) ?? 'null')).toMatchObject({ kind: 'cardio', planId: 'c1' })
+    expect(wrapper.get('h1').text()).toBe('PRZYGOTUJ SIĘ')
   })
 })
