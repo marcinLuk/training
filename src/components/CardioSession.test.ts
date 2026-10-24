@@ -287,15 +287,535 @@ describe('the cardio session screen', () => {
     expect(sessionSource).toMatch(/@media \(prefers-reduced-motion: reduce\)\s*\{\s*\.bar-fill\s*\{\s*transition:\s*none;/)
   })
 
-  it('"Zablokuj" is a plain button in this phase: tapping it changes nothing', async () => {
+  it('"Zablokuj" locks only the screen: the session state and the storage are left as they were', async () => {
     const wrapper = await startPlan()
     await look(10_000)
-    const before = wrapper.html()
+    const stored = localStorage.getItem(WORKOUT_KEY)
 
     await tap(wrapper, 'Zablokuj')
 
-    expect(wrapper.html()).toBe(before)
     expect(phase(wrapper)).toBe('PRACA')
+    expect(clock(wrapper)).toBe('0:13')
+    expect(localStorage.getItem(WORKOUT_KEY)).toBe(stored)
+    expect(wrapper.find('[role="alertdialog"]').exists()).toBe(false)
+  })
+})
+
+describe('lock mode', () => {
+  const UNLOCK_NAME = 'Przytrzymaj, aby odblokować'
+  const HOLD_MS = 2000
+
+  /** Locks a running session at 10 s and returns the app. Phase PRACA, clock 0:13. */
+  async function lockedSession(): Promise<VueWrapper> {
+    const wrapper = await startPlan()
+    await look(10_000)
+    await tap(wrapper, 'Zablokuj')
+    return wrapper
+  }
+
+  const bar = (wrapper: VueWrapper) => button(wrapper.element, UNLOCK_NAME)
+  const isLocked = (wrapper: VueWrapper): boolean => wrapper.find('[data-testid="hold-label"]').exists()
+  const fillStyle = (wrapper: VueWrapper): string => wrapper.get('[data-testid="hold-fill"]').attributes('style') ?? ''
+  const label = (wrapper: VueWrapper): string => text(wrapper, '[data-testid="hold-label"]')
+
+  /**
+   * The clock jumps ahead by all but the last 50 ms, then exactly one render tick runs. The tick
+   * only asks for a re-read; the time it reads is the jump, not the number of ticks.
+   */
+  async function holdFor(wrapper: VueWrapper, ms: number): Promise<void> {
+    vi.setSystemTime(Date.now() + ms - 50)
+    await vi.advanceTimersByTimeAsync(50)
+    await wrapper.vm.$nextTick()
+  }
+
+  function stubReducedMotion(matches: boolean): void {
+    Object.defineProperty(window, 'matchMedia', {
+      configurable: true,
+      value: (query: string) => ({ matches: matches && query.includes('prefers-reduced-motion'), media: query }),
+    })
+  }
+
+  afterEach(() => {
+    Reflect.deleteProperty(window, 'matchMedia')
+  })
+
+  it('"Zablokuj" replaces Pauza, Zablokuj and Zakończ with one hold bar and shows "Ekran zablokowany" in the top Meta row', async () => {
+    const wrapper = await lockedSession()
+
+    expect(isLocked(wrapper)).toBe(true)
+    expect(label(wrapper)).toBe(UNLOCK_NAME)
+    const buttons = wrapper.findAll('button')
+    expect(buttons).toHaveLength(1)
+    expect(buttons[0].attributes('aria-label')).toBe(UNLOCK_NAME)
+    expect(wrapper.get('.meta-row').text()).toContain('Ekran zablokowany')
+    expect(wrapper.get('.meta-row').text()).not.toContain('Żwawy bieg w Łodzi')
+    expect(wrapper.get('.meta-row').text()).toContain('Interwał 1 z 4')
+    expect(() => button(wrapper.element, 'Pauza')).toThrow()
+    expect(() => button(wrapper.element, 'Zakończ')).toThrow()
+    expect(() => button(wrapper.element, 'Zablokuj')).toThrow()
+  })
+
+  it('the hold bar is a 64 px full-width button with a stroke SVG padlock (2 px, aria-hidden), no emoji', async () => {
+    const wrapper = await lockedSession()
+
+    expect(bar(wrapper).classes()).toEqual(expect.arrayContaining(['btn-large', 'btn-block', 'hold-bar']))
+    const icon = bar(wrapper).get('svg')
+    expect(icon.attributes('stroke-width')).toBe('2')
+    expect(icon.attributes('stroke')).toBe('currentColor')
+    expect(icon.attributes('aria-hidden')).toBe('true')
+    expect(wrapper.get('.actions').text()).not.toMatch(/\p{Extended_Pictographic}/u)
+    expect(sessionSource).toMatch(/\.hold-bar\s*\{[^}]*border-color:\s*var\(--on-cardio\);/)
+  })
+
+  it('a 1.9 s hold stays locked and the fill goes back to zero on release', async () => {
+    const wrapper = await lockedSession()
+
+    await bar(wrapper).trigger('pointerdown')
+    await holdFor(wrapper, 1900)
+    expect(isLocked(wrapper)).toBe(true)
+    await bar(wrapper).trigger('pointerup')
+
+    expect(isLocked(wrapper)).toBe(true)
+    expect(label(wrapper)).toBe(UNLOCK_NAME)
+    expect(fillStyle(wrapper)).toContain('calc(100% - 0%)')
+  })
+
+  it('a 2.0 s hold unlocks, read from the clock with no tick: the release alone is enough', async () => {
+    const wrapper = await lockedSession()
+
+    await bar(wrapper).trigger('pointerdown')
+    vi.setSystemTime(Date.now() + HOLD_MS)
+    await bar(wrapper).trigger('pointerup')
+
+    expect(isLocked(wrapper)).toBe(false)
+    expect(wrapper.get('.meta-row').text()).toContain('Żwawy bieg w Łodzi')
+    expect(() => button(wrapper.element, 'Pauza')).not.toThrow()
+    expect(() => button(wrapper.element, 'Zablokuj')).not.toThrow()
+    expect(() => button(wrapper.element, 'Zakończ')).not.toThrow()
+  })
+
+  it('a hold still pressed unlocks when the render timer reads 2.0 s, and not at 1.9 s', async () => {
+    const wrapper = await lockedSession()
+
+    await bar(wrapper).trigger('pointerdown')
+    await holdFor(wrapper, 1900)
+    expect(isLocked(wrapper)).toBe(true)
+
+    await holdFor(wrapper, 100)
+    expect(isLocked(wrapper)).toBe(false)
+  })
+
+  it('the fill grows from the left with the clock: 0%, 50% after 1 s, back to 0% after a release', async () => {
+    const wrapper = await lockedSession()
+    expect(fillStyle(wrapper)).toContain('calc(100% - 0%)')
+
+    await bar(wrapper).trigger('pointerdown')
+    await holdFor(wrapper, 1000)
+    expect(fillStyle(wrapper)).toContain('calc(100% - 50%)')
+
+    await bar(wrapper).trigger('pointerup')
+    expect(fillStyle(wrapper)).toContain('calc(100% - 0%)')
+  })
+
+  it.each(['pointerup', 'pointercancel', 'pointerleave'])(
+    'a %s before 2 s resets the hold: a second press needs its own full 2 s',
+    async (ending) => {
+      const wrapper = await lockedSession()
+
+      await bar(wrapper).trigger('pointerdown')
+      await holdFor(wrapper, 1500)
+      await bar(wrapper).trigger(ending)
+      expect(fillStyle(wrapper)).toContain('calc(100% - 0%)')
+
+      await bar(wrapper).trigger('pointerdown')
+      await holdFor(wrapper, 1500)
+      expect(isLocked(wrapper)).toBe(true)
+      await holdFor(wrapper, 500)
+      expect(isLocked(wrapper)).toBe(false)
+    },
+  )
+
+  /** A pointer event with an id, as a touch sends it. Dispatched on the element, like the browser does. */
+  async function pointer(element: Element, type: string, pointerId: number): Promise<void> {
+    // Vue skips a listener attached in the same millisecond as an event that another listener saw first.
+    vi.setSystemTime(Date.now() + 1)
+    element.dispatchEvent(new PointerEvent(type, { pointerId, bubbles: true, cancelable: true }))
+    await nextTick()
+  }
+
+  async function click(element: Element): Promise<void> {
+    vi.setSystemTime(Date.now() + 1)
+    element.dispatchEvent(new MouseEvent('click', { bubbles: true, cancelable: true }))
+    await nextTick()
+  }
+
+  /** Locks, presses the bar with pointer 7 and lets the render timer unlock it with the finger still down. */
+  async function unlockedWithFingerDown(): Promise<VueWrapper> {
+    const wrapper = await lockedSession()
+    await pointer(bar(wrapper).element, 'pointerdown', 7)
+    await holdFor(wrapper, 1900)
+    expect(isLocked(wrapper)).toBe(true)
+    await holdFor(wrapper, 100)
+    expect(isLocked(wrapper)).toBe(false)
+    return wrapper
+  }
+
+  /** A move of the captured pointer, as a touch sends it to the bar when the finger slides. */
+  async function move(element: Element, x: number, y: number): Promise<void> {
+    vi.setSystemTime(Date.now() + 1)
+    element.dispatchEvent(new PointerEvent('pointermove', { pointerId: 7, clientX: x, clientY: y, bubbles: true }))
+    await nextTick()
+  }
+
+  /** The bar sits at x 16-396, y 835-899 on a 412 px phone. jsdom has no layout, so the rectangle is given. */
+  function placeBar(element: Element): void {
+    element.getBoundingClientRect = () => new DOMRect(16, 835, 380, 64)
+  }
+
+  it('a finger that slides off the bar resets the hold, with no pointerleave (a touch has none until the lift)', async () => {
+    const wrapper = await lockedSession()
+    const element = bar(wrapper).element
+    placeBar(element)
+
+    await pointer(element, 'pointerdown', 7)
+    await holdFor(wrapper, 1500)
+    expect(fillStyle(wrapper)).toContain('calc(100% - 75%)')
+    await move(element, 206, 400)
+    expect(fillStyle(wrapper)).toContain('calc(100% - 0%)')
+    await holdFor(wrapper, 1000)
+
+    expect(isLocked(wrapper)).toBe(true)
+  })
+
+  it.each([
+    ['left', 10, 867],
+    ['right', 400, 867],
+    ['above', 206, 830],
+    ['below', 206, 905],
+  ])('a slide off the bar to the %s resets the hold', async (_side, x, y) => {
+    const wrapper = await lockedSession()
+    const element = bar(wrapper).element
+    placeBar(element)
+
+    await pointer(element, 'pointerdown', 7)
+    await holdFor(wrapper, 1000)
+    await move(element, x, y)
+
+    expect(fillStyle(wrapper)).toContain('calc(100% - 0%)')
+  })
+
+  it('moves that stay on the bar keep the hold, so a 2 s hold with a little finger drift still unlocks', async () => {
+    const wrapper = await lockedSession()
+    const element = bar(wrapper).element
+    placeBar(element)
+
+    await pointer(element, 'pointerdown', 7)
+    await holdFor(wrapper, 1000)
+    await move(element, 20, 840)
+    await move(element, 392, 895)
+    await move(element, 206, 867)
+    expect(fillStyle(wrapper)).toContain('calc(100% - 50%)')
+    await holdFor(wrapper, 1000)
+
+    expect(isLocked(wrapper)).toBe(false)
+  })
+
+  it('a move with no hold running does nothing', async () => {
+    const wrapper = await lockedSession()
+    const element = bar(wrapper).element
+    placeBar(element)
+
+    await move(element, 206, 400)
+
+    expect(isLocked(wrapper)).toBe(true)
+    expect(fillStyle(wrapper)).toContain('calc(100% - 0%)')
+  })
+
+  it.each(['Zablokuj', 'Zakończ'])('the lift and click of the press that unlocked do nothing on %s: no re-lock, no question', async (name) => {
+    const wrapper = await unlockedWithFingerDown()
+    const stored = localStorage.getItem(WORKOUT_KEY)
+    const target = button(wrapper.element, name).element
+
+    await pointer(target, 'pointerup', 7)
+    vi.setSystemTime(Date.now() + ACTION_GUARD_MS)
+    await click(target)
+
+    expect(isLocked(wrapper)).toBe(false)
+    expect(wrapper.find('[role="alertdialog"]').exists()).toBe(false)
+    expect(phase(wrapper)).toBe('PRACA')
+    expect(localStorage.getItem(WORKOUT_KEY)).toBe(stored)
+  })
+
+  it.each(['Zablokuj', 'Zakończ', 'Pauza'])('the lift on %s alone (its click is not needed) is swallowed', async (name) => {
+    const wrapper = await unlockedWithFingerDown()
+    const stored = localStorage.getItem(WORKOUT_KEY)
+    const target = button(wrapper.element, name).element
+    const seen = vi.fn()
+    target.addEventListener('pointerup', seen)
+
+    await pointer(target, 'pointerup', 7)
+
+    expect(seen).not.toHaveBeenCalled()
+    expect(localStorage.getItem(WORKOUT_KEY)).toBe(stored)
+  })
+
+  it('the lift of another pointer is not swallowed: only the unlocking press is', async () => {
+    const wrapper = await unlockedWithFingerDown()
+
+    await pointer(button(wrapper.element, 'Zakończ').element, 'pointerup', 8)
+    vi.setSystemTime(Date.now() + ACTION_GUARD_MS)
+    await click(button(wrapper.element, 'Zakończ').element)
+
+    expect(wrapper.get('[role="alertdialog"]').text()).toContain('Zakończyć trening?')
+  })
+
+  it('after the lift a fresh tap works again: Zakończ asks the question, and so does Zablokuj lock', async () => {
+    const wrapper = await unlockedWithFingerDown()
+    const end = button(wrapper.element, 'Zakończ').element
+    await pointer(end, 'pointerup', 7)
+    await click(end)
+
+    vi.setSystemTime(Date.now() + ACTION_GUARD_MS)
+    await pointer(end, 'pointerdown', 9)
+    await pointer(end, 'pointerup', 9)
+    await click(end)
+    expect(wrapper.get('[role="alertdialog"]').text()).toContain('Zakończyć trening?')
+    await button(wrapper.element, 'Wróć do treningu').trigger('click')
+
+    const lock = button(wrapper.element, 'Zablokuj').element
+    await pointer(lock, 'pointerdown', 10)
+    await pointer(lock, 'pointerup', 10)
+    await click(lock)
+    expect(isLocked(wrapper)).toBe(true)
+  })
+
+  it('the guard swallows one click only: the next click works with no pointerdown before it', async () => {
+    const wrapper = await unlockedWithFingerDown()
+    const end = button(wrapper.element, 'Zakończ').element
+    await pointer(end, 'pointerup', 7)
+    await click(end)
+    expect(wrapper.find('[role="alertdialog"]').exists()).toBe(false)
+
+    vi.setSystemTime(Date.now() + ACTION_GUARD_MS)
+    await click(end)
+
+    expect(wrapper.get('[role="alertdialog"]').text()).toContain('Zakończyć trening?')
+  })
+
+  it('a lift whose click never comes does not swallow the next fresh tap', async () => {
+    const wrapper = await unlockedWithFingerDown()
+    await pointer(button(wrapper.element, 'Zakończ').element, 'pointerup', 7)
+
+    vi.setSystemTime(Date.now() + ACTION_GUARD_MS)
+    const lock = button(wrapper.element, 'Zablokuj').element
+    await pointer(lock, 'pointerdown', 11)
+    await pointer(lock, 'pointerup', 11)
+    await click(lock)
+
+    expect(isLocked(wrapper)).toBe(true)
+  })
+
+  it('a cancelled press ends the guard: the next click works', async () => {
+    const wrapper = await unlockedWithFingerDown()
+    await pointer(button(wrapper.element, 'Zakończ').element, 'pointercancel', 7)
+
+    vi.setSystemTime(Date.now() + ACTION_GUARD_MS)
+    await click(button(wrapper.element, 'Zakończ').element)
+
+    expect(wrapper.get('[role="alertdialog"]').text()).toContain('Zakończyć trening?')
+  })
+
+  it('a timer that fires after a cancel does not unlock', async () => {
+    const wrapper = await lockedSession()
+
+    await bar(wrapper).trigger('pointerdown')
+    await bar(wrapper).trigger('pointercancel')
+    await vi.advanceTimersByTimeAsync(HOLD_MS + 1000)
+
+    expect(isLocked(wrapper)).toBe(true)
+  })
+
+  it('taps where Pauza and Zakończ were do nothing: the session is not paused and no question opens', async () => {
+    const wrapper = await lockedSession()
+    const stored = localStorage.getItem(WORKOUT_KEY)
+
+    for (const selector of ['.actions', '.clock', '.next-row', '.phase-block', '.cardio-session', '.timeline']) {
+      vi.setSystemTime(Date.now() + ACTION_GUARD_MS)
+      await wrapper.get(selector).trigger('click')
+    }
+    await bar(wrapper).trigger('click')
+
+    expect(isLocked(wrapper)).toBe(true)
+    expect(wrapper.find('[role="alertdialog"]').exists()).toBe(false)
+    expect(phase(wrapper)).toBe('PRACA')
+    expect(JSON.parse(localStorage.getItem(WORKOUT_KEY) ?? 'null').pausedAt).toBeNull()
+    expect(localStorage.getItem(WORKOUT_KEY)).toBe(stored)
+  })
+
+  it('a quick tap on the bar (down and up at once) does not unlock', async () => {
+    const wrapper = await lockedSession()
+
+    await bar(wrapper).trigger('pointerdown')
+    await bar(wrapper).trigger('pointerup')
+
+    expect(isLocked(wrapper)).toBe(true)
+  })
+
+  it('the session keeps running while locked: the clock moves and a sound cue still plays', async () => {
+    const wrapper = await lockedSession()
+    vi.clearAllMocks()
+
+    await look(22_000)
+    expect(isLocked(wrapper)).toBe(true)
+    expect(phase(wrapper)).toBe('PRACA')
+    expect(clock(wrapper)).toBe('0:01')
+    expect(playCountdownBeep).toHaveBeenCalledTimes(3)
+
+    await look(23_000)
+    expect(phase(wrapper)).toBe('ODPOCZYNEK')
+    expect(playRestStart).toHaveBeenCalledTimes(1)
+    expect(wrapper.get('.meta-row').text()).toContain('Interwał 2 z 4')
+    expect(wrapper.text()).toContain('Razem 0:20')
+  })
+
+  it('the session is still at the right place after the unlock', async () => {
+    const wrapper = await lockedSession()
+    await bar(wrapper).trigger('pointerdown')
+    vi.setSystemTime(Date.now() + HOLD_MS)
+    await bar(wrapper).trigger('pointerup')
+    await look(12_500)
+
+    expect(phase(wrapper)).toBe('PRACA')
+    expect(clock(wrapper)).toBe('0:11')
+    expect(JSON.parse(localStorage.getItem(WORKOUT_KEY) ?? 'null').pausedAt).toBeNull()
+  })
+
+  it('a locked session that reaches its planned end shows the end screen', async () => {
+    const wrapper = await lockedSession()
+
+    await look(63_000)
+
+    expect(heading(wrapper)).toBe('Koniec treningu')
+  })
+
+  it('a paused session can be locked too, and the lock does not resume it', async () => {
+    const wrapper = await startPlan()
+    await look(10_000)
+    await tap(wrapper, 'Pauza')
+    await tap(wrapper, 'Zablokuj')
+
+    await look(40_000)
+
+    expect(isLocked(wrapper)).toBe(true)
+    expect(phase(wrapper)).toBe('PAUZA')
+    expect(clock(wrapper)).toBe('0:13')
+  })
+
+  it('locking writes nothing to storage', async () => {
+    const wrapper = await startPlan()
+    await look(10_000)
+    const before = { ...localStorage }
+
+    await tap(wrapper, 'Zablokuj')
+
+    expect({ ...localStorage }).toEqual(before)
+  })
+
+  it('a fresh mount (a reload) shows the session unlocked and paused', async () => {
+    await lockedSession()
+    moveTo(12_000)
+
+    const wrapper = reload()
+
+    expect(isLocked(wrapper)).toBe(false)
+    expect(phase(wrapper)).toBe('PAUZA')
+    expect(wrapper.get('.meta-row').text()).toContain('Żwawy bieg w Łodzi')
+    expect(() => button(wrapper.element, 'Wznów')).not.toThrow()
+    expect(() => button(wrapper.element, 'Zakończ')).not.toThrow()
+  })
+
+  it('holding Space for 2.0 s unlocks and 1.9 s does not', async () => {
+    const wrapper = await lockedSession()
+
+    await bar(wrapper).trigger('keydown', { key: ' ' })
+    await holdFor(wrapper, 1900)
+    await bar(wrapper).trigger('keyup', { key: ' ' })
+    expect(isLocked(wrapper)).toBe(true)
+
+    await bar(wrapper).trigger('keydown', { key: ' ' })
+    vi.setSystemTime(Date.now() + HOLD_MS)
+    await bar(wrapper).trigger('keyup', { key: ' ' })
+    expect(isLocked(wrapper)).toBe(false)
+  })
+
+  it('holding Enter for 2.0 s unlocks, with the key repeat ignored and the bar still filling', async () => {
+    const wrapper = await lockedSession()
+
+    await bar(wrapper).trigger('keydown', { key: 'Enter' })
+    await holdFor(wrapper, 1500)
+    await bar(wrapper).trigger('keydown', { key: 'Enter', repeat: true })
+    expect(fillStyle(wrapper)).toContain('calc(100% - 75%)')
+    await holdFor(wrapper, 500)
+
+    expect(isLocked(wrapper)).toBe(false)
+  })
+
+  it('other keys start no hold, and losing focus before 2 s resets the hold', async () => {
+    const wrapper = await lockedSession()
+
+    await bar(wrapper).trigger('keydown', { key: 'a' })
+    await holdFor(wrapper, HOLD_MS)
+    await bar(wrapper).trigger('keyup', { key: 'a' })
+    expect(isLocked(wrapper)).toBe(true)
+
+    await bar(wrapper).trigger('keydown', { key: ' ' })
+    await holdFor(wrapper, 1000)
+    await bar(wrapper).trigger('blur')
+    await holdFor(wrapper, 1500)
+    await bar(wrapper).trigger('keyup', { key: ' ' })
+    expect(isLocked(wrapper)).toBe(true)
+  })
+
+  it('under prefers-reduced-motion the bar shows "Trzymaj… 1" then "Trzymaj… 2" and no fill', async () => {
+    stubReducedMotion(true)
+    const wrapper = await lockedSession()
+    expect(label(wrapper)).toBe(UNLOCK_NAME)
+
+    await bar(wrapper).trigger('pointerdown')
+    expect(label(wrapper)).toBe('Trzymaj… 1')
+    expect(wrapper.find('[data-testid="hold-fill"]').exists()).toBe(false)
+
+    await holdFor(wrapper, 900)
+    expect(label(wrapper)).toBe('Trzymaj… 1')
+    await holdFor(wrapper, 100)
+    expect(label(wrapper)).toBe('Trzymaj… 2')
+
+    await holdFor(wrapper, 999)
+    expect(isLocked(wrapper)).toBe(true)
+    await bar(wrapper).trigger('pointerup')
+    expect(label(wrapper)).toBe(UNLOCK_NAME)
+  })
+
+  it('without reduced motion the label stays and the fill shows', async () => {
+    stubReducedMotion(false)
+    const wrapper = await lockedSession()
+
+    await bar(wrapper).trigger('pointerdown')
+    await holdFor(wrapper, 1200)
+
+    expect(label(wrapper)).toBe(UNLOCK_NAME)
+    expect(wrapper.find('[data-testid="hold-fill"]').exists()).toBe(true)
+  })
+
+  it('the unlock lands back on a working screen: Zakończ asks the question again', async () => {
+    const wrapper = await lockedSession()
+    await bar(wrapper).trigger('pointerdown')
+    vi.setSystemTime(Date.now() + HOLD_MS)
+    await bar(wrapper).trigger('pointerup')
+
+    await tap(wrapper, 'Zakończ')
+
+    expect(wrapper.get('[role="alertdialog"]').text()).toContain('Zakończyć trening?')
   })
 })
 

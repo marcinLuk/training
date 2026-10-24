@@ -18,7 +18,7 @@ Ledger:
 - [x] Phase 2
 - [x] Phase 3
 - [x] Phase 4
-- [ ] Phase 5
+- [x] Phase 5
 - [ ] Phase 6
 - [ ] goal review
 - [ ] e2e walkthrough
@@ -35,23 +35,24 @@ Routing (Step 1): every slice → sonnet — every slice writes production code 
 | 2 — Cardio session engine | sonnet | 1 | CONCERNS (2 minor) → `40c4517` | feature — new interval timeline, pause and sound cues | 13m / 5m+ | 120k+ |
 | 3 — Cardio sounds, persistence and session controller | sonnet | 2 | CONCERNS (3 minor, 1 nit) → `442b607` | feature — new sounds, stored cardio session, resume rules | 24m / 12m+ | 281k+ |
 | 4 — Plan list tags, plan type choice and cardio editor | sonnet | 2 | CONCERNS (1 minor) → `799275f` | feature — new UI for cardio plans | unknown / 9m+ | 275k+ |
-| 5 — Cardio session screen | sonnet | 0 | waiting | feature — new session screen | — | — |
+| 5 — Cardio session screen | sonnet | 2 | CONCERNS (1 minor, 3 nits) → `3f0d32f` | feature — new session screen | 40m / 7m+ | 240k+ |
 | 6 — Lock mode | sonnet | 0 | waiting | feature — new lock mode | — | — |
 
 ## Run totals
 
-phases measured: 4 of 6 executed (1 wall unknown — phase 4)   ·   tokens are subagents only, 10x-critic usage not returned (+)
+phases measured: 5 of 6 executed (1 wall unknown — phase 4)   ·   tokens are subagents only, 10x-critic usage not returned (+)
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 4 | 907k+ | 100% | 54m | 100% | 32m+ |
+| feature | 5 | 1,147k+ | 100% | 94m | 100% | 39m+ |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 4 | 907k+ | 100% | 54m | 100% | 32m+ |
+| **total** | 5 | 1,147k+ | 100% | 94m | 100% | 39m+ |
 
-Closed findings: `cardio-start-guard-unpinned`, `unknown-plan-type-test-vacuous`, `cardio-interval-missing-field-unpinned`, `cardio-releases-shared-wake-lock`, `restored-expiry-timer-unpinned`, `remove-block-clears-errors-unpinned`, `add-interval-alternation-unpinned`
+Closed findings: `cardio-start-guard-unpinned`, `unknown-plan-type-test-vacuous`, `cardio-interval-missing-field-unpinned`, `cardio-releases-shared-wake-lock`, `restored-expiry-timer-unpinned`, `remove-block-clears-errors-unpinned`, `add-interval-alternation-unpinned`, `meta-row-type-role`, `cross-kind-expiry-dismiss-unpinned`
 Open from phase 4 (Minor): `ambiguous-remove-button-names`
+Open from phase 5 (Minor/Nit): `dense-timeline-boundary-loose`, `stale-describe-name`, `clock-line-height`, `title-role-case` (DESIGN.md question for the owner)
 Open from phase 3 (Minor/Nit): `wake-lock-depends-on-mount-order` (→ phase 5 slice details), `leave-without-session-clears-key`, `wake-lock-test-name-overclaims`, `pause-reads-clock-twice`
 Open (Minor/Nit, never fixed by design): `plan-union-shape-deviates` — Plan stays the strength type, AnyPlan is the union; strength plans are never written with type 'strength' · `getready-first-beep-at-start-instant`, `cues-window-before-resume-misplaces-cues` — engine facts, carried into phase 3 slice details
 
@@ -64,9 +65,50 @@ resume point: phase 4 round 1 — the builder's work is on disk and no critic en
 
 ---
 
+## Phase 6 — Lock mode
+
+phase:     feature  ·  start 2026-10-24T19:19:44+0200
+
+### round 2          builder sonnet → critic 10x-critic
+  cost:      builder 147k tok / 65 calls / 8m37s  ·  critic unknown (no usage returned)
+  workers:   criteria script 10s · walker sonnet 19:41:40→19:43:38 · prover-1 sonnet 19:45:10→19:46:15
+  spot-checks: walker screenshots + coordinator re-ran touch holds and slide-off on vite preview → confirmed; prover-1 E1 re-run → confirmed
+  automated: 3/3   manual: 1/1 (0 unreachable; mouse and CDP touch)
+  verdict:   CONCERNS (1 minor)
+  blockers:  none
+  majors:    none
+  closures:  `unlock-lift-hits-revealed-buttons` → closed (CDP touch 2.1 s holds at x=348/64/206: unlocked, no dialog, fresh tap works; mutants E1, E2 red); `touch-leave-does-not-reset` → closed (CDP slide to y=400 + 2.1 s stays locked; E3 red)
+  minors:    `unlock-guard-can-outlive-its-press` — after a pointercancel the guard stays armed for the same pointerId (mouse id 1; touch gets a new id per touch on Chrome, so the phone path is mostly unaffected); test name overclaims — never sent to a builder, surfaced in the final report
+  report:    reviews/phase-6-round-2.md
+  spot-check: re-ran `npx vitest run src/components/CardioSession.test.ts` → 79 passed → confirmed
+  inconclusive: none
+  diff:      CardioSession.vue + CardioSession.test.ts, cumulative vs HEAD +745/-12 (round 2: post-unlock guard keyed by pointerId with capture-phase pointerup/click/pointerdown; pointermove rect hit-test; +13 tests)
+  scripted:  python heredoc once on CardioSession.test.ts — lane rule broken; `npx vue-tsc -b` by the orchestrator → exit 0
+  integrity: plan-freeze clean; never-weaken scan clean
+  builder:   claims 11 mutants red (1 equivalent); CDP touch runs A–E on vite preview: lift after unlock swallowed, slide-off stays locked
+### round 1          builder sonnet → critic 10x-critic
+  cost:      builder 125k tok / 26 calls / 2m47s  ·  critic unknown (no usage returned)
+  workers:   criteria script 11s · walker sonnet 19:24:14→19:26:16 (mouse only) · prover none (coordinator ran E1, E2 with CDP touch emulation)
+  spot-checks: walker 6.4 locked + reload screenshots → confirmed
+  automated: 3/3   manual: 1/1 (0 unreachable; walked with a mouse — the touch defects came from the coordinator's own experiments)
+  verdict:   FAIL
+  blockers:  `unlock-lift-hits-revealed-buttons` — the timer unlocks while the finger is still down; the revealed Zablokuj/Zakończ take the lift's click (re-lock or the end dialog); src/components/CardioSession.vue:58-64, :211-219
+  majors:    `touch-leave-does-not-reset` — touch captures the pointer, so pointerleave never fires before the lift; a finger slid off the bar still unlocks; src/components/CardioSession.vue:188
+  minors:    `hold-ignores-pointer-id`, `lock-focus-lost`, `lock-across-interval-unasserted`, `padlock-svg-duplicated`
+  report:    reviews/phase-6-round-1.md
+  spot-check: opened src/components/CardioSession.vue:58-64 (render timer sets `locked.value = false` with the pointer still down) and :185-188 (only pointerleave, no capture release or hit test) → confirmed
+  inconclusive: none
+  diff:      2 files changed, +498/-11 (CardioSession.vue +173, CardioSession.test.ts +336: 22 lock tests)
+  clauses:   all mapped except browser-only (visual fill, pixel sizes → 6.4); HEAD check: 21 tests red against HEAD CardioSession.vue
+  scripted:  none
+  existing tests: the phase-5 test "Zablokuj is a plain button" (whole-HTML equality) replaced by "Zablokuj locks only the screen" (phase, clock, storage byte-identical, no dialog) — behaviour changed by the brief; read by the orchestrator
+  integrity: plan-freeze clean; never-weaken scan clean
+  builder:   hold bar timed from now() with a 50 ms render timer; pointer up/cancel/leave and blur reset; Space/Enter hold; reduced-motion text via matchMedia at hold start
+
 ## Phase 5 — Cardio session screen
 
-phase:     feature  ·  start 2026-10-24T18:39:47+0200
+phase:     feature  ·  start 2026-10-24T18:39:47+0200  ·  end 2026-10-24T19:19:27+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 40m  ·  subagent time 7m + critics unknown  ·  tokens 240k + critics unknown (subagents only, 10x-critic workers excluded)  ·  rounds 2  ·  commit `3f0d32f`
 
 ### round 2          builder sonnet → critic 10x-critic
   cost:      builder 85k tok / 14 calls / 1m54s  ·  critic unknown (no usage returned)

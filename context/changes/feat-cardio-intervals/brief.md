@@ -87,20 +87,20 @@ See `research.md` (entry points: `src/plans/plan.ts:9`, `src/plans/planStore.ts:
 
 ### Phase 5: Cardio session screen
 #### Automated Verification:
-- [x] 5.1 `npx vitest run src/components` passes, including new tests for the session screen, get-ready, pause/resume, end confirm, end screen, resume after a fresh mount and the update/wake-lock wiring (D5, D6, D8)
-- [x] 5.2 `npm test` shows 0 failing tests (baseline 0) (D6, D8)
-- [x] 5.3 `npm run build` exits 0 (D6)
+- [x] 5.1 `npx vitest run src/components` passes, including new tests for the session screen, get-ready, pause/resume, end confirm, end screen, resume after a fresh mount and the update/wake-lock wiring (D5, D6, D8) — 3f0d32f
+- [x] 5.2 `npm test` shows 0 failing tests (baseline 0) (D6, D8) — 3f0d32f
+- [x] 5.3 `npm run build` exits 0 (D6) — 3f0d32f
 #### Manual Verification:
-- [x] 5.4 at 412×915 on `vite preview` with Playwright's fake clock: Start a cardio plan → violet field with "PRZYGOTUJ SIĘ" and 0:03 → "PRACA" with the clock counting down → "ODPOCZYNEK"; "Interwał X z Y", "Dalej:", "Razem", "Zostało" and the timeline match the plan; Pauza → "PAUZA" and "Wznów", the clock stands; Wznów continues; Zakończ asks „Zakończyć trening?”; after the last interval the end screen shows (D6)
-- [x] 5.5 on `vite preview`: reload during a work interval → the session comes back paused at the same interval; sound calls (instrumented `createOscillator`) happen for the countdown and the interval starts while visible (D4, D5)
+- [x] 5.4 at 412×915 on `vite preview` with Playwright's fake clock: Start a cardio plan → violet field with "PRZYGOTUJ SIĘ" and 0:03 → "PRACA" with the clock counting down → "ODPOCZYNEK"; "Interwał X z Y", "Dalej:", "Razem", "Zostało" and the timeline match the plan; Pauza → "PAUZA" and "Wznów", the clock stands; Wznów continues; Zakończ asks „Zakończyć trening?”; after the last interval the end screen shows (D6) — 3f0d32f
+- [x] 5.5 on `vite preview`: reload during a work interval → the session comes back paused at the same interval; sound calls (instrumented `createOscillator`) happen for the countdown and the interval starts while visible (D4, D5) — 3f0d32f
 
 ### Phase 6: Lock mode
 #### Automated Verification:
-- [ ] 6.1 `npx vitest run src/components` passes, including new tests for lock, the 2 s hold, an early release, ignored touches, reduced-motion text and the lock removed after a fresh mount (D7)
-- [ ] 6.2 `npm test` shows 0 failing tests (baseline 0) (D7, D8)
-- [ ] 6.3 `npm run build` exits 0 (D7)
+- [x] 6.1 `npx vitest run src/components` passes, including new tests for lock, the 2 s hold, an early release, ignored touches, reduced-motion text and the lock removed after a fresh mount (D7)
+- [x] 6.2 `npm test` shows 0 failing tests (baseline 0) (D7, D8)
+- [x] 6.3 `npm run build` exits 0 (D7)
 #### Manual Verification:
-- [ ] 6.4 at 412×915 on `vite preview`: "Zablokuj" shows "Przytrzymaj, aby odblokować" and "Ekran zablokowany"; taps where Pauza and Zakończ were do nothing; a 1 s hold does not unlock; a 2 s hold unlocks; the session keeps running while locked; reload removes the lock (D7)
+- [x] 6.4 at 412×915 on `vite preview`: "Zablokuj" shows "Przytrzymaj, aby odblokować" and "Ekran zablokowany"; taps where Pauza and Zakończ were do nothing; a 1 s hold does not unlock; a 2 s hold unlocks; the session keeps running while locked; reload removes the lock (D7)
 
 ## Slice details
 
