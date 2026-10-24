@@ -30,11 +30,12 @@ The app was rebuilt from scratch in October 2026. The old Express + SQLite proto
 
 Source of truth for scope and decisions:
 
-- `context/foundation/prd.md` — requirements (FR-001…FR-015), non-goals, open questions.
+- `context/foundation/prd-v2.md` — **the current PRD**: the cardio module (interval sessions, lock mode), FR-016…FR-028 plus changes to FR-009, FR-011, FR-012. It is a delta on top of v1.
+- `context/foundation/prd.md` — PRD v1, the strength MVP (FR-001…FR-015). Still valid wherever `prd-v2.md` does not change it. Read both.
 - `PRODUCT.md` — users, purpose, principles and accessibility rules (in Polish).
 - `DESIGN.md` — the approved visual system "Talerze": colors, type, layout, components, Do's and Don'ts (in Polish).
 - `context/foundation/tech-stack.md` — stack choice and why.
-- `context/foundation/shape-notes.md` — the discovery notes behind the PRD.
+- `context/foundation/shape-notes.md` — the discovery notes behind PRD v2 (cardio). The notes behind v1 are in git history.
 
 The UI text is in **Polish**.
 
@@ -44,7 +45,7 @@ Every AI agent MUST read `DESIGN.md` (and `PRODUCT.md`) before it creates or cha
 
 - Use only the tokens, type scale, spacing and component rules from `DESIGN.md`. Do not invent new colors, fonts or sizes.
 - The design is approved. Do not redesign it. If a task needs something `DESIGN.md` does not cover, ask the user, then update `DESIGN.md` in the same change.
-- The MVP has no cardio, calendar, history or weight field. Plate colors and the plate stack are reserved for later ("po MVP"). Do not use them now.
+- Cardio is in scope from PRD v2, but `DESIGN.md` does not cover it yet (interval screen, lock mode, plan type mark). Ask the user and update `DESIGN.md` before you build cardio UI. The app has no calendar, history or weight field. Plate colors and the plate stack are reserved for later ("po MVP"). Do not use them now.
 - Keep the key rules: one chalk primary action per screen, the biggest number is sets left (rest time during rest), touch targets 56 px (64 px for the main action), no emoji as icons, no gradients, no left color stripe on cards.
 - The MVP is dark theme only ("guma"). Do not build the light theme or a theme switch.
 - Fonts are served locally from `public/`, not from a CDN.
@@ -82,7 +83,7 @@ TypeScript config is split: `tsconfig.app.json` covers `src/` without test files
 
 ## Product constraints (from the PRD)
 
-These are requirements, not preferences. Check `context/foundation/prd.md` before you change any of them.
+These are requirements, not preferences. Check `context/foundation/prd-v2.md` and `context/foundation/prd.md` before you change any of them.
 
 - **No server for user data.** Plans and workout state live only on the device. Do not add API calls, accounts or sync.
 - **Offline after the first load.** The app shell must work with no network.
@@ -90,7 +91,7 @@ These are requirements, not preferences. Check `context/foundation/prd.md` befor
 - **Rest time comes from timestamps.** Compute the remaining rest from the stored start time and the current time. Never count timer ticks; a hidden tab stops ticking.
 - **The screen stays on during a workout** (FR-012).
 - **Target: Android phone, current Chrome.** Design for a phone first. iOS and desktop are not targets.
-- **Out of scope for the MVP:** workout history, statistics, calendar, exercise library, cardio, rep counting, voice guidance, vibration, Google Play. See `## Non-Goals` in the PRD.
+- **Out of scope:** workout history, statistics, calendar, exercise library, rep counting, voice guidance, vibration, Google Play. For cardio also: GPS, distance, heart rate, a guaranteed sound after a power-button lock, and a lock mode for the strength workout. See `## Non-Goals` in both PRDs.
 
 ## Deployment
 
