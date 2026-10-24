@@ -96,11 +96,17 @@ See `research.md` (entry points: `src/plans/plan.ts:9`, `src/plans/planStore.ts:
 
 ### Phase 6: Lock mode
 #### Automated Verification:
-- [x] 6.1 `npx vitest run src/components` passes, including new tests for lock, the 2 s hold, an early release, ignored touches, reduced-motion text and the lock removed after a fresh mount (D7)
-- [x] 6.2 `npm test` shows 0 failing tests (baseline 0) (D7, D8)
-- [x] 6.3 `npm run build` exits 0 (D7)
+- [x] 6.1 `npx vitest run src/components` passes, including new tests for lock, the 2 s hold, an early release, ignored touches, reduced-motion text and the lock removed after a fresh mount (D7) — f554013
+- [x] 6.2 `npm test` shows 0 failing tests (baseline 0) (D7, D8) — f554013
+- [x] 6.3 `npm run build` exits 0 (D7) — f554013
 #### Manual Verification:
-- [x] 6.4 at 412×915 on `vite preview`: "Zablokuj" shows "Przytrzymaj, aby odblokować" and "Ekran zablokowany"; taps where Pauza and Zakończ were do nothing; a 1 s hold does not unlock; a 2 s hold unlocks; the session keeps running while locked; reload removes the lock (D7)
+- [x] 6.4 at 412×915 on `vite preview`: "Zablokuj" shows "Przytrzymaj, aby odblokować" and "Ekran zablokowany"; taps where Pauza and Zakończ were do nothing; a 1 s hold does not unlock; a 2 s hold unlocks; the session keeps running while locked; reload removes the lock (D7) — f554013
+
+### Phase 7: Goal-review fixes
+#### Automated Verification:
+- [x] 7.1 `npx vitest run src/components` passes, including new App-level tests: the second tap of a double tap 150 ms after a cardio session ends (Zakończ confirm, and „Wróć do planów” on the end screen) does not start a strength workout, and the same from strength to cardio; a tap after 500 ms still starts (goal review `cross-kind-tap-guard-gap`) (D8)
+- [x] 7.2 `npm test` shows 0 failing tests (baseline 0) (D8)
+- [x] 7.3 `npm run build` exits 0 (D8)
 
 ## Slice details
 
@@ -241,3 +247,20 @@ Changes required:
   paused, phase 3).
 Slice guardrails: tests for a 1.9 s hold (stays locked) and a 2.0 s hold (unlocks) with literal
 values; an early release resets.
+
+### Phase 7: Goal-review fixes
+Appended 2026-10-24 from `reviews/goal-review.md` (brief mode §7); the frozen part is unchanged.
+Changes required:
+- `cross-kind-tap-guard-gap` (Major): `useWorkout` and `useCardio` each keep their own 500 ms tap
+  guard (`useWorkout.ts:137`, `useCardio.ts:157`), and `App.vue` `startPlan` (`:56-62`) calls the
+  start of the other kind, which checks only its own guard. So the second tap of a double tap that
+  ends one kind of workout can start the other kind 150 ms later. Make the `ACTION_GUARD_MS` window
+  shared across both kinds, so a start of either kind is refused within 500 ms of the last screen
+  change of either controller. Choose the smallest change that keeps each controller's own rules
+  (for example, a shared module-level "guard until" timestamp both controllers read and write, or
+  an App-level check before `startPlan`). The strength guard behaviour must not change for
+  strength-only use (`useWorkout.ts` is a hotspot: keep its tests green).
+- Tests: App-level, both directions, both end paths (end confirm, end screen „Wróć do planów”),
+  with the clock moved by `vi.setSystemTime` and a literal 150 ms / 500 ms; build fixtures through
+  the app's own functions.
+Slice guardrails: no other goal-review finding is in scope (the Minors and Nits go to the owner).

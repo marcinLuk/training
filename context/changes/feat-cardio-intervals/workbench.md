@@ -19,7 +19,7 @@ Ledger:
 - [x] Phase 3
 - [x] Phase 4
 - [x] Phase 5
-- [ ] Phase 6
+- [x] Phase 6
 - [ ] goal review
 - [ ] e2e walkthrough
 - [ ] retrospective
@@ -36,21 +36,22 @@ Routing (Step 1): every slice → sonnet — every slice writes production code 
 | 3 — Cardio sounds, persistence and session controller | sonnet | 2 | CONCERNS (3 minor, 1 nit) → `442b607` | feature — new sounds, stored cardio session, resume rules | 24m / 12m+ | 281k+ |
 | 4 — Plan list tags, plan type choice and cardio editor | sonnet | 2 | CONCERNS (1 minor) → `799275f` | feature — new UI for cardio plans | unknown / 9m+ | 275k+ |
 | 5 — Cardio session screen | sonnet | 2 | CONCERNS (1 minor, 3 nits) → `3f0d32f` | feature — new session screen | 40m / 7m+ | 240k+ |
-| 6 — Lock mode | sonnet | 0 | waiting | feature — new lock mode | — | — |
+| 6 — Lock mode | sonnet | 2 | CONCERNS (1 minor) → `f554013` | feature — new lock mode | 30m / 11m+ | 272k+ |
 
 ## Run totals
 
-phases measured: 5 of 6 executed (1 wall unknown — phase 4)   ·   tokens are subagents only, 10x-critic usage not returned (+)
+phases measured: 6 of 6 executed (1 wall unknown — phase 4)   ·   tokens are subagents only, 10x-critic usage not returned (+)
 
 | Category | Phases | Tokens | % tokens | Wall | % wall | Subagent time |
 |---|---|---|---|---|---|---|
-| feature | 5 | 1,147k+ | 100% | 94m | 100% | 39m+ |
+| feature | 6 | 1,419k+ | 100% | 124m | 100% | 50m+ |
 | stabilization | 0 | 0 | 0% | 0m | 0% | 0m |
 | refactor | 0 | 0 | 0% | 0m | 0% | 0m |
 | end-of-run review | — | — | — | — | — | — |
-| **total** | 5 | 1,147k+ | 100% | 94m | 100% | 39m+ |
+| **total** | 6 | 1,419k+ | 100% | 124m | 100% | 50m+ |
 
-Closed findings: `cardio-start-guard-unpinned`, `unknown-plan-type-test-vacuous`, `cardio-interval-missing-field-unpinned`, `cardio-releases-shared-wake-lock`, `restored-expiry-timer-unpinned`, `remove-block-clears-errors-unpinned`, `add-interval-alternation-unpinned`, `meta-row-type-role`, `cross-kind-expiry-dismiss-unpinned`
+Closed findings: `cardio-start-guard-unpinned`, `unknown-plan-type-test-vacuous`, `cardio-interval-missing-field-unpinned`, `cardio-releases-shared-wake-lock`, `restored-expiry-timer-unpinned`, `remove-block-clears-errors-unpinned`, `add-interval-alternation-unpinned`, `meta-row-type-role`, `cross-kind-expiry-dismiss-unpinned`, `unlock-lift-hits-revealed-buttons`, `touch-leave-does-not-reset`
+Open from phase 6 (Minor): `unlock-guard-can-outlive-its-press`
 Open from phase 4 (Minor): `ambiguous-remove-button-names`
 Open from phase 5 (Minor/Nit): `dense-timeline-boundary-loose`, `stale-describe-name`, `clock-line-height`, `title-role-case` (DESIGN.md question for the owner)
 Open from phase 3 (Minor/Nit): `wake-lock-depends-on-mount-order` (→ phase 5 slice details), `leave-without-session-clears-key`, `wake-lock-test-name-overclaims`, `pause-reads-clock-twice`
@@ -65,9 +66,64 @@ resume point: phase 4 round 1 — the builder's work is on disk and no critic en
 
 ---
 
+## Phase 7 — Goal-review fixes
+
+phase:     feature  ·  start 2026-10-24T19:59:36+0200
+appended:  2026-10-24 from goal review 1 (`cross-kind-tap-guard-gap`, Major); rows 7.1–7.3 added at the end of ## Progress and a Slice details entry; frozen hash unchanged (integrity clean)
+
+### round 2          builder sonnet → critic 10x-critic
+  cost:      builder 85k tok / 20 calls / 1m44s  ·  critic unknown (no usage returned)
+  workers:   criteria script 11s · walker none · prover none (coordinator ran M0–M5)
+  spot-checks: none — no worker spawned
+  automated: 3/3   manual: n/a
+  verdict:   CONCERNS (2 nits)
+  blockers:  none
+  majors:    none
+  closures:  `cross-kind-guard-misses-expiry` → closed (M2 = round-1 shape: exactly the 4 expiry tests red)
+  minors:    `guard-docblock-says-end-time`, `pass-through-show-list-after-end` (Nits)
+  report:    reviews/phase-7-round-2.md
+  spot-check: re-ran `npx vitest run src/components/CrossKindStartGuard.test.ts` → 13 passed → confirmed
+  inconclusive: none
+  diff:      App.vue cumulative +31/-6 (sync watcher on `workoutOpen` true→false arms the shared window; manual arming removed); CrossKindStartGuard.test.ts 294 lines (+4 expiry tests)
+  scripted:  none
+  integrity: plan-freeze clean; never-weaken scan clean
+  builder:   claims 3 mutants red; `flush: 'post'` mutant not distinguishable by tests (noted); 4 new tests red on round-1 App.vue
+
+### round 1          builder sonnet → critic 10x-critic
+  cost:      builder 108k tok / 23 calls / 2m08s  ·  critic unknown (no usage returned)
+  workers:   criteria script ~11s · walker none (no manual items) · prover none (coordinator ran M0–M6, X1–X3)
+  spot-checks: none — no worker spawned
+  automated: 3/3   manual: n/a
+  verdict:   FAIL
+  blockers:  none
+  majors:    `cross-kind-guard-misses-expiry` — the shared window is armed only on the four end/leave paths; a tap that expires an idle workout also lands on the plan list without it (X1 strength→cardio, X3 cardio→strength); src/App.vue:62-65,107-110
+  minors:    `guard-until-docblock-wording`, `strength-fixture-literal` (Nits)
+  report:    reviews/phase-7-round-1.md
+  spot-check: opened src/App.vue:36, 50-110 — expiry shows the list through the controllers' `expired` state; `workoutEndedGuardUntil` is set only in `showListAfterEnd()` → confirmed
+  inconclusive: none
+  diff:      1 file changed, +20/-5 (App.vue: shared `workoutEndedGuardUntil`, `showListAfterEnd()` on all four end paths, `startPlan` refuses inside the window); new: CrossKindStartGuard.test.ts (9 tests)
+  clauses:   all mapped; HEAD check: 6/9 new tests red against HEAD App.vue (both directions)
+  scripted:  python heredoc once on src/App.vue (two import lines) — lane rule broken; `npx vue-tsc -b` at 2f
+  integrity: plan-freeze clean; never-weaken scan clean
+  builder:   App-level start guard; useWorkout.ts and useCardio.ts untouched
+
+## Goal review
+
+### goal review 1          critic opus + ultrathink (general-purpose)
+  cost:      247k tok / 58 calls / 8m45s
+  done when: D1–D8 met (npm test 775 passed, build exit 0, targeted runs, browser walk goal-1..8.png) · D9 owner-run
+  blockers:  none
+  majors:    `cross-kind-tap-guard-gap` — each controller has its own 500 ms guard; a double tap that ends a cardio session can start a strength workout 150 ms later, and the reverse (scratch probe); src/App.vue:56-62, useCardio.ts:200, useWorkout.ts:180
+  minors:    `wake-lock-order-coupling`, `duplicated-session-controller`, `unused-exports-after-slices`, `design-value-drift`, `corrupt-copy-failed-then-overwrite` (medium confidence), `end-screen-not-locked` (low; owner question)
+  nits:      `naming-type-vs-kind`, `stale-interim-test`, `editor-save-date-now`, `confirm-over-end-screen`
+  report:    reviews/goal-review.md
+  spot-check: opened src/workout/useWorkout.ts:137 / useCardio.ts:157 (separate `guardUntil` per controller) and src/App.vue:56-62 (startPlan checks no shared guard) → confirmed
+  next:      appended Phase 7, then the goal critic runs once more on the new diff
+
 ## Phase 6 — Lock mode
 
-phase:     feature  ·  start 2026-10-24T19:19:44+0200
+phase:     feature  ·  start 2026-10-24T19:19:44+0200  ·  end 2026-10-24T19:49:36+0200  ·  user wait 0m  ·  paused 0m
+totals:    wall 30m  ·  subagent time 11m + critics unknown  ·  tokens 272k + critics unknown (subagents only, 10x-critic workers excluded)  ·  rounds 2  ·  commit `f554013`
 
 ### round 2          builder sonnet → critic 10x-critic
   cost:      builder 147k tok / 65 calls / 8m37s  ·  critic unknown (no usage returned)

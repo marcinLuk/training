@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import CardioPlanEditor from './components/CardioPlanEditor.vue'
 import CardioSession from './components/CardioSession.vue'
 import EndWorkoutConfirm from './components/EndWorkoutConfirm.vue'
@@ -9,11 +9,12 @@ import PlanTypeChoice from './components/PlanTypeChoice.vue'
 import WorkoutEnd from './components/WorkoutEnd.vue'
 import WorkoutRest from './components/WorkoutRest.vue'
 import WorkoutSet from './components/WorkoutSet.vue'
+import { now } from './lib/clock'
 import { isCardioPlan, type CardioPlan, type Plan } from './plans/plan'
 import { deletePlan, listAllPlans } from './plans/planStore'
 import { useServiceWorkerUpdates } from './pwa/useServiceWorkerUpdates'
 import { useCardio } from './workout/useCardio'
-import { useWorkout } from './workout/useWorkout'
+import { ACTION_GUARD_MS, useWorkout } from './workout/useWorkout'
 
 type View =
   | { kind: 'plan-list' }
@@ -53,7 +54,26 @@ function showList(): void {
   view.value = { kind: 'plan-list' }
 }
 
+/**
+ * When a workout of either kind was last ended or left. The strength and cardio controllers each
+ * guard only their own taps, so the second tap of a double tap that ends one kind would start the
+ * other kind from the plan list. Starts of both kinds wait for this shared window.
+ */
+let workoutEndedGuardUntil = 0
+
+// One place for every route from an open workout to the plan list: end confirm, end-screen return,
+// a tap that expires an idle workout, and an expiry by the controller's own timer. The watcher runs
+// sync, so the window starts at the moment of the screen change.
+watch(
+  workoutOpen,
+  (open, wasOpen) => {
+    if (wasOpen && !open) workoutEndedGuardUntil = now() + ACTION_GUARD_MS
+  },
+  { flush: 'sync' },
+)
+
 function startPlan(planId: string): void {
+  if (now() < workoutEndedGuardUntil) return
   const plan = plans.value.find((candidate) => candidate.id === planId)
   if (plan === undefined) return
   const started = isCardioPlan(plan) ? cardio.start(plan) : workout.start(plan)
@@ -94,20 +114,25 @@ function removePlan(planId: string): void {
   }
 }
 
+/** Shows the plan list after a workout of either kind ended. The shared start guard arms itself. */
+function showListAfterEnd(): void {
+  showList()
+}
+
 function endWorkout(): void {
-  if (workout.confirmEnd()) showList()
+  if (workout.confirmEnd()) showListAfterEnd()
 }
 
 function leaveWorkout(): void {
-  if (workout.leave()) showList()
+  if (workout.leave()) showListAfterEnd()
 }
 
 function endCardio(): void {
-  if (cardio.confirmEnd()) showList()
+  if (cardio.confirmEnd()) showListAfterEnd()
 }
 
 function leaveCardio(): void {
-  if (cardio.leave()) showList()
+  if (cardio.leave()) showListAfterEnd()
 }
 </script>
 
