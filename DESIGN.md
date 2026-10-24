@@ -261,6 +261,12 @@ Zaokrąglenia są powściągliwe: 10 px dla przycisków, pól i kart, 6 px dla c
 - Po powrocie z blokady, innej aplikacji lub przeładowania ekran od razu pokazuje to samo miejsce i ten sam stan przerwy, w mniej niż 3 s. Wygasły trening (po czasie bezczynności) pokazuje krótką informację i wraca do listy planów. Treść informacji: „Trening wygasł po 2 godzinach bez dotknięcia." Znika, gdy użytkownik uruchomi trening lub otworzy edytor planu.
 - „Zakończ trening" (Danger, 56 px) leży u góry widoku serii i przerwy, daleko od akcji głównej. Dotknięcie otwiera w aplikacji pytanie „Zakończyć trening?" z przyciskami „Wróć do treningu" (drugorzędny) i „Zakończ trening" (Danger), bez przycisku kredowego. Potwierdzenie usuwa trening i otwiera listę planów; „Wróć do treningu" zostawia trening bez zmian.
 
+### Ikona aplikacji
+- Jedna ikona: sztanga z `public/favicon.svg` (kreda `#f2f2ef` na gumie `#121314`). Bez tekstu, bez gradientu, bez talerzy w kolorach wag i bez innego stylu ikony.
+- Ikony `any` (192 i 512 px) mają zaokrąglony kwadrat jak `favicon.svg`. Ikona `maskable` (512 px) wypełnia cały kwadrat gumą, bez zaokrągleń i bez przezroczystego brzegu. Sztanga mieści się w środkowym kole o średnicy 80% szerokości, bo Android przycina ikonę do własnego kształtu.
+- Kolor tła i kolor motywu w manifeście to guma `#121314`, tak samo jak `theme-color` w `index.html`.
+- Pliki PNG powstają raz ze źródeł SVG (`scripts/icons/make-icons.sh`) i trafiają do repozytorium. Build ich nie tworzy.
+
 ### Po MVP (zarezerwowane)
 - **Stos talerzy:** sztanga z boku z talerzami w kolorach wag. Wejdzie razem z polem ciężaru. Obok zawsze tekst, np. „20 + 1,25 na stronę".
 - **Chip wagi:** kolor najcięższego talerza na stronę, zawsze z liczbą.
